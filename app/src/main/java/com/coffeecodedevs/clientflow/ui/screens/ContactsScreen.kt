@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -43,7 +44,7 @@ import com.coffeecodedevs.clientflow.data.ContactType
 
 import androidx.compose.ui.unit.Dp
 
-// Custom shape for bottom navigation bar with FAB cutout
+// Custom shape for bottom bar with smooth semicircular cutout
 class BottomBarWithCutoutShape(private val cutoutRadiusDp: Dp) : Shape {
     override fun createOutline(
         size: Size,
@@ -52,14 +53,38 @@ class BottomBarWithCutoutShape(private val cutoutRadiusDp: Dp) : Shape {
     ): Outline {
         return Outline.Generic(
             path = Path().apply {
-                val cornerRadius = 35f * density.density
-                val cutoutRadius = with(density) { cutoutRadiusDp.toPx() }
+                val cornerRadius = size.height / 2f
+                val R = with(density) { cutoutRadiusDp.toPx() }
+                val r = 15f * density.density // Increased smoothing radius
                 val cutoutCenterX = size.width / 2f
-
-                // Parameters for smoothing
-                val smoothing = 1.5f // Control point distance factor
-                val topEdgeY = 0f
-
+                
+                // Calculate distance between centers of shoulder circle and cup circle
+                // D^2 + r^2 = (R + r)^2
+                // D = sqrt((R+r)^2 - r^2) = sqrt(R^2 + 2Rr)
+                val D = kotlin.math.sqrt(R * R + 2 * R * r)
+                
+                // Calculate angles
+                // theta is the angle of the vector from Shoulder Center to Cup Center
+                // relative to the horizontal.
+                // Vector is (D, -r) because Cup Center is at (0,0) relative to Shoulder's y=r,
+                // but we are in y-down coordinates.
+                // Actually, let's use standard math:
+                // Shoulder Center: (cx - D, r)
+                // Cup Center: (cx, 0)
+                // Vector Shoulder->Cup: (D, -r)
+                val theta = kotlin.math.atan2(-r, D)
+                val thetaDeg = Math.toDegrees(theta.toDouble()).toFloat()
+                
+                // Cup Start Angle:
+                // Vector Cup->Shoulder: (-D, r)
+                val cupStartAngle = kotlin.math.atan2(r, -D)
+                val cupStartDeg = Math.toDegrees(cupStartAngle.toDouble()).toFloat()
+                
+                // Cup End Angle:
+                // Vector Cup->RightShoulder: (D, r)
+                val cupEndAngle = kotlin.math.atan2(r, D)
+                val cupEndDeg = Math.toDegrees(cupEndAngle.toDouble()).toFloat()
+                
                 // Start from top-left, after the corner
                 moveTo(0f, cornerRadius)
 
@@ -71,36 +96,64 @@ class BottomBarWithCutoutShape(private val cutoutRadiusDp: Dp) : Shape {
                     forceMoveTo = false
                 )
 
-                // Line to start of cutout area (left side)
-                // We start the curve slightly before the cutout radius to allow for smoothing
-                val curveStartOffset = cutoutRadius * 1.8f
-                lineTo(cutoutCenterX - curveStartOffset, topEdgeY)
+                // Line to start of shoulder
+                lineTo(cutoutCenterX - D, 0f)
 
-                // Smooth transition into the cutout using cubic bezier
-                // This creates a "liquid" like connection
-                cubicTo(
-                    cutoutCenterX - cutoutRadius * 1.2f, topEdgeY, // Control point 1
-                    cutoutCenterX - cutoutRadius, topEdgeY + cutoutRadius * 0.2f, // Control point 2
-                    cutoutCenterX - cutoutRadius * 0.8f, topEdgeY + cutoutRadius * 0.6f // End of first curve segment
+                // Left Shoulder Arc
+                // Center: (cutoutCenterX - D, r)
+                // Start: 270 (Top)
+                // Sweep: to thetaDeg (which is approx -15, so 345)
+                // Sweep angle = thetaDeg - (-90) = thetaDeg + 90
+                arcTo(
+                    rect = Rect(
+                        cutoutCenterX - D - r, 0f,
+                        cutoutCenterX - D + r, 2 * r
+                    ),
+                    startAngleDegrees = 270f,
+                    sweepAngleDegrees = thetaDeg + 90f,
+                    forceMoveTo = false
                 )
 
-                // The main cutout arc (bottom part)
-                // We draw a quadratic or cubic curve for the bottom of the cup
-                cubicTo(
-                    cutoutCenterX - cutoutRadius * 0.4f, topEdgeY + cutoutRadius * 1.1f, // Control point 3
-                    cutoutCenterX + cutoutRadius * 0.4f, topEdgeY + cutoutRadius * 1.1f, // Control point 4
-                    cutoutCenterX + cutoutRadius * 0.8f, topEdgeY + cutoutRadius * 0.6f // End of bottom segment
+                // Cup Arc
+                // Center: (cutoutCenterX, 0)
+                // Start: cupStartDeg (approx 165)
+                // Sweep: to cupEndDeg (approx 15)
+                // We go counter-clockwise (downwards), so sweep is negative
+                // Sweep = cupEndDeg - cupStartDeg
+                arcTo(
+                    rect = Rect(
+                        cutoutCenterX - R, -R,
+                        cutoutCenterX + R, R
+                    ),
+                    startAngleDegrees = cupStartDeg,
+                    sweepAngleDegrees = cupEndDeg - cupStartDeg,
+                    forceMoveTo = false
                 )
 
-                // Smooth transition out of the cutout (right side)
-                cubicTo(
-                    cutoutCenterX + cutoutRadius, topEdgeY + cutoutRadius * 0.2f, // Control point 5
-                    cutoutCenterX + cutoutRadius * 1.2f, topEdgeY, // Control point 6
-                    cutoutCenterX + curveStartOffset, topEdgeY // End of curve
+                // Right Shoulder Arc
+                // Center: (cutoutCenterX + D, r)
+                // Start: 180 - thetaDeg (approx 195)
+                // Sweep: to 270
+                // Sweep = 270 - (180 - thetaDeg) = 90 + thetaDeg
+                // Wait, 180 - thetaDeg?
+                // Vector RightShoulder->Cup is (-D, -r). Angle atan2(-r, -D) = -165 (or 195).
+                // So start is correct.
+                // Sweep is positive (clockwise) to 270.
+                // 270 - 195 = 75. Correct.
+                // Note: thetaDeg is negative. So 180 - (-15) = 195.
+                // 90 + (-15) = 75. Correct.
+                arcTo(
+                    rect = Rect(
+                        cutoutCenterX + D - r, 0f,
+                        cutoutCenterX + D + r, 2 * r
+                    ),
+                    startAngleDegrees = 180f - thetaDeg,
+                    sweepAngleDegrees = 90f + thetaDeg,
+                    forceMoveTo = false
                 )
 
                 // Continue top edge to right corner
-                lineTo(size.width - cornerRadius, topEdgeY)
+                lineTo(size.width - cornerRadius, 0f)
 
                 // Top-right corner
                 arcTo(
@@ -159,8 +212,8 @@ class ClientsTabShape : Shape {
     ): Outline {
         return Outline.Generic(
             path = Path().apply {
-                val topLeftRadius = 30f * density.density
-                val curveWidth = 70f * density.density // Increased width for much less vertical curve
+                val topLeftRadius = 20f * density.density
+                val curveWidth = 55f * density.density // Increased width for much less vertical curve
 
                 // Start from top-left
                 moveTo(0f, topLeftRadius)
@@ -261,13 +314,13 @@ class HeaderWithSearchCutoutShape : Shape {
     ): Outline {
         return Outline.Generic(
             path = Path().apply {
-                val bottomLeftRadius = 35f * density.density
+                val bottomLeftRadius = 15f * density.density
                 // Flat right corner as requested
 
                 // Cutout parameters - smooth and natural
-                val cutoutWidth = 300f * density.density
+                val cutoutWidth = 310f * density.density
                 val cutoutHeight = 54f * density.density
-                val rightMargin = 15f * density.density
+                val rightMargin = 0f * density.density
 
                 // Position cutout at bottom right
                 val cutoutRight = size.width - rightMargin
@@ -388,7 +441,7 @@ fun ContactsScreen() {
                             color = Color.White,
                             shape = HeaderWithSearchCutoutShape()
                         )
-                        .padding(start = 8.dp, top = 20.dp, bottom = 20.dp)
+                        .padding(start = 16.dp, top = 20.dp, bottom = 20.dp)
                 ) {
                     Text(
                         text = "CONTACTS",
@@ -402,7 +455,7 @@ fun ContactsScreen() {
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(end = 54.dp, bottom = 3.dp) // Centered in 300dp cutout (15 margin + 39 side padding)
+                        .padding(end = 39.dp, bottom = 3.dp) // Centered in 300dp cutout (0 margin + 39 side padding)
                         .width(222.dp)
                         .height(40.dp)
                         .clip(RoundedCornerShape(20.dp))
@@ -421,10 +474,10 @@ fun ContactsScreen() {
                             modifier = Modifier.weight(1f)
                         )
                         Icon(
-                            imageVector = Icons.Default.Search,
+                            imageVector = Icons.Outlined.Search,
                             contentDescription = "Search",
                             tint = Color(0xFF8B9BA8),
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                  }
@@ -504,7 +557,13 @@ fun ContactsScreen() {
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
-                        .background(Color.White),
+                        .background(
+                            Color.White,
+                            when (selectedTab) {
+                                ContactType.CLIENT -> RoundedCornerShape(topEnd = 10.dp)
+                                ContactType.EMPLOYEE -> RoundedCornerShape(topStart = 10.dp)
+                            }
+                        ),
                     contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 130.dp)
             ) {
                 val filteredContacts = contacts.filter { it.type == selectedTab }
@@ -551,25 +610,25 @@ fun ContactsScreen() {
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .padding(horizontal = 64.dp, vertical = 60.dp)
+                .padding(start = 64.dp, end = 64.dp, bottom = 60.dp)
         ) {
             // Bottom Navigation Bar
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = BottomBarWithCutoutShape(cutoutRadiusDp = 42.dp),
+                shape = BottomBarWithCutoutShape(cutoutRadiusDp = 36.dp),
                 color = Color(0xFF313131),
                 shadowElevation = 12.dp
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 16.dp, end = 20.dp, top = 8.dp, bottom = 8.dp),
+                        .padding(horizontal = 24.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // First icon with circular background
+                    // First icon - Person with blue circular background
                     Box(
                         modifier = Modifier
                             .size(40.dp)
@@ -613,8 +672,8 @@ fun ContactsScreen() {
                 onClick = { },
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .offset(y = (-35).dp)
-                    .size(70.dp),
+                    .offset(y = (-25).dp)
+                    .size(56.dp),
                 containerColor = Color(0xFF313131),
                 shape = CircleShape,
                 elevation = FloatingActionButtonDefaults.elevation(
@@ -626,7 +685,7 @@ fun ContactsScreen() {
                     imageVector = Icons.Default.Add,
                     contentDescription = "Add",
                     tint = Color.White,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }
