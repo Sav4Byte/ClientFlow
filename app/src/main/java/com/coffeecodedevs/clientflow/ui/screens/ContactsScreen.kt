@@ -305,6 +305,102 @@ class EmployeesTabShape : Shape {
     }
 }
 
+// Custom shape for comment box with cutout for action buttons
+class CommentBoxWithCutoutShape : Shape {
+    override fun createOutline(
+        size: Size,
+        layoutDirection: LayoutDirection,
+        density: Density
+    ): Outline {
+        return Outline.Generic(
+            path = Path().apply {
+                val cornerRadius = 12f * density.density
+                
+                // Parameters for the cutout
+                val cutoutHeight = 14f * density.density // Reverted to 14dp
+                val flatWidth = 120f * density.density // Reverted to 120dp
+                val slopeWidth = 60f * density.density // Tilt
+                val smoothing = 40f * density.density // Smoothing
+                val topCornerRadius = 20f * density.density // Radius for the top-right corner of the cutout
+
+                // Start from top-left
+                moveTo(cornerRadius, 0f)
+
+                // Top edge
+                lineTo(size.width - cornerRadius, 0f)
+
+                // Top-right corner
+                arcTo(
+                    rect = Rect(
+                        left = size.width - cornerRadius * 2,
+                        top = 0f,
+                        right = size.width,
+                        bottom = cornerRadius * 2
+                    ),
+                    startAngleDegrees = 270f,
+                    sweepAngleDegrees = 90f,
+                    forceMoveTo = false
+                )
+
+                // Right edge down to start of cutout top corner
+                lineTo(size.width, size.height - cutoutHeight - topCornerRadius)
+
+                // Rounded corner into the cutout "ceiling"
+                quadraticBezierTo(
+                    size.width, size.height - cutoutHeight,
+                    size.width - topCornerRadius, size.height - cutoutHeight
+                )
+
+                // Line to the start of the S-curve
+                lineTo(size.width - flatWidth, size.height - cutoutHeight)
+
+                // Smooth S-curve transition down to the bottom
+                // Using cubic bezier for better control over "tilt" and "rounding"
+                cubicTo(
+                    size.width - flatWidth - smoothing, size.height - cutoutHeight, // CP1: Horizontal from top
+                    size.width - flatWidth - slopeWidth + smoothing, size.height,   // CP2: Horizontal from bottom
+                    size.width - flatWidth - slopeWidth, size.height                // End point
+                )
+
+                // Bottom edge to left corner
+                lineTo(cornerRadius, size.height)
+
+                // Bottom-left corner
+                arcTo(
+                    rect = Rect(
+                        left = 0f,
+                        top = size.height - cornerRadius * 2,
+                        right = cornerRadius * 2,
+                        bottom = size.height
+                    ),
+                    startAngleDegrees = 90f,
+                    sweepAngleDegrees = 90f,
+                    forceMoveTo = false
+                )
+
+                // Left edge
+                lineTo(0f, cornerRadius)
+
+                // Top-left corner
+                arcTo(
+                    rect = Rect(
+                        left = 0f,
+                        top = 0f,
+                        right = cornerRadius * 2,
+                        bottom = cornerRadius * 2
+                    ),
+                    startAngleDegrees = 180f,
+                    sweepAngleDegrees = 90f,
+                    forceMoveTo = false
+                )
+
+                close()
+            }
+        )
+    }
+}
+
+
 // Custom shape for header with cutout on the right for search bar
 class HeaderWithSearchCutoutShape : Shape {
     override fun createOutline(
@@ -318,8 +414,8 @@ class HeaderWithSearchCutoutShape : Shape {
                 // Flat right corner as requested
 
                 // Cutout parameters - smooth and natural
-                val cutoutWidth = 310f * density.density
-                val cutoutHeight = 54f * density.density
+                val cutoutWidth = 300f * density.density
+                val cutoutHeight = 42f * density.density
                 val rightMargin = 0f * density.density
 
                 // Position cutout at bottom right
@@ -395,6 +491,7 @@ fun ContactsScreen() {
     // Sample data
     val contacts = remember {
         listOf(
+            // Clients
             Contact(1, "Alan Smith", ContactType.CLIENT),
             Contact(2, "Ali Conors", ContactType.CLIENT),
             Contact(3, "Bailey Brown", ContactType.CLIENT),
@@ -406,6 +503,19 @@ fun ContactsScreen() {
             Contact(9, "Diana Collins", ContactType.CLIENT),
             Contact(10, "Eleanor Smith", ContactType.CLIENT),
             Contact(11, "Ethan Williams", ContactType.CLIENT),
+
+            // Employees
+            Contact(12, "Amelia Rodriguez", ContactType.EMPLOYEE),
+            Contact(13, "Andrew Martinez", ContactType.EMPLOYEE),
+            Contact(14, "Anna Thompson", ContactType.EMPLOYEE),
+            Contact(15, "Brian Anderson", ContactType.EMPLOYEE),
+            Contact(16, "Carlos Garcia", ContactType.EMPLOYEE),
+            Contact(17, "Charlotte Davis", ContactType.EMPLOYEE),
+            Contact(18, "Christopher Lee", ContactType.EMPLOYEE),
+            Contact(19, "Emma Wilson", ContactType.EMPLOYEE),
+            Contact(20, "Frank Miller", ContactType.EMPLOYEE),
+            Contact(21, "George Taylor", ContactType.EMPLOYEE),
+            Contact(22, "Hannah Moore", ContactType.EMPLOYEE),
         )
     }
 
@@ -431,7 +541,7 @@ fun ContactsScreen() {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(72.dp)
+                    .height(60.dp)
             ) {
                 // White background with cutout
                 Box(
@@ -441,7 +551,7 @@ fun ContactsScreen() {
                             color = Color.White,
                             shape = HeaderWithSearchCutoutShape()
                         )
-                        .padding(start = 16.dp, top = 20.dp, bottom = 20.dp)
+                        .padding(start = 16.dp, top = 20.dp, bottom = 5.dp)
                 ) {
                     Text(
                         text = "CONTACTS",
@@ -455,8 +565,9 @@ fun ContactsScreen() {
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(end = 39.dp, bottom = 3.dp) // Centered in 300dp cutout (0 margin + 39 side padding)
-                        .width(222.dp)
+                        .padding(end = 36.dp, bottom = 0.dp) // Right margin 34dp as requested
+                        .offset(y = 10.dp) // Move search bar 10dp lower
+                        .width(228.dp)
                         .height(40.dp)
                         .clip(RoundedCornerShape(20.dp))
                         .background(Color.White)
@@ -483,7 +594,7 @@ fun ContactsScreen() {
                  }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
             // Tabs and Content
             Column(
@@ -564,7 +675,7 @@ fun ContactsScreen() {
                                 ContactType.EMPLOYEE -> RoundedCornerShape(topStart = 10.dp)
                             }
                         ),
-                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 130.dp)
+                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 200.dp)
             ) {
                 val filteredContacts = contacts.filter { it.type == selectedTab }
                 val groupedContacts = filteredContacts.groupBy { it.name.first().toString() }
@@ -589,7 +700,7 @@ fun ContactsScreen() {
                             }
                         )
                     }
-                    
+
                     // Divider after each letter group
                     item {
                         androidx.compose.material3.HorizontalDivider(
@@ -610,7 +721,7 @@ fun ContactsScreen() {
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .padding(start = 64.dp, end = 64.dp, bottom = 60.dp)
+                .padding(start = 64.dp, end = 64.dp, bottom = 57.dp)
         ) {
             // Bottom Navigation Bar
             Surface(
@@ -744,8 +855,8 @@ fun ContactItem(
             Text(
                 text = contact.name,
                 fontSize = 17.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF2C4A5E)
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF334D6F)
             )
             Icon(
                 imageVector = Icons.Default.KeyboardArrowDown,
@@ -765,45 +876,51 @@ fun ContactItem(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 4.dp, bottom = 8.dp)
+                    .padding(top = 4.dp, bottom = 16.dp)
             ) {
-                if (contact.note != null) {
-                    Box(
+                Box(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    if (contact.note != null) {
+                        // Comment box with cutout for buttons
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 22.dp) // Lift box so buttons look lower
+                                .clip(CommentBoxWithCutoutShape())
+                                .background(Color(0xFFAEE0FF))
+                                .padding(start = 7.dp, top = 10.dp, end = 15.dp, bottom = 15.dp)
+                        ) {
+                            Text(
+                                text = contact.note,
+                                fontSize = 13.sp,
+                                color = Color(0xFF2C4A5E),
+                                lineHeight = 18.sp
+                            )
+                        }
+                    }
+                    
+                    // Action buttons positioned in the cutout area
+                    Row(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFF8DC5E0))
-                            .padding(14.dp)
+                            .align(Alignment.BottomEnd)
+                            .padding(end = 8.dp, bottom = 0.dp)
+                            .offset(y = 8.dp), // Just lower the buttons
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(
-                            text = contact.note,
-                            fontSize = 13.sp,
-                            color = Color(0xFF2C4A5E),
-                            lineHeight = 18.sp
+                        ActionButton(
+                            icon = Icons.Default.Phone,
+                            onClick = { }
+                        )
+                        ActionButton(
+                            icon = Icons.Default.Email,
+                            onClick = { }
+                        )
+                        ActionButton(
+                            icon = Icons.Default.Info,
+                            onClick = { }
                         )
                     }
-                }
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 10.dp),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    ActionButton(
-                        icon = Icons.Default.Phone,
-                        onClick = { }
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    ActionButton(
-                        icon = Icons.Default.Email,
-                        onClick = { }
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    ActionButton(
-                        icon = Icons.Default.Info,
-                        onClick = { }
-                    )
                 }
             }
         }
@@ -817,9 +934,9 @@ fun ActionButton(
 ) {
     Box(
         modifier = Modifier
-            .size(44.dp)
+            .size(36.dp)
             .clip(CircleShape)
-            .background(Color(0xFF34495E))
+            .background(Color(0xFF313131))
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
@@ -827,7 +944,7 @@ fun ActionButton(
             imageVector = icon,
             contentDescription = null,
             tint = Color.White,
-            modifier = Modifier.size(22.dp)
+            modifier = Modifier.size(18.dp)
         )
     }
 }
