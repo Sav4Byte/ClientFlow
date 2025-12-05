@@ -675,19 +675,20 @@ fun ContactsScreen() {
                                 ContactType.EMPLOYEE -> RoundedCornerShape(topStart = 10.dp)
                             }
                         ),
-                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 200.dp)
+                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 300.dp)
             ) {
                 val filteredContacts = contacts.filter { it.type == selectedTab }
                 val groupedContacts = filteredContacts.groupBy { it.name.first().toString() }
 
-                groupedContacts.forEach { (letter, contactsInGroup) ->
+                val groupedContactsList = groupedContacts.entries.toList()
+                groupedContactsList.forEachIndexed { index, (letter, contactsInGroup) ->
                     item {
                         Text(
                             text = "${letter}${letter.lowercase()}",
                             fontSize = 13.sp,
                             color = Color(0xFF7A8C99),
                             fontWeight = FontWeight.Normal,
-                            modifier = Modifier.padding(top = 12.dp, bottom = 8.dp)
+                            modifier = Modifier.padding(top = 10.dp, bottom = 6.dp)
                         )
                     }
 
@@ -701,15 +702,17 @@ fun ContactsScreen() {
                         )
                     }
 
-                    // Divider after each letter group
-                    item {
-                        androidx.compose.material3.HorizontalDivider(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            thickness = 1.dp,
-                            color = Color(0xFFE0E0E0)
-                        )
+                    // Divider after each letter group except the last one
+                    if (index < groupedContactsList.size - 1) {
+                        item {
+                            androidx.compose.material3.HorizontalDivider(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp),
+                                thickness = 1.dp,
+                                color = Color(0xFFE0E0E0)
+                            )
+                        }
                     }
                 }
                 }
@@ -847,14 +850,14 @@ fun ContactItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(44.dp)
+                .height(38.dp)
                 .clickable(onClick = onToggleExpand),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
                 text = contact.name,
-                fontSize = 17.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF334D6F)
             )
