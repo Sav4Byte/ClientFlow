@@ -314,14 +314,14 @@ class CommentBoxWithCutoutShape : Shape {
     ): Outline {
         return Outline.Generic(
             path = Path().apply {
-                val cornerRadius = 12f * density.density
+                val cornerRadius = 8f * density.density
                 
                 // Parameters for the cutout
-                val cutoutHeight = 14f * density.density // Reverted to 14dp
+                val cutoutHeight = 23f * density.density // Increased to maintain ceiling position
                 val flatWidth = 120f * density.density // Reverted to 120dp
                 val slopeWidth = 60f * density.density // Tilt
                 val smoothing = 40f * density.density // Smoothing
-                val topCornerRadius = 20f * density.density // Radius for the top-right corner of the cutout
+                val topCornerRadius = 10f * density.density // Reduced radius for cutout corner
 
                 // Start from top-left
                 moveTo(cornerRadius, 0f)
@@ -886,10 +886,10 @@ fun ContactItem(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(bottom = 22.dp) // Lift box so buttons look lower
+                                .padding(bottom = 13.dp) // Extended left side down more
                                 .clip(CommentBoxWithCutoutShape())
                                 .background(Color(0xFFAEE0FF))
-                                .padding(start = 7.dp, top = 10.dp, end = 15.dp, bottom = 15.dp)
+                                .padding(start = 7.dp, top = 10.dp, end = 15.dp, bottom = 22.dp)
                         ) {
                             Text(
                                 text = contact.note,
