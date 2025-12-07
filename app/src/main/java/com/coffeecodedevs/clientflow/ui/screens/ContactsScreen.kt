@@ -14,6 +14,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.PathFillType
+import androidx.compose.ui.graphics.vector.path
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -39,12 +44,56 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.coffeecodedevs.clientflow.data.Contact
 import com.coffeecodedevs.clientflow.data.ContactType
+import androidx.compose.ui.res.painterResource
+import com.coffeecodedevs.clientflow.R
 
 
 
 import androidx.compose.ui.unit.Dp
 
+
 // Custom shape for bottom bar with smooth semicircular cutout
+
+val CustomContactIcon: ImageVector
+    get() {
+        if (_customContactIcon != null) return _customContactIcon!!
+        _customContactIcon = ImageVector.Builder(
+            name = "Contact",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            // Head
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 2f,
+                strokeLineCap = StrokeCap.Round
+            ) {
+                moveTo(12f, 4f)
+                curveTo(14.21f, 4f, 16f, 5.79f, 16f, 8f)
+                curveTo(16f, 10.21f, 14.21f, 12f, 12f, 12f)
+                curveTo(9.79f, 12f, 8f, 10.21f, 8f, 8f)
+                curveTo(8f, 5.79f, 9.79f, 4f, 12f, 4f)
+                close()
+            }
+            // Body (Arc)
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 2f,
+                strokeLineCap = StrokeCap.Round
+            ) {
+                moveTo(4f, 20f)
+                quadTo(12f, 13f, 20f, 20f)
+            }
+        }.build()
+        return _customContactIcon!!
+    }
+private var _customContactIcon: ImageVector? = null
+
+
+
+
 class BottomBarWithCutoutShape(private val cutoutRadiusDp: Dp) : Shape {
     override fun createOutline(
         size: Size,
@@ -752,7 +801,7 @@ fun ContactsScreen() {
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Person,
+                            imageVector = CustomContactIcon,
                             contentDescription = null,
                             tint = Color.White,
                             modifier = Modifier.size(24.dp)
@@ -760,22 +809,25 @@ fun ContactsScreen() {
                     }
 
                     BottomNavIcon(
-                        icon = Icons.Default.List,
+                        painter = painterResource(R.drawable.notes),
                         selected = selectedBottomTab == 1,
+                        color = Color.White,
                         onClick = { selectedBottomTab = 1 }
                     )
 
                     Spacer(modifier = Modifier.width(70.dp)) // Space for FAB
 
                     BottomNavIcon(
-                        icon = Icons.Default.Menu,
+                        painter = painterResource(R.drawable.dial),
                         selected = selectedBottomTab == 2,
+                        color = Color.White,
                         onClick = { selectedBottomTab = 2 }
                     )
 
                     BottomNavIcon(
-                        icon = Icons.Default.DateRange,
+                        painter = painterResource(R.drawable.calendar),
                         selected = selectedBottomTab == 3,
+                        color = Color.White,
                         onClick = { selectedBottomTab = 3 }
                     )
                 }
@@ -892,7 +944,7 @@ fun ContactItem(
                                 .padding(bottom = 13.dp) // Extended left side down more
                                 .clip(CommentBoxWithCutoutShape())
                                 .background(Color(0xFFAEE0FF))
-                                .padding(start = 7.dp, top = 10.dp, end = 15.dp, bottom = 22.dp)
+                                .padding(start = 7.dp, top = 10.dp, end = 15.dp, bottom = 35.dp)
                         ) {
                             Text(
                                 text = contact.note,
@@ -902,26 +954,26 @@ fun ContactItem(
                             )
                         }
                     }
-                    
+
                     // Action buttons positioned in the cutout area
                     Row(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
                             .padding(end = 8.dp, bottom = 0.dp)
-                            .offset(y = 8.dp), // Just lower the buttons
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            .offset(y = 12.dp), // Just lower the buttons
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        ActionButton(
-                            icon = Icons.Default.Phone,
-                            onClick = { }
+                        ActionButton (
+                            painter = painterResource(R.drawable.phone),
+                            onClick = { },
                         )
-                        ActionButton(
-                            icon = Icons.Default.Email,
-                            onClick = { }
+                        ActionButton (
+                            painter = painterResource(R.drawable.sms),
+                            onClick = { },
                         )
-                        ActionButton(
-                            icon = Icons.Default.Info,
-                            onClick = { }
+                        ActionButton (
+                            painter = painterResource(R.drawable.eye),
+                            onClick = { },
                         )
                     }
                 }
@@ -947,7 +999,29 @@ fun ActionButton(
             imageVector = icon,
             contentDescription = null,
             tint = Color.White,
-            modifier = Modifier.size(18.dp)
+            modifier = Modifier.size(24.dp)
+        )
+    }
+}
+
+@Composable
+fun ActionButton(
+    painter: androidx.compose.ui.graphics.painter.Painter,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(36.dp)
+            .clip(CircleShape)
+            .background(Color(0xFF313131))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            painter = painter,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(35.dp)
         )
     }
 }
@@ -956,13 +1030,31 @@ fun ActionButton(
 fun BottomNavIcon(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     selected: Boolean,
+    color: Color? = null,
     onClick: () -> Unit
 ) {
     IconButton(onClick = onClick) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = if (selected) Color.White else Color.White.copy(alpha = 0.4f),
+            tint = color ?: if (selected) Color.White else Color.White.copy(alpha = 0.4f),
+            modifier = Modifier.size(22.dp)
+        )
+    }
+}
+
+@Composable
+fun BottomNavIcon(
+    painter: androidx.compose.ui.graphics.painter.Painter,
+    selected: Boolean,
+    color: Color? = null,
+    onClick: () -> Unit
+) {
+    IconButton(onClick = onClick) {
+        Icon(
+            painter = painter,
+            contentDescription = null,
+            tint = color ?: if (selected) Color.White else Color.White.copy(alpha = 0.4f),
             modifier = Modifier.size(22.dp)
         )
     }

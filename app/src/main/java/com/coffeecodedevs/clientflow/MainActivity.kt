@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.coffeecodedevs.clientflow.ui.screens.GoalsScreen
+import com.coffeecodedevs.clientflow.ui.screens.ContactsScreen
 import com.coffeecodedevs.clientflow.ui.theme.ClientFlowTheme
 
 class MainActivity : ComponentActivity() {
@@ -17,7 +17,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ClientFlowTheme {
-                GoalsScreen()
+                ContactsScreen()
             }
         }
     }
@@ -27,6 +27,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun GoalsScreenPreview() {
     ClientFlowTheme {
-        GoalsScreen()
+        ContactsScreen()
     }
 }
