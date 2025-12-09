@@ -26,11 +26,13 @@ import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.coffeecodedevs.clientflow.R
 
 @Composable
 fun GoalsScreen(
@@ -70,7 +72,7 @@ fun GoalsScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .clip(RoundedCornerShape(bottomStart = 12.dp))
+                        .clip(GoalsHeaderWithCutoutShape())
                         .background(Color.White)
                 ) {
                     // Header with back button and title inside white block
@@ -109,15 +111,15 @@ fun GoalsScreen(
                     horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterHorizontally)
                 ) {
                     GoalsActionButton(
-                        icon = Icons.Default.Delete,
+                        painter = painterResource(R.drawable.trash),
                         onClick = { }
                     )
                     GoalsActionButton(
-                        icon = Icons.Default.Share,
+                        painter = painterResource(R.drawable.share),
                         onClick = { }
                     )
                     GoalsActionButton(
-                        icon = Icons.Default.Edit,
+                        painter = painterResource(R.drawable.pen),
                         onClick = { }
                     )
                 }
@@ -182,27 +184,28 @@ private fun GoalParagraph(text: String) {
 
 @Composable
 private fun GoalsActionButton(
-    icon: ImageVector,
+    painter: androidx.compose.ui.graphics.painter.Painter,
     onClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
             .size(36.dp)
             .clip(CircleShape)
-            .background(Color(0xFF3A3A3A))
+            .background(Color(0xFF313131))
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Icon(
-            imageVector = icon,
+            painter = painter,
             contentDescription = null,
-            tint = Color.White,
-            modifier = Modifier.size(18.dp)
+            tint = Color.Unspecified,
+            modifier = Modifier.size(28.dp)
         )
     }
 }
 
-   fun createOutline(
+class GoalsHeaderWithCutoutShape : Shape {
+    override fun createOutline(
         size: Size,
         layoutDirection: LayoutDirection,
         density: Density
@@ -261,5 +264,6 @@ private fun GoalsActionButton(
                 close()
             }
         )
-    }
+    }}
+
 
