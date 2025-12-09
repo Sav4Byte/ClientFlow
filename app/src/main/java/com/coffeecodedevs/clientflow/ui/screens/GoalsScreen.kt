@@ -70,7 +70,7 @@ fun GoalsScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .clip(GoalsHeaderWithCutoutShape())
+                        .clip(RoundedCornerShape(bottomStart = 12.dp))
                         .background(Color.White)
                 ) {
                     // Header with back button and title inside white block
@@ -202,8 +202,7 @@ private fun GoalsActionButton(
     }
 }
 
-class GoalsHeaderWithCutoutShape : Shape {
-    override fun createOutline(
+   fun createOutline(
         size: Size,
         layoutDirection: LayoutDirection,
         density: Density
@@ -263,4 +262,4 @@ class GoalsHeaderWithCutoutShape : Shape {
             }
         )
     }
-}
+
