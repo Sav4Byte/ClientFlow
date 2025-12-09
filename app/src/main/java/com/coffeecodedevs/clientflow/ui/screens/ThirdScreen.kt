@@ -91,7 +91,7 @@ fun ThirdScreen(
                                 contentDescription = "Back",
                                 modifier = Modifier
                                     .size(28.dp)
-                                    .offset(y = (-3).dp)
+                                     .offset(y = (-3).dp)
                                     .clickable { onBackClick() },
                                 tint = Color.Unspecified
                             )
