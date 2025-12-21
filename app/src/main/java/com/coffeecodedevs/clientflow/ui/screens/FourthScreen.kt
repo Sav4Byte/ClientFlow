@@ -55,11 +55,11 @@ fun FourthScreen() {
         Column(modifier = Modifier.fillMaxSize()) {
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Calendar header - OCTOBER on white, dates on gradient
+            // Заголовок календаря: ОКТЯБРЬ на белом фоне, даты на градиенте
             Column(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // OCTOBER 2025 on white background - with cutout at bottom
+                // OCTOBER 2025 на белом фоне - с вырезом снизу
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -75,7 +75,7 @@ fun FourthScreen() {
                     )
                 }
                 
-                // Dates on gradient background
+                // Даты на градиентном фоне
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -93,30 +93,29 @@ fun FourthScreen() {
         }
     }
 
-        // 1. White content block (positioned at 175dp to allow tab protrusion)
+        // 1. Белый блок контента (размещен на 175dp для выступа вкладки)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight()
                 .padding(top = 175.dp) 
                 .padding(horizontal = 16.dp)
-                .padding(bottom = 100.dp)
                 .clip(ContentWithTabShape(selectedTab))
                 .background(Color.White)
         ) {
             Box(modifier = Modifier.padding(top = 40.dp).padding(20.dp)) {
                 when (selectedTab) {
                     "REMINDER" -> {
-                        LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            items(reminders) { reminder -> ReminderItem(reminder) }
-                        }
+                        LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                             items(reminders) { reminder -> ReminderItem(reminder) }
+                         }
                     }
                     else -> {}
                 }
             }
         }
 
-        // 2. Tabs Row (pinned to sit exactly above the white block)
+        // 2. Ряд вкладок (закреплен ровно над белым блоком)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -158,12 +157,7 @@ fun FourthScreen() {
                     BottomNavIcon(painterResource(R.drawable.notes), selectedBottomTab == 1) { selectedBottomTab = 1 }
                     Spacer(modifier = Modifier.width(70.dp))
                     BottomNavIcon(painterResource(R.drawable.dial), selectedBottomTab == 2) { selectedBottomTab = 2 }
-                    Box(
-                        modifier = Modifier.size(40.dp).clip(CircleShape).background(Color(0x8087CEEB)).clickable { selectedBottomTab = 3 },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(painterResource(R.drawable.calendar), contentDescription = null, tint = Color.White, modifier = Modifier.size(24.dp))
-                    }
+                    BottomNavIcon(painterResource(R.drawable.calendar), selectedBottomTab == 3) { selectedBottomTab = 3 }
                 }
             }
             FloatingActionButton(
@@ -185,31 +179,30 @@ private fun CalendarDay(day: String, dayName: String, isSelected: Boolean) {
     if (isSelected) {
         Box(
             modifier = Modifier
-                .width(60.dp)
-                .height(120.dp),
+                .width(80.dp)
+                .height(100.dp),
             contentAlignment = Alignment.TopCenter
         ) {
-            // Убрали форму с фоном - только текст
-            
-            // Текст "24" - можно двигать независимо
+            // Текст числа (например, "24")
             Text(
                 day,
-                fontSize = 48.sp,
-                fontWeight = FontWeight.Bold,
+                fontSize = 44.sp,
+                fontWeight = FontWeight.Normal,
                 color = Color(0xFF334D6F),
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .offset(y = (-28).dp)
+                    .offset(y = (-28).dp) // Сместил выше
             )
-            
-            // Текст "Fri" - можно двигать независимо
+
+            // Текст названия дня (например, "Fri")
             Text(
                 dayName,
-                fontSize = 18.sp,
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Normal,
                 color = Color(0xFF334D6F),
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .offset(y = 28.dp)
+                    .offset(y = 20.dp) // Сместил выше вслед за числом
             )
         }
     } else {
@@ -224,12 +217,12 @@ private fun CalendarDay(day: String, dayName: String, isSelected: Boolean) {
                 day,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Normal,
-                color = Color(0xFF8B9CAE)
+                color = Color(0x99334D6F) // Установил запрошенный цвет с прозрачностью
             )
             Text(
                 dayName,
                 fontSize = 12.sp,
-                color = Color(0xFF8B9CAE)
+                color = Color(0x99334D6F) // Установил запрошенный цвет с прозрачностью
             )
         }
     }
@@ -239,14 +232,15 @@ private class ContentWithTabShape(val selectedTab: String) : Shape {
     override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
         return Outline.Generic(
             path = Path().apply {
-                val cornerRadius = 24f * density.density
+                val cornerRadius = 32f * density.density // Для "ушек"
+                val bodyCornerRadius = 16f * density.density // Для основных углов блока (сделаем острее)
                 val tabHeight = 40f * density.density
-                val smoothFactor = 20f * density.density
+                val smoothFactor = 28f * density.density
                 val bodyTop = tabHeight
                 
-                // Divide the total width into 3 equal sections to match the Row with weight(1f)
+                // Разделяем общую ширину на 3 равные секции для соответствия Row с weight(1f)
                 val sectionWidth = size.width / 3f
-                val tabWidth = sectionWidth // Ear width matches the section width for centering
+                val tabWidth = sectionWidth // Ширина вкладки соответствует ширине секции для центрирования
                 
                 val tabStartX = when (selectedTab) {
                     "ALL" -> 0f
@@ -256,79 +250,75 @@ private class ContentWithTabShape(val selectedTab: String) : Shape {
                 }
                 val tabEndX = tabStartX + tabWidth
 
-                // Start at bottom-left corner
-                moveTo(0f, size.height - cornerRadius)
-                quadraticBezierTo(0f, size.height, cornerRadius, size.height)
+                // Начинаем с левого нижнего угла (прямые углы)
+                moveTo(0f, size.height)
+                lineTo(size.width, size.height)
                 
-                // Bottom edge
-                lineTo(size.width - cornerRadius, size.height)
-                quadraticBezierTo(size.width, size.height, size.width, size.height - cornerRadius)
-                
-                // Right edge
+                // Правый край
                 if (selectedTab == "REMINDER") {
-                    // Right edge up into the tab
+                    // Правый край вверх во вкладку
                     lineTo(size.width, cornerRadius)
                     quadraticBezierTo(size.width, 0f, size.width - cornerRadius, 0f)
                     
-                    // Top of tab
+                    // Верх вкладки
                     lineTo(tabStartX + smoothFactor, 0f)
                     
-                    // Curve down to main body
+                    // Изгиб вниз к основному телу
                     cubicTo(
                         tabStartX, 0f,
                         tabStartX, bodyTop,
                         tabStartX - smoothFactor, bodyTop
                     )
                     
-                    // Across top left of main body
-                    lineTo(cornerRadius, bodyTop)
-                    quadraticBezierTo(0f, bodyTop, 0f, bodyTop + cornerRadius)
+                    // По левой верхней части основного тела
+                    lineTo(bodyCornerRadius, bodyTop)
+                    quadraticBezierTo(0f, bodyTop, 0f, bodyTop + bodyCornerRadius)
                 } else if (selectedTab == "ALL") {
-                    // Right edge up to main body top
-                    lineTo(size.width, bodyTop + cornerRadius)
-                    quadraticBezierTo(size.width, bodyTop, size.width - cornerRadius, bodyTop)
+                    // Правый край вверх к верху основного тела
+                    lineTo(size.width, bodyTop + bodyCornerRadius)
+                    quadraticBezierTo(size.width, bodyTop, size.width - bodyCornerRadius, bodyTop)
                     
-                    // Across top edge to the end of the tab
+                    // По верхнему краю к концу вкладки
                     lineTo(tabEndX + smoothFactor, bodyTop)
                     
-                    // Curve UP into the tab
+                    // Изгиб ВВЕРХ во вкладку
                     cubicTo(
                         tabEndX, bodyTop,
                         tabEndX, 0f,
                         tabEndX - smoothFactor, 0f
                     )
                     
-                    // Top of tab to left edge
+                    // От верха вкладки к левому краю
                     lineTo(cornerRadius, 0f)
                     quadraticBezierTo(0f, 0f, 0f, cornerRadius)
-                } else { // ORDERS (Center)
-                    // Right edge up to main body top
-                    lineTo(size.width, bodyTop + cornerRadius)
-                    quadraticBezierTo(size.width, bodyTop, size.width - cornerRadius, bodyTop)
+                } else { // ORDERS (Центр)
+                    // Правый край вверх к верху основного тела
+                    lineTo(size.width, bodyTop + bodyCornerRadius)
+                    quadraticBezierTo(size.width, bodyTop, size.width - bodyCornerRadius, bodyTop)
                     
-                    // Across to tab end
+                    // Переход к концу вкладки
                     lineTo(tabEndX + smoothFactor, bodyTop)
                     
-                    // Curve UP into tab
+                    // Изгиб ВВЕРХ во вкладку
                     cubicTo(
                         tabEndX, bodyTop,
                         tabEndX, 0f,
                         tabEndX - smoothFactor * 0.8f, 0f
                     )
                     
-                    // Top of tab
+                    // Верх вкладки
                     lineTo(tabStartX + smoothFactor * 0.8f, 0f)
                     
-                    // Curve DOWN out of tab
+                    // Изгиб ВНИЗ из вкладки
                     cubicTo(
                         tabStartX, 0f,
                         tabStartX, bodyTop,
                         tabStartX - smoothFactor, bodyTop
                     )
                     
-                    // Top edge to left
-                    lineTo(cornerRadius, bodyTop)
-                    quadraticBezierTo(0f, bodyTop, 0f, bodyTop + cornerRadius)
+                    // Верхний край к левой стороне
+                    lineTo(bodyCornerRadius, bodyTop)
+                    quadraticBezierTo(0f, bodyTop, 0f, bodyTop + bodyCornerRadius)
                 }
                 
                 close()
@@ -341,52 +331,58 @@ private class OctoberHeaderWithCutoutShape : Shape {
     override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
         return Outline.Generic(
             path = Path().apply {
-                // Cutout parameters - smooth and natural like in ContactsScreen
+                // Параметры выреза
                 val cutoutWidth = 130f * density.density
                 val cutoutHeight = 45f * density.density
-                val centerX = size.width * 0.63f // Позиция над числом 24 (сместил чуть левее)
+                val centerX = size.width * 0.63f 
                 
                 val cutoutLeft = centerX - cutoutWidth / 2f
                 val cutoutRight = centerX + cutoutWidth / 2f
                 val cutoutBottom = size.height
                 val cutoutTop = cutoutBottom - cutoutHeight
                 
-                // Control points for smooth transitions - adjusted for balance
                 val smoothFactor = 30f * density.density
+                val edgeCornerRadius = 24f * density.density // Радиус для краев
 
-                // Start from top-left
+                // Начинаем с левого верхнего угла
                 moveTo(0f, 0f)
 
-                // Top edge
+                // Верхний край
                 lineTo(size.width, 0f)
 
-                // Right edge
-                lineTo(size.width, size.height)
+                // Правый край вниз к началу закругления угла
+                lineTo(size.width, size.height - edgeCornerRadius)
                 
-                // Bottom edge to cutout start (right side)
+                // Изгиб в правом нижнем углу (идет "вверх")
+                quadraticBezierTo(size.width, size.height, size.width - edgeCornerRadius, size.height)
+                
+                // Нижний край к началу центрального выреза (правая сторона)
                 lineTo(cutoutRight, size.height)
 
-                // Curve UP and LEFT into the cutout
+                // Изгиб ВВЕРХ и ВЛЕВО в центральный вырез
                 cubicTo(
                     cutoutRight - smoothFactor, size.height,
                     cutoutRight - smoothFactor, cutoutTop,
                     cutoutRight - smoothFactor * 2, cutoutTop
                 )
 
-                // Line across top of cutout
+                // Линия по верху центрального выреза
                 lineTo(cutoutLeft + smoothFactor * 2, cutoutTop)
 
-                // Curve DOWN and LEFT out of the cutout
+                // Изгиб ВНИЗ и ВЛЕВО из центрального выреза
                 cubicTo(
                     cutoutLeft + smoothFactor, cutoutTop,
                     cutoutLeft + smoothFactor, size.height,
                     cutoutLeft, size.height
                 )
 
-                // Continue bottom edge to left
-                lineTo(0f, size.height)
+                // Линия к началу закругления левого нижнего угла
+                lineTo(edgeCornerRadius, size.height)
 
-                // Left edge back to start
+                // Изгиб в левом нижнем углу
+                quadraticBezierTo(0f, size.height, 0f, size.height - edgeCornerRadius)
+
+                // Левый край обратно к началу
                 lineTo(0f, 0f)
 
                 close()
@@ -402,7 +398,7 @@ private fun TabItem(text: String, selected: Boolean, modifier: Modifier = Modifi
         text = text,
         fontSize = 16.sp,
         fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-        color = if (selected) Color(0xFF334D6F) else Color(0xFF999999),
+        color = Color(0xFF334D6F),
         modifier = modifier.clickable(onClick = onClick)
     )
 }
@@ -413,17 +409,29 @@ private fun ReminderItem(reminder: Reminder) {
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color(0xFFFFDDB5)).padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(painterResource(R.drawable.bell), contentDescription = null, tint = Color(0xFF333333), modifier = Modifier.size(24.dp))
+        Icon(painterResource(R.drawable.reminder), contentDescription = null, tint = Color(0xFF333333), modifier = Modifier.size(24.dp))
         Spacer(modifier = Modifier.width(12.dp))
-        Text(reminder.text, fontSize = 16.sp, color = Color(0xFF333333), modifier = Modifier.weight(1f))
+        Text(reminder.text, fontSize = 14.sp, color = Color(0xFF333333), modifier = Modifier.weight(1f))
         Text(reminder.time, fontSize = 14.sp, color = Color(0xFF666666))
     }
 }
 
 @Composable
 private fun BottomNavIcon(painter: androidx.compose.ui.graphics.painter.Painter, selected: Boolean, onClick: () -> Unit) {
-    IconButton(onClick = onClick) {
-        Icon(painter, contentDescription = null, tint = if (selected) Color.White else Color.White.copy(alpha = 0.4f), modifier = Modifier.size(22.dp))
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .clip(CircleShape)
+            .background(if (selected) Color(0x8087CEEB) else Color.Transparent)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            painter = painter,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(24.dp)
+        )
     }
 }
 
