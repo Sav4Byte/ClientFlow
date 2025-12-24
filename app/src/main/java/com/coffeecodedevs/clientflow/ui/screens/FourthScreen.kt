@@ -434,14 +434,14 @@ private fun OrderItem(order: Order) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(end = 16.dp, bottom = 25.dp) // Увеличили отступ, чтобы укоротить ширину блока
+            .padding(end = 2.dp, bottom = 25.dp) 
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(OrderItemShape())
                 .background(Color(0xFFE5CCFF))
-                .padding(16.dp)
+                .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 10.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -492,7 +492,7 @@ private fun OrderItem(order: Order) {
         Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .offset(x = 0.dp, y = 10.dp) // Выравнивание правого края (x=0)
+                .offset(x = 0.dp, y = 15.dp) // Выравнивание правого края (x=0)
                 .size(42.dp)
                 .clip(CircleShape)
                 .background(Color(0xFF313131)),
@@ -512,45 +512,44 @@ private class OrderItemShape : Shape {
     override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
         return Outline.Generic(
             path = Path().apply {
-                val r = 16f * density.density
+                val cornerRadius = 8f * density.density
                 
-                // Сбалансированные параметры "кармана"
-                val cutoutSize = 38f * density.density 
-                val sIn = 12f * density.density   // Розовый угол
-                val sOut = 20f * density.density  // Нижний выход
+                // Уменьшенные параметры для плотного прилегания к кнопке
+                val cutoutHeight = 34f * density.density // Ниже (ближе к верху кнопки)
+                val flatWidth = 30f * density.density   // Уже (ближе к боку кнопки)
+                val slopeWidth = 40f * density.density
+                val smoothing = 20f * density.density   // Компактнее сглаживание
+                val topCornerRadius = 15f * density.density // Аккуратный угол
 
                 // Верх
-                moveTo(r, 0f)
-                lineTo(size.width - r, 0f)
-                quadraticBezierTo(size.width, 0f, size.width, r)
+                moveTo(cornerRadius, 0f)
+                lineTo(size.width - cornerRadius, 0f)
+                quadraticBezierTo(size.width, 0f, size.width, cornerRadius)
 
-                // Правый край вниз до входа в вырез
-                lineTo(size.width, size.height - cutoutSize - sIn)
+                // Правое ребро вниз до начала скругления
+                lineTo(size.width, size.height - cutoutHeight - topCornerRadius)
 
-                // 1. Верхний угол (вход)
+                // Внутренний верхний угол (вход в вырез)
                 quadraticBezierTo(
-                    size.width, size.height - cutoutSize, 
-                    size.width - sIn, size.height - cutoutSize
+                    size.width, size.height - cutoutHeight,
+                    size.width - topCornerRadius, size.height - cutoutHeight
                 )
 
-                // 2. Внутренняя чаша (переход вертикаль-горизонталь)
+                // Плоский участок (потолок)
+                lineTo(size.width - flatWidth, size.height - cutoutHeight)
+
+                // Плавный S-образный спуск
                 cubicTo(
-                    size.width - cutoutSize, size.height - cutoutSize,
-                    size.width - cutoutSize, size.height - cutoutSize,
-                    size.width - cutoutSize, size.height - sOut
-                )
-
-                // 3. Нижний угол (выход)
-                quadraticBezierTo(
-                    size.width - cutoutSize, size.height,
-                    size.width - cutoutSize - sOut, size.height
+                    size.width - flatWidth - smoothing, size.height - cutoutHeight, 
+                    size.width - flatWidth - slopeWidth + smoothing, size.height,   
+                    size.width - flatWidth - slopeWidth, size.height                
                 )
 
                 // Низ и лево
-                lineTo(r, size.height)
-                quadraticBezierTo(0f, size.height, 0f, size.height - r)
-                lineTo(0f, r)
-                quadraticBezierTo(0f, 0f, r, 0f)
+                lineTo(cornerRadius, size.height)
+                quadraticBezierTo(0f, size.height, 0f, size.height - cornerRadius)
+                lineTo(0f, cornerRadius)
+                quadraticBezierTo(0f, 0f, cornerRadius, 0f)
                 
                 close()
             }
