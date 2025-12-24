@@ -29,18 +29,26 @@ import androidx.compose.ui.unit.sp
 import com.coffeecodedevs.clientflow.R
 
 data class Reminder(val id: Int, val text: String, val time: String)
+data class Order(val id: Int, val title: String, val description: String, val clientName: String, val time: String)
 
 @Composable
 fun FourthScreen() {
     var selectedTab by remember { mutableStateOf("REMINDER") }
     var selectedBottomTab by remember { mutableStateOf(3) }
-    
+
     val reminders = listOf(
         Reminder(1, "Call Daniel Brooks", "9:00"),
         Reminder(2, "Call Ali Conors", "9:40"),
         Reminder(3, "Make an order for Sam Watson", "11:10"),
         Reminder(4, "Ask Fred about \"Gepur\"", "12:00"),
         Reminder(5, "Prepare documents", "16:00")
+    )
+
+    val orders = listOf(
+        Order(1, "SUMMER COLLECTION", "The client requested a lookbook for the July capsule drop and asked to be notified once the new swimwear line becomes available.", "Daniel Brooks", "9:10"),
+        Order(2, "FLORAL PRINT DRESSES", "Color: Sand / Coral. Size Range: XS–XXL\nQuantity: 200 pcs. Unit Price: $12.50", "Ali Konnors", "9:45"),
+        Order(3, "SHORT-SLEEVE SHIRTS", "Men’s Linen Short-Sleeve Shirt:\nClient requested fabric swatches for upcoming fall color palette.\nAdd 10 extra units of the Sand Oversized T-Shirt if available in stock.", "Sam Watson", "9:30"),
+        Order(4, "T-SHIRTS", "The client requested a lookbook for the July capsule drop and asked to be notified once the new swimwear line becomes available.", "Fred", "9:25")
     )
 
     Box(
@@ -74,7 +82,7 @@ fun FourthScreen() {
                         color = Color(0xFF334D6F)
                     )
                 }
-                
+
                 // Даты на градиентном фоне
                 Row(
                     modifier = Modifier
@@ -98,17 +106,22 @@ fun FourthScreen() {
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight()
-                .padding(top = 175.dp) 
+                .padding(top = 175.dp)
                 .padding(horizontal = 16.dp)
                 .clip(ContentWithTabShape(selectedTab))
                 .background(Color.White)
         ) {
-            Box(modifier = Modifier.padding(top = 40.dp).padding(20.dp)) {
+            Box(modifier = Modifier.padding(top = 40.dp).padding(horizontal = 16.dp, vertical = 20.dp)) {
                 when (selectedTab) {
                     "REMINDER" -> {
-                        LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                             items(reminders) { reminder -> ReminderItem(reminder) }
-                         }
+                        LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 120.dp)) {
+                            items(reminders) { reminder -> ReminderItem(reminder) }
+                        }
+                    }
+                    "ORDERS" -> {
+                        LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 120.dp)) {
+                            items(orders) { order -> OrderItem(order) }
+                        }
                     }
                     else -> {}
                 }
@@ -119,7 +132,7 @@ fun FourthScreen() {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 175.dp) 
+                .padding(top = 175.dp)
                 .height(40.dp)
                 .padding(horizontal = 16.dp), // Совпадает с отступом белого блока
             verticalAlignment = Alignment.CenterVertically
@@ -237,11 +250,11 @@ private class ContentWithTabShape(val selectedTab: String) : Shape {
                 val tabHeight = 40f * density.density
                 val smoothFactor = 28f * density.density
                 val bodyTop = tabHeight
-                
+
                 // Разделяем общую ширину на 3 равные секции для соответствия Row с weight(1f)
                 val sectionWidth = size.width / 3f
                 val tabWidth = sectionWidth // Ширина вкладки соответствует ширине секции для центрирования
-                
+
                 val tabStartX = when (selectedTab) {
                     "ALL" -> 0f
                     "ORDERS" -> sectionWidth
@@ -253,23 +266,23 @@ private class ContentWithTabShape(val selectedTab: String) : Shape {
                 // Начинаем с левого нижнего угла (прямые углы)
                 moveTo(0f, size.height)
                 lineTo(size.width, size.height)
-                
+
                 // Правый край
                 if (selectedTab == "REMINDER") {
                     // Правый край вверх во вкладку
                     lineTo(size.width, cornerRadius)
                     quadraticBezierTo(size.width, 0f, size.width - cornerRadius, 0f)
-                    
+
                     // Верх вкладки
                     lineTo(tabStartX + smoothFactor, 0f)
-                    
+
                     // Изгиб вниз к основному телу
                     cubicTo(
                         tabStartX, 0f,
                         tabStartX, bodyTop,
                         tabStartX - smoothFactor, bodyTop
                     )
-                    
+
                     // По левой верхней части основного тела
                     lineTo(bodyCornerRadius, bodyTop)
                     quadraticBezierTo(0f, bodyTop, 0f, bodyTop + bodyCornerRadius)
@@ -277,17 +290,17 @@ private class ContentWithTabShape(val selectedTab: String) : Shape {
                     // Правый край вверх к верху основного тела
                     lineTo(size.width, bodyTop + bodyCornerRadius)
                     quadraticBezierTo(size.width, bodyTop, size.width - bodyCornerRadius, bodyTop)
-                    
+
                     // По верхнему краю к концу вкладки
                     lineTo(tabEndX + smoothFactor, bodyTop)
-                    
+
                     // Изгиб ВВЕРХ во вкладку
                     cubicTo(
                         tabEndX, bodyTop,
                         tabEndX, 0f,
                         tabEndX - smoothFactor, 0f
                     )
-                    
+
                     // От верха вкладки к левому краю
                     lineTo(cornerRadius, 0f)
                     quadraticBezierTo(0f, 0f, 0f, cornerRadius)
@@ -295,32 +308,32 @@ private class ContentWithTabShape(val selectedTab: String) : Shape {
                     // Правый край вверх к верху основного тела
                     lineTo(size.width, bodyTop + bodyCornerRadius)
                     quadraticBezierTo(size.width, bodyTop, size.width - bodyCornerRadius, bodyTop)
-                    
+
                     // Переход к концу вкладки
                     lineTo(tabEndX + smoothFactor, bodyTop)
-                    
+
                     // Изгиб ВВЕРХ во вкладку
                     cubicTo(
                         tabEndX, bodyTop,
                         tabEndX, 0f,
                         tabEndX - smoothFactor * 0.8f, 0f
                     )
-                    
+
                     // Верх вкладки
                     lineTo(tabStartX + smoothFactor * 0.8f, 0f)
-                    
+
                     // Изгиб ВНИЗ из вкладки
                     cubicTo(
                         tabStartX, 0f,
                         tabStartX, bodyTop,
                         tabStartX - smoothFactor, bodyTop
                     )
-                    
+
                     // Верхний край к левой стороне
                     lineTo(bodyCornerRadius, bodyTop)
                     quadraticBezierTo(0f, bodyTop, 0f, bodyTop + bodyCornerRadius)
                 }
-                
+
                 close()
             }
         )
@@ -334,13 +347,13 @@ private class OctoberHeaderWithCutoutShape : Shape {
                 // Параметры выреза
                 val cutoutWidth = 130f * density.density
                 val cutoutHeight = 45f * density.density
-                val centerX = size.width * 0.63f 
-                
+                val centerX = size.width * 0.63f
+
                 val cutoutLeft = centerX - cutoutWidth / 2f
                 val cutoutRight = centerX + cutoutWidth / 2f
                 val cutoutBottom = size.height
                 val cutoutTop = cutoutBottom - cutoutHeight
-                
+
                 val smoothFactor = 30f * density.density
                 val edgeCornerRadius = 24f * density.density // Радиус для краев
 
@@ -352,10 +365,10 @@ private class OctoberHeaderWithCutoutShape : Shape {
 
                 // Правый край вниз к началу закругления угла
                 lineTo(size.width, size.height - edgeCornerRadius)
-                
+
                 // Изгиб в правом нижнем углу (идет "вверх")
                 quadraticBezierTo(size.width, size.height, size.width - edgeCornerRadius, size.height)
-                
+
                 // Нижний край к началу центрального выреза (правая сторона)
                 lineTo(cutoutRight, size.height)
 
@@ -413,6 +426,135 @@ private fun ReminderItem(reminder: Reminder) {
         Spacer(modifier = Modifier.width(12.dp))
         Text(reminder.text, fontSize = 14.sp, color = Color(0xFF333333), modifier = Modifier.weight(1f))
         Text(reminder.time, fontSize = 14.sp, color = Color(0xFF666666))
+    }
+}
+
+@Composable
+private fun OrderItem(order: Order) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(end = 16.dp, bottom = 25.dp) // Увеличили отступ, чтобы укоротить ширину блока
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(OrderItemShape())
+                .background(Color(0xFFE5CCFF))
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        painter = painterResource(R.drawable.notess),
+                        contentDescription = null,
+                        tint = Color(0xFF334D6F),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = order.title,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF334D6F)
+                    )
+                }
+                Text(
+                    text = order.time,
+                    fontSize = 12.sp,
+                    color = Color(0xFF334D6F).copy(alpha = 0.6f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = order.description,
+                fontSize = 13.sp,
+                color = Color(0xFF334D6F),
+                lineHeight = 18.sp
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                text = order.clientName,
+                fontSize = 12.sp,
+                color = Color(0xFF334D6F).copy(alpha = 0.6f)
+            )
+        }
+
+        // Кнопка со стрелкой (в центре тройной выемки)
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .offset(x = 0.dp, y = 10.dp) // Выравнивание правого края (x=0)
+                .size(42.dp)
+                .clip(CircleShape)
+                .background(Color(0xFF313131)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.arrow_up_right),
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+private class OrderItemShape : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
+        return Outline.Generic(
+            path = Path().apply {
+                val r = 16f * density.density
+                
+                // Сбалансированные параметры "кармана"
+                val cutoutSize = 38f * density.density 
+                val sIn = 12f * density.density   // Розовый угол
+                val sOut = 20f * density.density  // Нижний выход
+
+                // Верх
+                moveTo(r, 0f)
+                lineTo(size.width - r, 0f)
+                quadraticBezierTo(size.width, 0f, size.width, r)
+
+                // Правый край вниз до входа в вырез
+                lineTo(size.width, size.height - cutoutSize - sIn)
+
+                // 1. Верхний угол (вход)
+                quadraticBezierTo(
+                    size.width, size.height - cutoutSize, 
+                    size.width - sIn, size.height - cutoutSize
+                )
+
+                // 2. Внутренняя чаша (переход вертикаль-горизонталь)
+                cubicTo(
+                    size.width - cutoutSize, size.height - cutoutSize,
+                    size.width - cutoutSize, size.height - cutoutSize,
+                    size.width - cutoutSize, size.height - sOut
+                )
+
+                // 3. Нижний угол (выход)
+                quadraticBezierTo(
+                    size.width - cutoutSize, size.height,
+                    size.width - cutoutSize - sOut, size.height
+                )
+
+                // Низ и лево
+                lineTo(r, size.height)
+                quadraticBezierTo(0f, size.height, 0f, size.height - r)
+                lineTo(0f, r)
+                quadraticBezierTo(0f, 0f, r, 0f)
+                
+                close()
+            }
+        )
     }
 }
 
