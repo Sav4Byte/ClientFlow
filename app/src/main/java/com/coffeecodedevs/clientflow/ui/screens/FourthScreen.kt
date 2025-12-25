@@ -51,6 +51,15 @@ fun FourthScreen() {
         Order(4, "T-SHIRTS", "The client requested a lookbook for the July capsule drop and asked to be notified once the new swimwear line becomes available.", "Fred", "9:25")
     )
 
+    val timelineItems = listOf(
+        TimelineItem.Simple(1, "Call Daniel Brooks", "9:00", Color(0xFFFFDDB5), R.drawable.reminder),
+        TimelineItem.Simple(2, "DANIEL BROOKS", "9:02", Color(0xFFAEDEF4), R.drawable.phone),
+        TimelineItem.Detailed(3, "SUMMER COLLECTION", "The client requested a lookbook for the July capsule drop and asked to be notified once the new swimwear line becomes available.", "Daniel Brooks", "9:10", Color(0xFFE5CCFF), R.drawable.notess, customHeight = 134.dp, descriptionFontSize = 13.sp),
+        TimelineItem.Detailed(4, "DAN DILAN", "The client expressed interest in upcoming pre-\norders for the Resort Wear Capsule, asking to \nreceive the digital lookbook.", null, "9:30", Color(0xFFAEDEF4), R.drawable.phone, titleArrow = true, descriptionFontSize = 13.sp),
+        TimelineItem.Simple(5, "Call Ali Conors", "9:40", Color(0xFFFFDDB5), R.drawable.reminder),
+        TimelineItem.Detailed(6, "FLORAL PRINT DRESSES", "Color: Sand / Coral. Size Range: XS–XXL\nQuantity: 200 pcs. Unit Price: $12.50", "Ali Konnors", "9:45", Color(0xFFE5CCFF), R.drawable.notess, customHeight = 114.dp)
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -61,7 +70,7 @@ fun FourthScreen() {
             )
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Заголовок календаря: ОКТЯБРЬ на белом фоне, даты на градиенте
             Column(
@@ -106,13 +115,29 @@ fun FourthScreen() {
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight()
-                .padding(top = 175.dp)
+                .padding(top = 155.dp)
                 .padding(horizontal = 16.dp)
                 .clip(ContentWithTabShape(selectedTab))
                 .background(Color.White)
         ) {
             Box(modifier = Modifier.padding(top = 40.dp).padding(horizontal = 16.dp, vertical = 20.dp)) {
                 when (selectedTab) {
+                    "ALL" -> {
+                        LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(bottom = 180.dp)) {
+                            items(timelineItems) { item ->
+                                if (item.id == 2 || item.id == 3) {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                }
+                                if (item.id == 6) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                }
+                                when (item) {
+                                    is TimelineItem.Simple -> SimpleTimelineItem(item)
+                                    is TimelineItem.Detailed -> DetailedTimelineItem(item)
+                                }
+                            }
+                        }
+                    }
                     "REMINDER" -> {
                         LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 120.dp)) {
                             items(reminders) { reminder -> ReminderItem(reminder) }
@@ -132,7 +157,7 @@ fun FourthScreen() {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 175.dp)
+                .padding(top = 155.dp)
                 .height(40.dp)
                 .padding(horizontal = 16.dp), // Совпадает с отступом белого блока
             verticalAlignment = Alignment.CenterVertically
@@ -153,7 +178,7 @@ fun FourthScreen() {
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .padding(start = 64.dp, end = 64.dp, bottom = 57.dp)
+                .padding(start = 64.dp, end = 64.dp, bottom = 65.dp)
         ) {
             Surface(
                 modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -184,6 +209,158 @@ fun FourthScreen() {
             }
         }
     }
+}
+
+
+@Composable
+private fun SimpleTimelineItem(item: TimelineItem.Simple) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(40.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(item.color)
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (item.iconRes != null) {
+            val size = if (item.iconRes == R.drawable.phone) 32.dp else 24.dp
+            Icon(painterResource(item.iconRes), contentDescription = null, tint = Color(0xFF333333), modifier = Modifier.size(size))
+        } else if (item.iconVector != null) {
+            Icon(item.iconVector, contentDescription = null, tint = Color(0xFF333333), modifier = Modifier.size(24.dp))
+        }
+        
+        Spacer(modifier = Modifier.width(12.dp))
+        
+        Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+            Text(item.text, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF333333))
+            if (item.showArrow) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(painterResource(R.drawable.arrow_up_right), contentDescription = null, tint = Color(0xFF333333), modifier = Modifier.size(20.dp))
+            }
+        }
+        
+        Text(item.time, fontSize = 14.sp, color = Color(0xFF666666))
+    }
+}
+
+@Composable
+private fun DetailedTimelineItem(item: TimelineItem.Detailed) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(end = 2.dp, bottom = 25.dp) 
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(if (item.customHeight != null) Modifier.height(item.customHeight) else Modifier)
+                .clip(OrderItemShape())
+                .background(item.color)
+                .padding(start = 16.dp, top = 10.dp, end = 16.dp, bottom = 14.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (item.iconRes != null) {
+                        val size = if (item.iconRes == R.drawable.phone) 32.dp else 20.dp
+                        Icon(painterResource(item.iconRes), contentDescription = null, tint = Color(0xFF334D6F), modifier = Modifier.size(size))
+                    } else if (item.iconVector != null) {
+                        Icon(item.iconVector, contentDescription = null, tint = Color(0xFF334D6F), modifier = Modifier.size(20.dp))
+                    }
+                    
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = item.title,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF334D6F)
+                        )
+                        if (item.titleArrow) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(painterResource(R.drawable.arrow_up_right), contentDescription = null, tint = Color(0xFF334D6F), modifier = Modifier.size(20.dp))
+                        }
+                    }
+                }
+                Text(
+                    text = item.time,
+                    fontSize = 12.sp,
+                    color = Color(0xFF334D6F).copy(alpha = 0.6f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = item.description,
+                fontSize = item.descriptionFontSize ?: 14.sp,
+                color = Color(0xFF334D6F),
+                lineHeight = 18.sp
+            )
+
+            if (item.footer != null) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = item.footer,
+                    fontSize = 12.sp,
+                    color = Color(0xFF334D6F).copy(alpha = 0.6f)
+                )
+            } else {
+                 // Если футера нет, добавим небольшой отступ чтобы не прилипало к низу
+                 Spacer(modifier = Modifier.height(6.dp))
+            }
+        }
+
+        // Кнопка со стрелкой
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .offset(x = 0.dp, y = 21.dp)
+                .size(42.dp)
+                .clip(CircleShape)
+                .background(Color(0xFF313131)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.arrow_up_right),
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+sealed class TimelineItem {
+    abstract val id: Int
+    data class Simple(
+        override val id: Int,
+        val text: String,
+        val time: String,
+        val color: Color,
+        val iconRes: Int? = null,
+        val iconVector: androidx.compose.ui.graphics.vector.ImageVector? = null,
+        val showArrow: Boolean = false
+    ) : TimelineItem()
+
+    data class Detailed(
+        override val id: Int,
+        val title: String,
+        val description: String,
+        val footer: String?,
+        val time: String,
+        val color: Color,
+        val iconRes: Int? = null,
+        val iconVector: androidx.compose.ui.graphics.vector.ImageVector? = null,
+        val titleArrow: Boolean = false,
+        val customHeight: androidx.compose.ui.unit.Dp? = null,
+        val descriptionFontSize: androidx.compose.ui.unit.TextUnit? = null
+    ) : TimelineItem()
 }
 
 
@@ -515,13 +692,13 @@ private class OrderItemShape : Shape {
                 val cornerRadius = 8f * density.density
                 
                 // Уменьшенные параметры для плотного прилегания к кнопке
-                val cutoutHeight = 34f * density.density // Ниже (ближе к верху кнопки)
-                val flatWidth = 30f * density.density   // Уже (ближе к боку кнопки)
-                val slopeWidth = 40f * density.density
-                val smoothing = 20f * density.density   // Компактнее сглаживание
-                val topCornerRadius = 15f * density.density // Аккуратный угол
+                val cutoutHeight = 28f * density.density // Ниже (ближе к верху кнопки)
+                val flatWidth = 26f * density.density   // Уже (ближе к боку кнопки)
+                val slopeWidth = 36f * density.density
+                val smoothing = 18f * density.density   // Компактнее сглаживание
+                val topCornerRadius = 12f * density.density // Аккуратный угол
 
-                // Верх
+                  // Верх
                 moveTo(cornerRadius, 0f)
                 lineTo(size.width - cornerRadius, 0f)
                 quadraticBezierTo(size.width, 0f, size.width, cornerRadius)
