@@ -492,7 +492,7 @@ private fun OrderItem(order: Order) {
         Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .offset(x = 0.dp, y = 15.dp) // Выравнивание правого края (x=0)
+                .offset(x = 0.dp, y = 21.dp) // Выравнивание правого края (x=0)
                 .size(42.dp)
                 .clip(CircleShape)
                 .background(Color(0xFF313131)),
