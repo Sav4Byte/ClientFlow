@@ -94,7 +94,162 @@ private var _customContactIcon: ImageVector? = null
 
 
 
+class BottomBarWithCutoutShape(private val cutoutRadiusDp: Dp) : Shape {
+    override fun createOutline(
+        size: Size,
+        layoutDirection: LayoutDirection,
+        density: Density
+    ): Outline {
+        return Outline.Generic(
+            path = Path().apply {
+                val cornerRadius = size.height / 2f
+                val R = with(density) { cutoutRadiusDp.toPx() }
+                val r = 15f * density.density // Increased smoothing radius
+                val cutoutCenterX = size.width / 2f
+                
+                // Calculate distance between centers of shoulder circle and cup circle
+                // D^2 + r^2 = (R + r)^2
+                // D = sqrt((R+r)^2 - r^2) = sqrt(R^2 + 2Rr)
+                val D = kotlin.math.sqrt(R * R + 2 * R * r)
+                
+                // Calculate angles
+                // theta is the angle of the vector from Shoulder Center to Cup Center
+                // relative to the horizontal.
+                // Vector is (D, -r) because Cup Center is at (0,0) relative to Shoulder's y=r,
+                // but we are in y-down coordinates.
+                // Actually, let's use standard math:
+                // Shoulder Center: (cx - D, r)
+                // Cup Center: (cx, 0)
+                // Vector Shoulder->Cup: (D, -r)
+                val theta = kotlin.math.atan2(-r, D)
+                val thetaDeg = Math.toDegrees(theta.toDouble()).toFloat()
+                
+                // Cup Start Angle:
+                // Vector Cup->Shoulder: (-D, r)
+                val cupStartAngle = kotlin.math.atan2(r, -D)
+                val cupStartDeg = Math.toDegrees(cupStartAngle.toDouble()).toFloat()
+                
+                // Cup End Angle:
+                // Vector Cup->RightShoulder: (D, r)
+                val cupEndAngle = kotlin.math.atan2(r, D)
+                val cupEndDeg = Math.toDegrees(cupEndAngle.toDouble()).toFloat()
+                
+                // Start from top-left, after the corner
+                moveTo(0f, cornerRadius)
 
+                // Top-left corner
+                arcTo(
+                    rect = Rect(0f, 0f, cornerRadius * 2, cornerRadius * 2),
+                    startAngleDegrees = 180f,
+                    sweepAngleDegrees = 90f,
+                    forceMoveTo = false
+                )
+
+                // Line to start of shoulder
+                lineTo(cutoutCenterX - D, 0f)
+
+                // Left Shoulder Arc
+                // Center: (cutoutCenterX - D, r)
+                // Start: 270 (Top)
+                // Sweep: to thetaDeg (which is approx -15, so 345)
+                // Sweep angle = thetaDeg - (-90) = thetaDeg + 90
+                arcTo(
+                    rect = Rect(
+                        cutoutCenterX - D - r, 0f,
+                        cutoutCenterX - D + r, 2 * r
+                    ),
+                    startAngleDegrees = 270f,
+                    sweepAngleDegrees = thetaDeg + 90f,
+                    forceMoveTo = false
+                )
+
+                // Cup Arc
+                // Center: (cutoutCenterX, 0)
+                // Start: cupStartDeg (approx 165)
+                // Sweep: to cupEndDeg (approx 15)
+                // We go counter-clockwise (downwards), so sweep is negative
+                // Sweep = cupEndDeg - cupStartDeg
+                arcTo(
+                    rect = Rect(
+                        cutoutCenterX - R, -R,
+                        cutoutCenterX + R, R
+                    ),
+                    startAngleDegrees = cupStartDeg,
+                    sweepAngleDegrees = cupEndDeg - cupStartDeg,
+                    forceMoveTo = false
+                )
+
+                // Right Shoulder Arc
+                // Center: (cutoutCenterX + D, r)
+                // Start: 180 - thetaDeg (approx 195)
+                // Sweep: to 270
+                // Sweep = 270 - (180 - thetaDeg) = 90 + thetaDeg
+                // Wait, 180 - thetaDeg?
+                // Vector RightShoulder->Cup is (-D, -r). Angle atan2(-r, -D) = -165 (or 195).
+                // So start is correct.
+                // Sweep is positive (clockwise) to 270.
+                // 270 - 195 = 75. Correct.
+                // Note: thetaDeg is negative. So 180 - (-15) = 195.
+                // 90 + (-15) = 75. Correct.
+                arcTo(
+                    rect = Rect(
+                        cutoutCenterX + D - r, 0f,
+                        cutoutCenterX + D + r, 2 * r
+                    ),
+                    startAngleDegrees = 180f - thetaDeg,
+                    sweepAngleDegrees = 90f + thetaDeg,
+                    forceMoveTo = false
+                )
+
+                // Continue top edge to right corner
+                lineTo(size.width - cornerRadius, 0f)
+
+                // Top-right corner
+                arcTo(
+                    rect = Rect(
+                        left = size.width - cornerRadius * 2,
+                        top = 0f,
+                        right = size.width,
+                        bottom = cornerRadius * 2
+                    ),
+                    startAngleDegrees = 270f,
+                    sweepAngleDegrees = 90f,
+                    forceMoveTo = false
+                )
+
+                // Right edge
+                lineTo(size.width, size.height - cornerRadius)
+
+                // Bottom-right corner
+                arcTo(
+                    rect = Rect(
+                        left = size.width - cornerRadius * 2,
+                        top = size.height - cornerRadius * 2,
+                        right = size.width,
+                        bottom = size.height
+                    ),
+                    startAngleDegrees = 0f,
+                    sweepAngleDegrees = 90f,
+                    forceMoveTo = false
+                )
+
+                // Bottom edge
+                lineTo(cornerRadius, size.height)
+
+                // Bottom-left corner
+                arcTo(
+                    rect = Rect(0f, size.height - cornerRadius * 2, cornerRadius * 2, size.height),
+                    startAngleDegrees = 90f,
+                    sweepAngleDegrees = 90f,
+                    forceMoveTo = false
+                )
+
+                // Close path
+                close()
+            }
+        )
+    }
+}
 
 // Custom shape for CLIENTS tab - rounded top-left, wave cutout on top-right, bulge on bottom-right
 // Custom shape for CLIENTS tab - rounded top-left, smooth S-curve on right
@@ -377,9 +532,7 @@ class HeaderWithSearchCutoutShape : Shape {
 
 @Composable
 fun ContactsScreen(
-    selectedBottomTab: Int = 0,
-    onTabSelected: (Int) -> Unit = {},
-    onContactClick: () -> Unit = {}
+    onContactClick: (String) -> Unit = {}
 ) {
     var selectedTab by remember { mutableStateOf(ContactType.CLIENT) }
     var searchQuery by remember { mutableStateOf("") }
@@ -596,7 +749,7 @@ fun ContactsScreen(
                             onToggleExpand = {
                                 expandedContactId = if (expandedContactId == contact.id) null else contact.id
                             },
-                            onContactClick = onContactClick
+                            onViewClick = onContactClick
                         )
                     }
 
@@ -650,7 +803,7 @@ fun ContactItem(
     contact: Contact,
     isExpanded: Boolean,
     onToggleExpand: () -> Unit,
-    onContactClick: () -> Unit = {}
+    onViewClick: (String) -> Unit = {}
 ) {
     val rotationAngle by animateFloatAsState(
         targetValue = if (isExpanded) 180f else 0f,
@@ -735,7 +888,7 @@ fun ContactItem(
                         )
                         ActionButton (
                             painter = painterResource(R.drawable.eye),
-                            onClick = { },
+                            onClick = { onViewClick(contact.name) },
                         )
                     }
                 }

@@ -15,22 +15,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Outline
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import com.coffeecodedevs.clientflow.ui.screens.ContactsScreen
-import com.coffeecodedevs.clientflow.ui.screens.ContactDetailScreen
-import com.coffeecodedevs.clientflow.ui.screens.FifthScreen
-import com.coffeecodedevs.clientflow.ui.screens.FourthScreen
-import com.coffeecodedevs.clientflow.ui.screens.GoalsScreen
-import com.coffeecodedevs.clientflow.ui.screens.ThirdScreen
+import androidx.compose.ui.unit.offset
+import com.coffeecodedevs.clientflow.ui.screens.*
 import com.coffeecodedevs.clientflow.ui.theme.ClientFlowTheme
 
 class MainActivity : ComponentActivity() {
@@ -39,94 +35,102 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ClientFlowTheme {
-                var currentScreen by remember { mutableIntStateOf(5) } // Default to FifthScreen
+                AppNavigation()
+            }
+        }
+    }
+}
 
-                Box(modifier = Modifier.fillMaxSize()) {
-                    // 1. Content Area
-                    Box(modifier = Modifier.fillMaxSize().padding(bottom = 0.dp)) {
-                        when (currentScreen) {
-                            0 -> ContactsScreen(
-                                selectedBottomTab = 0,
-                                onTabSelected = { currentScreen = it },
-                                onContactClick = { currentScreen = 4 }
-                            )
-                            1 -> ThirdScreen(
-                                selectedBottomTab = 1,
-                                onTabSelected = { currentScreen = it },
-                                onBackClick = { currentScreen = 2 }
-                            )
-                            2 -> FourthScreen(
-                                selectedBottomTab = 2,
-                                onTabSelected = { currentScreen = it }
-                            )
-                            3 -> GoalsScreen(
-                                selectedBottomTab = 3,
-                                onTabSelected = { currentScreen = it },
-                                onBackClick = { currentScreen = 2 }
-                            )
-                            4 -> ContactDetailScreen(
-                                selectedBottomTab = 0,
-                                onTabSelected = { currentScreen = it },
-                                onBackClick = { currentScreen = 0 }
-                            )
-                            5 -> FifthScreen(
-                                onBackClick = { currentScreen = 0 }
-                            )
-                            else -> FifthScreen(
-                                onBackClick = { currentScreen = 0 }
-                            )
-                        }
-                    }
-
-                    // 2. Fixed Bottom Navigation Bar
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .fillMaxWidth()
-                            .padding(start = 64.dp, end = 64.dp, bottom = 65.dp)
+@Composable
+fun AppNavigation() {
+    var currentScreen by remember { mutableStateOf(0) }
+    var selectedBottomTab by remember { mutableStateOf(0) }
+    
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Экраны
+        when (currentScreen) {
+            0 -> ContactsScreen(
+                onContactClick = { currentScreen = 5 }
+            )
+            1 -> ThirdScreen(
+                onBackClick = { currentScreen = 0 }
+            )
+            2 -> GoalsScreen(
+                onBackClick = { currentScreen = 0 }
+            )
+            3 -> FourthScreen(
+                onNavigate = { screenIndex ->
+                    currentScreen = screenIndex
+                    selectedBottomTab = screenIndex
+                }
+            )
+            5 -> ContactDetailScreen(
+                onBackClick = { currentScreen = 0 }
+            )
+        }
+        
+        // Нижняя панель навигации (скрыта для экранов 3 и 5)
+        if (currentScreen != 3 && currentScreen != 5) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(start = 64.dp, end = 64.dp, bottom = 65.dp)
+            ) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    shape = BottomBarShape(cutoutRadiusDp = 36.dp),
+                    color = Color(0xFF313131),
+                    shadowElevation = 12.dp
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Surface(
-                            modifier = Modifier.fillMaxWidth().height(56.dp),
-                            shape = MainBottomBarShape(cutoutRadiusDp = 36.dp),
-                            color = Color(0xFF313131),
-                            shadowElevation = 12.dp
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                MainBottomNavIcon(painterResource(R.drawable.contact), currentScreen == 0) { currentScreen = 0 }
-                                Spacer(modifier = Modifier.width(12.dp))
-                                MainBottomNavIcon(painterResource(R.drawable.notes), currentScreen == 1) { currentScreen = 1 }
-                                
-                                Spacer(modifier = Modifier.width(70.dp))
-                                
-                                MainBottomNavIcon(painterResource(R.drawable.dial), currentScreen == 2) { currentScreen = 2 }
-                                Spacer(modifier = Modifier.width(12.dp))
-                                MainBottomNavIcon(painterResource(R.drawable.calendar), currentScreen == 3) { currentScreen = 3 }
+                        BottomNavIcon(
+                            painter = painterResource(R.drawable.contact),
+                            selected = selectedBottomTab == 0,
+                            onClick = {
+                                selectedBottomTab = 0
+                                currentScreen = 0
                             }
-                        }
-
-                        // Fixed FAB (Plus Button)
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.TopCenter)
-                                .offset(y = (-28).dp)
-                                .size(56.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFF313131))
-                                .clickable { /* Global Add Action */ },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
+                        )
+                        BottomNavIcon(
+                            painter = painterResource(R.drawable.notes),
+                            selected = selectedBottomTab == 1,
+                            onClick = {
+                                selectedBottomTab = 1
+                                currentScreen = 1
+                            }
+                        )
+                        Spacer(modifier = Modifier.width(70.dp))
+                        BottomNavIcon(
+                            painter = painterResource(R.drawable.dial),
+                            selected = selectedBottomTab == 2,
+                            onClick = {
+                                selectedBottomTab = 2
+                                currentScreen = 2
+                            }
+                        )
+                        BottomNavIcon(
+                            painter = painterResource(R.drawable.calendar),
+                            selected = selectedBottomTab == 3,
+                            onClick = {
+                                selectedBottomTab = 3
+                                currentScreen = 3
+                            }
+                        )
                     }
+                }
+                FloatingActionButton(
+                    onClick = {},
+                    modifier = Modifier.align(Alignment.TopCenter).offset(y = (-25).dp).size(56.dp),
+                    containerColor = Color(0xFF313131),
+                    shape = CircleShape,
+                    elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 8.dp, pressedElevation = 12.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add", tint = Color.White, modifier = Modifier.size(24.dp))
                 }
             }
         }
@@ -134,7 +138,11 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun MainBottomNavIcon(painter: androidx.compose.ui.graphics.painter.Painter, selected: Boolean, onClick: () -> Unit) {
+private fun BottomNavIcon(
+    painter: androidx.compose.ui.graphics.painter.Painter,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
     Box(
         modifier = Modifier
             .size(40.dp)
@@ -152,7 +160,7 @@ private fun MainBottomNavIcon(painter: androidx.compose.ui.graphics.painter.Pain
     }
 }
 
-private class MainBottomBarShape(private val cutoutRadiusDp: androidx.compose.ui.unit.Dp) : Shape {
+private class BottomBarShape(private val cutoutRadiusDp: androidx.compose.ui.unit.Dp) : Shape {
     override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
         return Outline.Generic(
             path = Path().apply {
@@ -183,5 +191,13 @@ private class MainBottomBarShape(private val cutoutRadiusDp: androidx.compose.ui
                 close()
             }
         )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun GoalsScreenPreview() {
+    ClientFlowTheme {
+        ContactsScreen()
     }
 }
