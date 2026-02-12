@@ -364,7 +364,7 @@ fun ContactsScreen(
                         .background(
                             color = Color.White,
                             shape = ContactsHeaderWithSearchCutoutShape()
-                        )
+                         )
                         .padding(start = 16.dp, top = 20.dp, bottom = 5.dp)
                 ) {
                     Text(
