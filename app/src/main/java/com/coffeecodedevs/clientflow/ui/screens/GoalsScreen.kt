@@ -3,17 +3,16 @@ package com.coffeecodedevs.clientflow.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,7 +24,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
@@ -38,6 +36,8 @@ import com.coffeecodedevs.clientflow.R
 fun GoalsScreen(
     onBackClick: () -> Unit = {}
 ) {
+    var selectedTab by remember { mutableStateOf("ORDERS") }
+
     val gradientColors = listOf(
         Color(0xFF9FD9D9), // Turquoise/mint at top
         Color(0xFFB8F2F2), // Lighter and more saturated mint
@@ -93,8 +93,8 @@ fun GoalsScreen(
                         )
                         Spacer(modifier = Modifier.width(16.dp))
                         Text(
-                            text = "Goals for next month",
-                            fontSize = 22.sp,
+                            text = "Daniel Brooks",
+                            fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF333333)
                         )
@@ -119,7 +119,7 @@ fun GoalsScreen(
                         onClick = { }
                     )
                     GoalsActionButton(
-                        painter = painterResource(R.drawable.pen),
+                        painter = painterResource(R.drawable.pensil),
                         onClick = { }
                     )
                 }
@@ -127,46 +127,7 @@ fun GoalsScreen(
 
             Spacer(modifier = Modifier.height(44.dp))
 
-            // Main content white block - full width with padding only for content
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 32.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color.White)
-                    .padding(20.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    GoalParagraph(
-                        text = "Increase overall sales by 15–18% by focusing on\npromoting the new seasonal collection and highlighting\nbest-selling items across all channels."
-                    )
-                    GoalParagraph(
-                        text = "Close at least four active deals with boutique retailers\nand multi-brand stores, especially those interested in\nour upcoming Fall/Winter line."
-                    )
-                    GoalParagraph(
-                        text = "Grow the B2B lead pipeline by identifying 25 new\npotential retail partners through trade shows, social\nmedia outreach, and referrals from existing clients."
-                    )
-                    GoalParagraph(
-                        text = "Improve follow-up consistency with current prospects\nby implementing a structured weekly check-in\nschedule and providing personalized lookbooks based\non their store profile."
-                    )
-                    GoalParagraph(
-                        text = "Strengthen relationships with existing partners by\noffering early access to new arrivals, updated\nwholesale pricing, and limited-edition items to\nencourage repeat orders."
-                    )
-                    GoalParagraph(
-                        text = "Increase online wholesale inquiries by updating\nproduct descriptions, enhancing visual content (model\nshots, detail close-ups), and promoting the collection\nvia targeted email campaigns."
-                    )
-                    GoalParagraph(
-                        text = "Reduce response time to new leads to under 6 hours\nto improve conversion rates and maintain a\ncompetitive advantage in the fast-moving fashion\nmarket."
-                    )
-                }
-            }
+            // TODO: сюда перенести таймлайн как на ContactDetailScreen (ALL / ORDERS)
         }
     }
 }
@@ -198,8 +159,8 @@ private fun GoalsActionButton(
         Icon(
             painter = painter,
             contentDescription = null,
-            tint = Color.Unspecified,
-            modifier = Modifier.size(28.dp)
+            tint = Color.White,
+            modifier = Modifier.size(20.dp)
         )
     }
 }

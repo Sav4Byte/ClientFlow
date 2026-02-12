@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -38,6 +39,25 @@ data class FifthOrder(
     val time: String
 )
 
+sealed class FifthTimelineItem {
+    data class SimpleCall(
+        val time: String,
+        val isIncoming: Boolean = false
+    ) : FifthTimelineItem()
+
+    data class DetailedCall(
+        val time: String,
+        val description: String
+    ) : FifthTimelineItem()
+
+    data class DetailedOrder(
+        val title: String,
+        val date: String,
+        val time: String,
+        val description: String
+    ) : FifthTimelineItem()
+}
+
 @Composable
 fun FifthScreen(
     onBackClick: () -> Unit = {}
@@ -48,31 +68,68 @@ fun FifthScreen(
     val orders = listOf(
         FifthOrder(
             1,
-            "LINEN SUMMER DRESSES",
-            "Restock of lightweight linen dresses in three colors: White, Sage Green, and Soft Coral. Total quantity: 180 pcs across five sizes.",
-            "14:4",
-            "5"
+            "ЛЕТНИЕ ЛЬНЯНЫЕ ПЛАТЬЯ",
+            "Пополнение запасов легких льняных платьев в трех цветах: Белый, Шалфей и Нежный Коралл. Общее количество: 180 шт. в пяти размерах.",
+            "14:45",
+            ""
         ),
         FifthOrder(
             2,
-            "WOMEN'S CASUAL TOPS",
-            "150 casual tops, including ribbed tank tops and relaxed-fit T-shirts in neutral tones.",
-            "Fri, 12:56",
-            ""
+            "ЛЕТНЯЯ КОЛЛЕКЦИЯ",
+            "Клиент попросил лукбук для июльской капсульной коллекции и попросил уведомить о появлении новой линии пляжной одежды.",
+            "17 окт.,",
+            "14:45"
         ),
         FifthOrder(
             3,
-            "BEACHWEAR SETS",
-            "The client ordered 95 beachwear sets consisting of cover-ups, bikinis, and matching sarongs. They asked for color-coordinated packaging and requested early access to the new Resort Collection lookbook.\nThe client asked for additional sizing options (XS–XXL)",
-            "Oct. 12, 14:45",
-            ""
+            "ФУТБОЛКИ",
+            "Клиент попросил лукбук для июльской капсульной коллекции и попросил уведомить о появлении новой линии пляжной одежды.",
+            "11 сен.,",
+            "14:45"
         ),
         FifthOrder(
             4,
-            "SHORT-SLEEVE SHIRTS",
-            "A wholesale order for 220 short-sleeve shirts in cotton and linen blends.",
-            "Oct. 11, 15:40",
+            "ЖЕНСКИЕ ПОВСЕДНЕВНЫЕ ТОПЫ",
+            "150 повседневных топов, включая майки в рубчик и свободные футболки нейтральных тонов.",
+            "Пт, 12:56",
             ""
+        ),
+        FifthOrder(
+            5,
+            "ПЛЯЖНЫЕ КОМПЛЕКТЫ",
+            "Клиент заказал 95 пляжных комплектов, состоящих из накидок, бикини и подходящих парео. Попросил упаковку в цвет и ранний доступ к лукбуку новой круизной коллекции.\nКлиент попросил дополнительные варианты размеров (XS–XXL)",
+            "12 окт., 14:45",
+            ""
+        ),
+        FifthOrder(
+            6,
+            "РУБАШКИ С КОРОТКИМ РУКАВОМ",
+            "Оптовый заказ на 220 рубашек с коротким рукавом из смесовых тканей (хлопок и лен).",
+            "11 окт., 15:40",
+            ""
+        )
+    )
+
+    val allTabItems = listOf(
+        FifthTimelineItem.SimpleCall("15:02"),
+        FifthTimelineItem.DetailedCall(
+            "14:45",
+            "Клиент специально интересовался наличием льняного платья А-силуэта в новых расцветках и запросил обновленные цены для оптовых заказов."
+        ),
+        FifthTimelineItem.SimpleCall("Вс, 14:34", isIncoming = true),
+        FifthTimelineItem.SimpleCall("19 окт., 17:56"),
+        FifthTimelineItem.DetailedOrder(
+            "ЛЕТНЯЯ КОЛЛЕКЦИЯ",
+            "17 окт.,",
+            "14:45",
+            "Клиент попросил лукбук для июльской капсульной коллекции и попросил уведомить о появлении новой линии пляжной одежды."
+        ),
+        FifthTimelineItem.SimpleCall("12 сен., 17:56"),
+        FifthTimelineItem.DetailedOrder(
+            "ФУТБОЛКИ",
+            "11 сен.,",
+            "14:45",
+            "Клиент попросил лукбук для июльской капсульной коллекции и попросил уведомить о появлении новой линии пляжной одежды."
         )
     )
 
@@ -238,7 +295,20 @@ fun FifthScreen(
                             }
                         }
                     }
-                    else -> {}
+                    "ALL" -> {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            contentPadding = PaddingValues(bottom = 120.dp)
+                        ) {
+                            items(allTabItems) { item ->
+                                when (item) {
+                                    is FifthTimelineItem.SimpleCall -> FifthSimpleCallItem(item)
+                                    is FifthTimelineItem.DetailedCall -> FifthDetailedCallItem(item)
+                                    is FifthTimelineItem.DetailedOrder -> FifthDetailedOrderItem(item)
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -291,7 +361,7 @@ private fun OrderItem(order: FifthOrder) {
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp))
                 .background(Color(0xFFE6D5F0))
-                .padding(16.dp)
+                .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 40.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -488,6 +558,248 @@ private class FifthScreenBottomBarShape(private val cutoutRadiusDp: androidx.com
                 arcTo(androidx.compose.ui.geometry.Rect(size.width - cornerRadius * 2, size.height - cornerRadius * 2, size.width, size.height), 0f, 90f, false)
                 lineTo(cornerRadius, size.height)
                 arcTo(androidx.compose.ui.geometry.Rect(0f, size.height - cornerRadius * 2, cornerRadius * 2, size.height), 90f, 90f, false)
+                close()
+            }
+        )
+    }
+}
+
+@Composable
+private fun FifthSimpleCallItem(item: FifthTimelineItem.SimpleCall) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFFAEDEF4))
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                painterResource(R.drawable.phone),
+                contentDescription = null,
+                tint = Color(0xFF334D6F),
+                modifier = Modifier.size(36.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                "ЗВОНОК",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF334D6F)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Icon(
+                painterResource(R.drawable.arrow_up_right),
+                contentDescription = null,
+                tint = Color(0xFF334D6F),
+                modifier = Modifier.size(20.dp).rotate(if (item.isIncoming) 180f else 0f)
+            )
+        }
+        Text(
+            item.time,
+            fontSize = 14.sp,
+            color = Color(0xFF334D6F).copy(alpha = 0.6f)
+        )
+    }
+}
+
+@Composable
+private fun FifthDetailedCallItem(item: FifthTimelineItem.DetailedCall) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 18.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(FifthItemShape())
+                .background(Color(0xFFAEDEF4))
+                .padding(start = 16.dp, top = 10.dp, end = 16.dp, bottom = 40.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        painterResource(R.drawable.phone),
+                        contentDescription = null,
+                        tint = Color(0xFF334D6F),
+                        modifier = Modifier.size(36.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        "ЗВОНОК",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF334D6F)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Icon(
+                        painterResource(R.drawable.arrow_up_right),
+                        contentDescription = null,
+                        tint = Color(0xFF334D6F),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Text(
+                    item.time,
+                    fontSize = 14.sp,
+                    color = Color(0xFF334D6F).copy(alpha = 0.6f)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = item.description,
+                fontSize = 14.sp,
+                color = Color(0xFF334D6F),
+                lineHeight = 20.sp
+            )
+            
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        // Pencil button
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .offset(y = 15.dp)
+                .size(42.dp)
+                .clip(CircleShape)
+                .background(Color(0xFF313131)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.pensil),
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun FifthDetailedOrderItem(item: FifthTimelineItem.DetailedOrder) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 18.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(FifthItemShape())
+                .background(Color(0xFFE6D5F0))
+                .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 40.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        painterResource(R.drawable.notes),
+                        contentDescription = null,
+                        tint = Color(0xFF334D6F),
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = item.title,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF334D6F)
+                    )
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        item.date,
+                        fontSize = 12.sp,
+                        color = Color(0xFF334D6F).copy(alpha = 0.6f)
+                    )
+                    Text(
+                        item.time,
+                        fontSize = 12.sp,
+                        color = Color(0xFF334D6F).copy(alpha = 0.6f)
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = item.description,
+                fontSize = 14.sp,
+                color = Color(0xFF334D6F),
+                lineHeight = 20.sp
+            )
+             Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        // Arrow button
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .offset(y = 15.dp)
+                .size(42.dp)
+                .clip(CircleShape)
+                .background(Color(0xFF313131)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.arrow_up_right),
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+private class FifthItemShape : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
+        return Outline.Generic(
+            path = Path().apply {
+                val cornerRadius = 8f * density.density
+
+                val cutoutHeight = 34f * density.density
+                val flatWidth = 30f * density.density
+                val slopeWidth = 40f * density.density
+                val smoothing = 20f * density.density
+                val topCornerRadius = 15f * density.density
+
+                moveTo(cornerRadius, 0f)
+                lineTo(size.width - cornerRadius, 0f)
+                quadraticBezierTo(size.width, 0f, size.width, cornerRadius)
+
+                lineTo(size.width, size.height - cutoutHeight - topCornerRadius)
+
+                quadraticBezierTo(
+                    size.width, size.height - cutoutHeight,
+                    size.width - topCornerRadius, size.height - cutoutHeight
+                )
+
+                lineTo(size.width - flatWidth, size.height - cutoutHeight)
+
+                cubicTo(
+                    size.width - flatWidth - smoothing, size.height - cutoutHeight,
+                    size.width - flatWidth - slopeWidth + smoothing, size.height,
+                    size.width - flatWidth - slopeWidth, size.height
+                )
+
+                lineTo(cornerRadius, size.height)
+                quadraticBezierTo(0f, size.height, 0f, size.height - cornerRadius)
+                lineTo(0f, cornerRadius)
+                quadraticBezierTo(0f, 0f, cornerRadius, 0f)
+
                 close()
             }
         )

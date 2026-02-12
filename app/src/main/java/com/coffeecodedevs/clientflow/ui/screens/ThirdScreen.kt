@@ -3,25 +3,25 @@ package com.coffeecodedevs.clientflow.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
-
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
@@ -29,18 +29,52 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.coffeecodedevs.clientflow.R
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Search
+
+data class NoteItem(
+    val id: Int,
+    val title: String,
+    val description: String,
+    val isGoalsNote: Boolean = false
+)
 
 @Composable
 fun ThirdScreen(
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    onGoalsClick: () -> Unit = {}
 ) {
+    val notes = remember {
+        listOf(
+            NoteItem(
+                1,
+                "PRICE",
+                "The Cotton Oversized T-Shirt is available in sizes\nXS to XXL. It is priced at $12.50 per piece with a\nminimum order of 50 pieces."
+            ),
+            NoteItem(
+                2,
+                "COASTAL FASHION STORE",
+                "Updated the order in the system and notified the warehouse."
+            ),
+            NoteItem(
+                3,
+                "URBAN STREETWEAR CO.",
+                "Received inquiry about custom oversized T-shirts for their summer drop.\nScheduled an intro call for Friday to go over fabric options, printing techniques, minimum order quantities, and potential delivery timelines.\nPreparing swatch samples and print method references for the call."
+            ),
+            NoteItem(
+                4,
+                "GOALS FOR NEXT MONTH",
+                "Increase overall sales by 15–18% by focusing on promoting the new seasonal collection and highlighting best-selling items across all channels.\n\nClose at least four active deals with boutique retailers and multi-brand stores, especially those interested in our upcoming Fall/Winter line.",
+                isGoalsNote = true
+            )
+        )
+    }
+
     val gradientColors = listOf(
-        Color(0xFFBDA1D7), // Purple at top
-        Color(0xFFC5ACD9), // Lighter purple
-        Color(0xFFD5C0E0), // Even lighter purple
-        Color(0xFFF5EFE6), // Light beige/cream
-        Color(0xFFF5E6D3)  // Light beige at bottom
+        Color(0xFF87CEEB),
+        Color(0xFFF5F5DC)
     )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -53,153 +87,94 @@ fun ThirdScreen(
             )
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 24.dp) // Space for status bar to show gradient
+            modifier = Modifier.fillMaxSize()
         ) {
-            // Top white block with header and cutout for buttons
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Header with "NOTES" и поиск как на ContactsScreen
             Box(
                 modifier = Modifier
-                    .width(408.dp)
-                    .height(165.dp)
-                    .align(Alignment.CenterHorizontally)
+                    .fillMaxWidth()
+                    .height(60.dp)
             ) {
-                // White block with cutout shape - cutout is at the TOP right
+                // Белый фон с вырезом под поиск
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .clip(ThirdHeaderCutoutShape())
-                        .background(Color.White)
+                        .background(
+                            color = Color.White,
+                            shape = HeaderWithSearchCutoutShape()
+                        )
+                        .padding(start = 30.dp, top = 20.dp, bottom = 5.dp)
                 ) {
-                    // Header content
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 16.dp, top = 16.dp, end = 16.dp)
-                    ) {
-                        // Back button and title
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.back),
-                                contentDescription = "Back",
-                                modifier = Modifier
-                                    .size(28.dp)
-                                    .offset(y = (-3).dp)
-                                    .clickable { onBackClick() },
-                                tint = Color.Unspecified
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(
-                                text = "Summer collection",
-                                fontSize = 28.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF333333)
-                            )
-                        }
-                        
-                        Spacer(modifier = Modifier.height(12.dp))
-                        
-                        // Info section - aligned with title text
-                        Column(
-                            modifier = Modifier.padding(start = 40.dp)
-                        ) {
-                            Text(
-                                text = "Dan Dillan",
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Normal,
-                                color = Color(0xFFAAAAAA)
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "12 Madison Street, Miami, FL",
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Normal,
-                                color = Color(0xFFAAAAAA)
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "Oct. 12, 14:45",
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Normal,
-                                color = Color(0xFFAAAAAA)
-                            )
-                        }
-                    }
+                    Text(
+                        text = "NOTES",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF334D6F)
+                    )
                 }
 
-
-                // Action buttons positioned evenly in the cutout
-                Row(
+                // Поисковая строка в вырезе
+                Box(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
+                        .padding(end = 36.dp, bottom = 0.dp)
                         .offset(y = 10.dp)
-                        .width(220.dp), // Match cutout width
-                    horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterHorizontally)
+                        .width(228.dp)
+                        .height(40.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Color.White)
+                        .padding(horizontal = 16.dp),
+                    contentAlignment = Alignment.CenterStart
                 ) {
-                    ThirdScreenActionButton(
-                        painter = painterResource(R.drawable.trash),
-                        onClick = { }
-                    )
-                    ThirdScreenActionButton(
-                        painter = painterResource(R.drawable.share),
-                        onClick = { }
-                    )
-                    ThirdScreenActionButton(
-                        painter = painterResource(R.drawable.pen),
-                        onClick = { }
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Search",
+                            color = Color(0xFF8B9BA8),
+                            fontSize = 15.sp,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Icon(
+                            imageVector = Icons.Outlined.Search,
+                            contentDescription = "Search",
+                            tint = Color(0xFF8B9BA8),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(40.dp))
 
-            // Main content white block - fixed size at bottom
+            // White container with notes list
             Box(
                 modifier = Modifier
-                    .width(376.dp)
-                    .height(648.dp)
-                    .align(Alignment.CenterHorizontally)
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(horizontal = 16.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(Color.White)
                     .padding(20.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(bottom = 140.dp)
                 ) {
-                    ProductTitle(text = "Linen A-Line Dress")
-                    ProductDetail(text = "• Color: White")
-                    ProductDetail(text = "• Size Range: S–XL")
-                    ProductDetail(text = "• Quantity: 120 pcs")
-                    ProductDetail(text = "• Unit Price: $38.00")
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    ProductTitle(text = "Cotton Oversized T-Shirt")
-                    ProductDetail(text = "• Color: Sand / Coral")
-                    ProductDetail(text = "• Size Range: XS–XXL")
-                    ProductDetail(text = "• Quantity: 200 pcs")
-                    ProductDetail(text = "• Unit Price: $12.50")
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    ProductTitle(text = "High-Waist Denim Shorts")
-                    ProductDetail(text = "• Wash: Light Blue")
-                    ProductDetail(text = "• Size Range: 24–32")
-                    ProductDetail(text = "• Quantity: 150 pcs")
-                    ProductDetail(text = "• Unit Price: $22.00")
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    ProductTitle(text = "Printed Satin Slip Dress")
-                    ProductDetail(text = "• Pattern: Tropical Floral")
-                    ProductDetail(text = "• Size Range: XS–L")
-                    ProductDetail(text = "• Quantity: 80 pcs")
-                    ProductDetail(text = "• Unit Price: $44.50")
+                    items(notes) { note ->
+                        NotesCard(
+                            note = note,
+                            onClick = {
+                                if (note.isGoalsNote) {
+                                    onGoalsClick()
+                                }
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -207,49 +182,77 @@ fun ThirdScreen(
 }
 
 @Composable
-private fun ProductTitle(text: String) {
-    Text(
-        text = text,
-        fontSize = 16.sp,
-        fontWeight = FontWeight.SemiBold,
-        color = Color(0xFF333333),
-        modifier = Modifier.padding(bottom = 4.dp)
-    )
-}
-
-@Composable
-private fun ProductDetail(text: String) {
-    Text(
-        text = text,
-        fontSize = 14.sp,
-        color = Color(0xFF333333),
-        lineHeight = 20.sp
-    )
-}
-
-@Composable
-private fun ThirdScreenActionButton(
-    painter: androidx.compose.ui.graphics.painter.Painter,
+private fun NotesCard(
+    note: NoteItem,
     onClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
-            .size(36.dp)
-            .clip(CircleShape)
-            .background(Color(0xFF313131))
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
+            .fillMaxWidth()
+            .padding(end = 2.dp, bottom = 25.dp)
     ) {
-        Icon(
-            painter = painter,
-            contentDescription = null,
-            tint = Color.Unspecified,
-            modifier = Modifier.size(28.dp)
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 30.dp)
+                .clip(NotesCardShape())
+                .background(Color(0xFFCCF5F0))
+                .clickable(onClick = onClick)
+                .padding(start = 20.dp, top = 8.dp, end = 20.dp, bottom = 20.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        painter = painterResource(R.drawable.notess),
+                        contentDescription = null,
+                        tint = Color(0xFF334D6F),
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = note.title,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF334D6F)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = note.description,
+                fontSize = 12.sp,
+                color = Color(0xFF334D6F),
+                lineHeight = 20.sp
+            )
+        }
+
+        // Arrow button
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .offset(x = 0.dp, y = 15.dp)
+                .size(42.dp)
+                .clip(CircleShape)
+                .background(Color(0xFF313131)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.arrow_up_right),
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+        }
     }
 }
 
-private class ThirdHeaderCutoutShape : Shape {
+private class HeaderWithSearchCutoutShape : Shape {
     override fun createOutline(
         size: Size,
         layoutDirection: LayoutDirection,
@@ -257,42 +260,121 @@ private class ThirdHeaderCutoutShape : Shape {
     ): Outline {
         return Outline.Generic(
             path = Path().apply {
-                val cutoutWidth = 220f * density.density
-                val cutoutHeight = 36f * density.density
+                val bottomLeftRadius = 15f * density.density
+
+                // Cutout parameters - smooth and natural
+                val cutoutWidth = 300f * density.density
+                val cutoutHeight = 42f * density.density
                 val rightMargin = 0f * density.density
-                
+
+                // Position cutout at bottom right
                 val cutoutRight = size.width - rightMargin
                 val cutoutLeft = cutoutRight - cutoutWidth
                 val cutoutBottom = size.height
                 val cutoutTop = cutoutBottom - cutoutHeight
-                
+
+                // Control points for smooth transitions
                 val smoothFactor = 25f * density.density
 
+                // Start from top-left
                 moveTo(0f, 0f)
+
+                // Top edge
                 lineTo(size.width, 0f)
+
+                // Right edge down to bottom (flat corner)
                 lineTo(size.width, size.height)
+
+                // Bottom edge moving left to cutout start
                 lineTo(cutoutRight, size.height)
-                
+
+                // Curve UP and LEFT into the cutout
                 cubicTo(
                     cutoutRight - smoothFactor, size.height,
                     cutoutRight - smoothFactor, cutoutTop,
                     cutoutRight - smoothFactor * 2, cutoutTop
                 )
-                
+
+                // Line across top of cutout
                 lineTo(cutoutLeft + smoothFactor * 2, cutoutTop)
-                
+
+                // Curve DOWN and LEFT out of the cutout
                 cubicTo(
                     cutoutLeft + smoothFactor, cutoutTop,
                     cutoutLeft + smoothFactor, size.height,
                     cutoutLeft, size.height
                 )
-                
-                lineTo(0f, size.height)
+
+                // Continue to bottom-left corner
+                lineTo(bottomLeftRadius, size.height)
+
+                // Bottom-left corner
+                arcTo(
+                    rect = Rect(
+                        left = 0f,
+                        top = size.height - bottomLeftRadius * 2,
+                        right = bottomLeftRadius * 2,
+                        bottom = size.height
+                    ),
+                    startAngleDegrees = 90f,
+                    sweepAngleDegrees = 90f,
+                    forceMoveTo = false
+                )
+
+                // Left edge back to start
                 lineTo(0f, 0f)
-                
+
                 close()
             }
         )
     }
 }
 
+private class NotesCardShape : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
+        return Outline.Generic(
+            path = Path().apply {
+                val cornerRadius = 20f * density.density
+
+                // Параметры для выреза под кнопку
+                val cutoutHeight = 34f * density.density
+                val flatWidth = 30f * density.density
+                val slopeWidth = 40f * density.density
+                val smoothing = 20f * density.density
+                val topCornerRadius = 15f * density.density
+
+                // Верх
+                moveTo(cornerRadius, 0f)
+                lineTo(size.width - cornerRadius, 0f)
+                quadraticBezierTo(size.width, 0f, size.width, cornerRadius)
+
+                // Правое ребро вниз до начала скругления
+                lineTo(size.width, size.height - cutoutHeight - topCornerRadius)
+
+                // Внутренний верхний угол (вход в вырез)
+                quadraticBezierTo(
+                    size.width, size.height - cutoutHeight,
+                    size.width - topCornerRadius, size.height - cutoutHeight
+                )
+
+                // Плоский участок (потолок)
+                lineTo(size.width - flatWidth, size.height - cutoutHeight)
+
+                // Плавный S-образный спуск
+                cubicTo(
+                    size.width - flatWidth - smoothing, size.height - cutoutHeight,
+                    size.width - flatWidth - slopeWidth + smoothing, size.height,
+                    size.width - flatWidth - slopeWidth, size.height
+                )
+
+                // Низ и лево
+                lineTo(cornerRadius, size.height)
+                quadraticBezierTo(0f, size.height, 0f, size.height - cornerRadius)
+                lineTo(0f, cornerRadius)
+                quadraticBezierTo(0f, 0f, cornerRadius, 0f)
+
+                close()
+            }
+        )
+    }
+}

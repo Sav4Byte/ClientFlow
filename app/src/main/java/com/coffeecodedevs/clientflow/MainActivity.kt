@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppNavigation() {
-    var currentScreen by remember { mutableStateOf(0) }
+    var currentScreen by remember { mutableStateOf(5) }
     var selectedBottomTab by remember { mutableStateOf(0) }
     
     Box(modifier = Modifier.fillMaxSize()) {
@@ -53,7 +53,11 @@ fun AppNavigation() {
                 onContactClick = { currentScreen = 5 }
             )
             1 -> ThirdScreen(
-                onBackClick = { currentScreen = 0 }
+                onBackClick = { currentScreen = 0 },
+                onGoalsClick = {
+                    currentScreen = 2
+                    selectedBottomTab = 2
+                }
             )
             2 -> GoalsScreen(
                 onBackClick = { currentScreen = 0 }
@@ -69,8 +73,8 @@ fun AppNavigation() {
             )
         }
         
-        // Нижняя панель навигации (скрыта для экранов 3 и 5)
-        if (currentScreen != 3 && currentScreen != 5) {
+        // Нижняя панель навигации (скрыта только для экрана 5)
+        if (currentScreen != 5) {
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)

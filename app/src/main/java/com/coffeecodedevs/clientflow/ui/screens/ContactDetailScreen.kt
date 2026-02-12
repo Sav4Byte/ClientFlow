@@ -38,6 +38,22 @@ data class ContactOrder(
     val color: Color
 )
 
+sealed class ContactTimelineItem {
+    data class SimpleCall(
+        val time: String,
+        val isIncoming: Boolean = false
+    ) : ContactTimelineItem()
+
+    data class DetailedCall(
+        val time: String,
+        val description: String
+    ) : ContactTimelineItem()
+
+    data class OrderItem(
+        val order: ContactOrder
+    ) : ContactTimelineItem()
+}
+
 @Composable
 fun ContactDetailScreen(
     contactName: String = "Daniel Brooks",
@@ -56,7 +72,7 @@ fun ContactDetailScreen(
             "Restock of lightweight linen dresses in three colors: White, Sage Green, and Soft Coral. Total quantity: 180 pcs across five sizes.",
             "14:45",
             "14:45",
-            Color(0xFFAEDEF4)
+            Color(0xFFE5CCFF)
         ),
         ContactOrder(
             2,
@@ -81,6 +97,37 @@ fun ContactDetailScreen(
             "Oct. 11, 15:40",
             "15:40",
             Color(0xFFE5CCFF)
+        )
+    )
+
+    val allTabItems = listOf(
+        ContactTimelineItem.SimpleCall(time = "15:02"),
+        ContactTimelineItem.DetailedCall(
+            time = "14:45",
+            description = "Client specifically asked about availability of the Linen A-Line Dress in new colors and requested updated pricing for bulk orders."
+        ),
+        ContactTimelineItem.SimpleCall(time = "Sun, 14:34", isIncoming = true),
+        ContactTimelineItem.SimpleCall(time = "Oct. 19, 17:56"),
+        ContactTimelineItem.OrderItem(
+            order = ContactOrder(
+                id = 5,
+                title = "SUMMER COLLECTION",
+                description = "The client requested a lookbook for the July capsule drop and asked to be notified once the new swimwear line becomes available.",
+                date = "Oct. 17,",
+                time = "14:45",
+                color = Color(0xFFE5CCFF)
+            )
+        ),
+        ContactTimelineItem.SimpleCall(time = "Sep. 12, 17:56"),
+        ContactTimelineItem.OrderItem(
+            order = ContactOrder(
+                id = 6,
+                title = "T-SHIRTS",
+                description = "The client requested a lookbook for the July capsule drop and asked to be notified once the new swimwear line becomes available.",
+                date = "Sep. 11,",
+                time = "14:45",
+                color = Color(0xFFE5CCFF)
+            )
         )
     )
 
@@ -111,7 +158,7 @@ fun ContactDetailScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp)
+                    .height(180.dp)
             ) {
                 Box(
                     modifier = Modifier
@@ -122,7 +169,7 @@ fun ContactDetailScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(start = 16.dp, top = 16.dp, end = 16.dp)
+                            .padding(start = 16.dp, top = 24.dp, end = 16.dp)
                     ) {
                         // Header with back button and title
                         Row(
@@ -137,25 +184,25 @@ fun ContactDetailScreen(
                                     modifier = Modifier
                                         .size(24.dp)
                                         .clickable { onBackClick() },
-                                    tint = Color(0xFF333333)
+                                    tint = Color(0xFF334D6F)
                                 )
                                 Spacer(modifier = Modifier.width(16.dp))
                                 Text(
                                     text = contactName,
                                     fontSize = 24.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF333333)
+                                    color = Color(0xFF334D6F)
                                 )
                             }
                             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                                 Icon(
-                                    painter = painterResource(R.drawable.trash),
+                                    painter = painterResource(R.drawable.thrash),
                                     contentDescription = "Delete",
                                     tint = Color.Unspecified,
                                     modifier = Modifier.size(24.dp)
                                 )
                                 Icon(
-                                    painter = painterResource(R.drawable.pen),
+                                    painter = painterResource(R.drawable.pensil),
                                     contentDescription = "Edit",
                                     tint = Color.Unspecified,
                                     modifier = Modifier.size(24.dp)
@@ -163,27 +210,27 @@ fun ContactDetailScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
                         // Contact note
                         Text(
                             text = contactNote,
-                            fontSize = 13.sp,
+                            fontSize = 12.sp,
                             color = Color(0xFFAAAAAA),
                             lineHeight = 18.sp,
                             modifier = Modifier.padding(start = 40.dp)
                         )
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(18.dp))
 
                         // Phone numbers
                         Column(modifier = Modifier.padding(start = 40.dp)) {
                             phoneNumbers.forEach { phone ->
                                 Text(
                                     text = phone,
-                                    fontSize = 15.sp,
+                                    fontSize = 14.sp,
                                     fontWeight = FontWeight.Medium,
-                                    color = Color(0xFF333333)
+                                    color = Color(0xFF334D6F)
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                             }
@@ -196,8 +243,8 @@ fun ContactDetailScreen(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .offset(y = 15.dp)
-                        .padding(end = 24.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        .padding(end = 36.dp),
+                    horizontalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
                     ContactActionButton(
                         painter = painterResource(R.drawable.phone),
@@ -231,13 +278,38 @@ fun ContactDetailScreen(
                         .clip(ContactDetailContentShape(selectedTab))
                         .background(Color.White)
                 ) {
-                    Box(modifier = Modifier.padding(top = 50.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)) {
-                        LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(16.dp),
-                            contentPadding = PaddingValues(bottom = 180.dp)
-                        ) {
-                            items(orders) { order ->
-                                ContactOrderItem(order)
+                    Box(
+                        modifier = Modifier.padding(
+                            top = 50.dp,
+                            start = 16.dp,
+                            end = 16.dp,
+                            bottom = 16.dp
+                        )
+                    ) {
+                        when (selectedTab) {
+                            "ORDERS" -> {
+                                LazyColumn(
+                                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                                    contentPadding = PaddingValues(bottom = 180.dp)
+                                ) {
+                                    items(orders) { order ->
+                                        ContactOrderItem(order)
+                                    }
+                                }
+                            }
+                            "ALL" -> {
+                                LazyColumn(
+                                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                                    contentPadding = PaddingValues(bottom = 180.dp)
+                                ) {
+                                    items(allTabItems) { item ->
+                                        when (item) {
+                                            is ContactTimelineItem.SimpleCall -> ContactSimpleCallItem(item)
+                                            is ContactTimelineItem.DetailedCall -> ContactDetailedCallItem(item)
+                                            is ContactTimelineItem.OrderItem -> ContactOrderItem(item.order)
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -277,7 +349,7 @@ fun ContactDetailScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 254.dp)
+                .padding(top = 234.dp)
                 .height(40.dp)
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -310,7 +382,7 @@ private fun ContactActionButton(
 ) {
     Box(
         modifier = Modifier
-            .size(44.dp)
+            .size(40.dp)
             .clip(CircleShape)
             .background(Color(0xFF313131))
             .clickable(onClick = onClick),
@@ -320,7 +392,7 @@ private fun ContactActionButton(
             painter = painter,
             contentDescription = null,
             tint = Color.White,
-            modifier = Modifier.size(28.dp)
+            modifier = Modifier.size(24.dp)
         )
     }
 }
@@ -330,14 +402,14 @@ private fun ContactOrderItem(order: ContactOrder) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(end = 2.dp, bottom = 25.dp)
+            .padding(end = 2.dp, bottom = 18.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(OrderItemShape())
+                .clip(ContactDetailOrderItemShape())
                 .background(order.color)
-                .padding(start = 16.dp, top = 14.dp, end = 16.dp, bottom = 16.dp)
+                .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 40.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -346,7 +418,7 @@ private fun ContactOrderItem(order: ContactOrder) {
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        painter = painterResource(R.drawable.notes),
+                        painter = painterResource(R.drawable.notess),
                         contentDescription = null,
                         tint = Color(0xFF334D6F),
                         modifier = Modifier.size(20.dp)
@@ -376,11 +448,11 @@ private fun ContactOrderItem(order: ContactOrder) {
             )
         }
 
-        // Arrow button
+        // Кнопка со стрелкой (в центре тройной выемки)
         Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .offset(x = 0.dp, y = 21.dp)
+                .offset(x = 0.dp, y = 15.dp) // Выравнивание правого края (x=0)
                 .size(42.dp)
                 .clip(CircleShape)
                 .background(Color(0xFF313131)),
@@ -388,6 +460,128 @@ private fun ContactOrderItem(order: ContactOrder) {
         ) {
             Icon(
                 painter = painterResource(R.drawable.arrow_up_right),
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ContactSimpleCallItem(item: ContactTimelineItem.SimpleCall) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFFAEDEF4))
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.phone),
+                contentDescription = null,
+                tint = Color(0xFF334D6F),
+                modifier = Modifier.size(36.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = "CALL",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF334D6F)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Icon(
+                painter = painterResource(R.drawable.arrow_up_right),
+                contentDescription = null,
+                tint = Color(0xFF334D6F),
+                modifier = Modifier
+                    .size(20.dp)
+                    .let { if (item.isIncoming) it else it }
+            )
+        }
+        Text(
+            text = item.time,
+            fontSize = 14.sp,
+            color = Color(0xFF334D6F).copy(alpha = 0.6f)
+        )
+    }
+}
+
+@Composable
+private fun ContactDetailedCallItem(item: ContactTimelineItem.DetailedCall) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 18.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(ContactDetailOrderItemShape())
+                .background(Color(0xFFAEDEF4))
+                .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 40.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        painter = painterResource(R.drawable.phone),
+                        contentDescription = null,
+                        tint = Color(0xFF334D6F),
+                        modifier = Modifier.size(36.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "CALL",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF334D6F)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(
+                        painter = painterResource(R.drawable.arrow_up_right),
+                        contentDescription = null,
+                        tint = Color(0xFF334D6F),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Text(
+                    text = item.time,
+                    fontSize = 14.sp,
+                    color = Color(0xFF334D6F).copy(alpha = 0.6f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = item.description,
+                fontSize = 13.sp,
+                color = Color(0xFF334D6F),
+                lineHeight = 20.sp
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .offset(y = 15.dp)
+                .size(42.dp)
+                .clip(CircleShape)
+                .background(Color(0xFF313131)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.pensil),
                 contentDescription = null,
                 tint = Color.White,
                 modifier = Modifier.size(20.dp)
@@ -404,9 +598,9 @@ private class ContactDetailHeaderShape : Shape {
     ): Outline {
         return Outline.Generic(
             path = Path().apply {
-                val cutoutWidth = 180f * density.density
-                val cutoutHeight = 36f * density.density
-                val rightMargin = 16f * density.density
+                val cutoutWidth = 230f * density.density
+                val cutoutHeight = 32f * density.density
+                val rightMargin = 0f * density.density
 
                 val cutoutRight = size.width - rightMargin
                 val cutoutLeft = cutoutRight - cutoutWidth
@@ -496,24 +690,49 @@ private class ContactDetailContentShape(val selectedTab: String) : Shape {
     }
 }
 
-private class OrderItemShape : Shape {
-    override fun createOutline(
-        size: Size,
-        layoutDirection: LayoutDirection,
-        density: Density
-    ): Outline {
+private class ContactDetailOrderItemShape : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
         return Outline.Generic(
             path = Path().apply {
-                val cornerRadius = 12f * density.density
+                val cornerRadius = 8f * density.density
+
+                // Уменьшенные параметры для плотного прилегания к кнопке
+                val cutoutHeight = 34f * density.density // Ниже (ближе к верху кнопки)
+                val flatWidth = 30f * density.density   // Уже (ближе к боку кнопки)
+                val slopeWidth = 40f * density.density
+                val smoothing = 20f * density.density   // Компактнее сглаживание
+                val topCornerRadius = 15f * density.density // Аккуратный угол
+
+                // Верх
                 moveTo(cornerRadius, 0f)
                 lineTo(size.width - cornerRadius, 0f)
-                quadraticTo(size.width, 0f, size.width, cornerRadius)
-                lineTo(size.width, size.height - cornerRadius)
-                quadraticTo(size.width, size.height, size.width - cornerRadius, size.height)
+                quadraticBezierTo(size.width, 0f, size.width, cornerRadius)
+
+                // Правое ребро вниз до начала скругления
+                lineTo(size.width, size.height - cutoutHeight - topCornerRadius)
+
+                // Внутренний верхний угол (вход в вырез)
+                quadraticBezierTo(
+                    size.width, size.height - cutoutHeight,
+                    size.width - topCornerRadius, size.height - cutoutHeight
+                )
+
+                // Плоский участок (потолок)
+                lineTo(size.width - flatWidth, size.height - cutoutHeight)
+
+                // Плавный S-образный спуск
+                cubicTo(
+                    size.width - flatWidth - smoothing, size.height - cutoutHeight,
+                    size.width - flatWidth - slopeWidth + smoothing, size.height,
+                    size.width - flatWidth - slopeWidth, size.height
+                )
+
+                // Низ и лево
                 lineTo(cornerRadius, size.height)
-                quadraticTo(0f, size.height, 0f, size.height - cornerRadius)
+                quadraticBezierTo(0f, size.height, 0f, size.height - cornerRadius)
                 lineTo(0f, cornerRadius)
-                quadraticTo(0f, 0f, cornerRadius, 0f)
+                quadraticBezierTo(0f, 0f, cornerRadius, 0f)
+
                 close()
             }
         )
