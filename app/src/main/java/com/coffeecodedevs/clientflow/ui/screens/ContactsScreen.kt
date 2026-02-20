@@ -296,7 +296,8 @@ class CommentBoxWithCutoutShape : Shape {
 // Custom shape for header with cutout on the right for search bar
 @Composable
 fun ContactsScreen(
-    onContactClick: (String) -> Unit = {}
+    onContactClick: (String) -> Unit = {},
+    onCreateClick: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableStateOf(ContactType.CLIENT) }
     var searchQuery by remember { mutableStateOf("") }

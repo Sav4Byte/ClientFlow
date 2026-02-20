@@ -279,12 +279,14 @@ fun ContactDetailScreen(
                         .background(Color.White)
                 ) {
                     Box(
-                        modifier = Modifier.padding(
-                            top = 50.dp,
-                            start = 16.dp,
-                            end = 16.dp,
-                            bottom = 16.dp
-                        )
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(
+                                top = 50.dp,
+                                start = 16.dp,
+                                end = 16.dp,
+                                bottom = 16.dp
+                            )
                     ) {
                         when (selectedTab) {
                             "ORDERS" -> {
