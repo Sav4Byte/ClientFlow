@@ -1,6 +1,8 @@
+
 package com.coffeecodedevs.clientflow.ui.screens
 
 import androidx.compose.foundation.background
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -249,84 +250,6 @@ private fun NotesCard(
                 modifier = Modifier.size(20.dp)
             )
         }
-    }
-}
-
-private class HeaderWithSearchCutoutShape : Shape {
-    override fun createOutline(
-        size: Size,
-        layoutDirection: LayoutDirection,
-        density: Density
-    ): Outline {
-        return Outline.Generic(
-            path = Path().apply {
-                val bottomLeftRadius = 15f * density.density
-
-                // Cutout parameters - smooth and natural
-                val cutoutWidth = 300f * density.density
-                val cutoutHeight = 42f * density.density
-                val rightMargin = 0f * density.density
-
-                // Position cutout at bottom right
-                val cutoutRight = size.width - rightMargin
-                val cutoutLeft = cutoutRight - cutoutWidth
-                val cutoutBottom = size.height
-                val cutoutTop = cutoutBottom - cutoutHeight
-
-                // Control points for smooth transitions
-                val smoothFactor = 25f * density.density
-
-                // Start from top-left
-                moveTo(0f, 0f)
-
-                // Top edge
-                lineTo(size.width, 0f)
-
-                // Right edge down to bottom (flat corner)
-                lineTo(size.width, size.height)
-
-                // Bottom edge moving left to cutout start
-                lineTo(cutoutRight, size.height)
-
-                // Curve UP and LEFT into the cutout
-                cubicTo(
-                    cutoutRight - smoothFactor, size.height,
-                    cutoutRight - smoothFactor, cutoutTop,
-                    cutoutRight - smoothFactor * 2, cutoutTop
-                )
-
-                // Line across top of cutout
-                lineTo(cutoutLeft + smoothFactor * 2, cutoutTop)
-
-                // Curve DOWN and LEFT out of the cutout
-                cubicTo(
-                    cutoutLeft + smoothFactor, cutoutTop,
-                    cutoutLeft + smoothFactor, size.height,
-                    cutoutLeft, size.height
-                )
-
-                // Continue to bottom-left corner
-                lineTo(bottomLeftRadius, size.height)
-
-                // Bottom-left corner
-                arcTo(
-                    rect = Rect(
-                        left = 0f,
-                        top = size.height - bottomLeftRadius * 2,
-                        right = bottomLeftRadius * 2,
-                        bottom = size.height
-                    ),
-                    startAngleDegrees = 90f,
-                    sweepAngleDegrees = 90f,
-                    forceMoveTo = false
-                )
-
-                // Left edge back to start
-                lineTo(0f, 0f)
-
-                close()
-            }
-        )
     }
 }
 

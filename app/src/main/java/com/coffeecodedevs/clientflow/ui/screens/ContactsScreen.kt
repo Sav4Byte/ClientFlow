@@ -6,6 +6,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,6 +20,9 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.vector.path
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -42,6 +46,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.TextStyle
 import com.coffeecodedevs.clientflow.data.Contact
 import com.coffeecodedevs.clientflow.data.ContactType
 import androidx.compose.ui.res.painterResource
@@ -297,7 +302,7 @@ class CommentBoxWithCutoutShape : Shape {
 // Custom shape for header with cutout on the right for search bar
 @Composable
 fun ContactsScreen(
-    onContactClick: (String) -> Unit = {},
+    onContactClick: (String, Boolean) -> Unit = { _, _ -> },
     onCreateClick: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableStateOf(ContactType.CLIENT) }
@@ -365,8 +370,8 @@ fun ContactsScreen(
                         .fillMaxSize()
                         .background(
                             color = Color.White,
-                            shape = ContactsHeaderWithSearchCutoutShape()
-                         )
+                            shape = HeaderWithSearchCutoutShape()
+                        )
                         .padding(start = 16.dp, top = 20.dp, bottom = 5.dp)
                 ) {
                     Text(
@@ -387,27 +392,50 @@ fun ContactsScreen(
                         .height(40.dp)
                         .clip(RoundedCornerShape(20.dp))
                         .background(Color.White)
-                        .padding(horizontal = 16.dp),
-                    contentAlignment = Alignment.CenterStart
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(
-                            text = "Search",
-                            color = Color(0xFF8B9BA8),
-                            fontSize = 15.sp,
-                            modifier = Modifier.weight(1f)
+                        BasicTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .padding(end = 8.dp),
+                            textStyle = TextStyle(
+                                color = Color(0xFF334D6F),
+                                fontSize = 14.sp
+                            ),
+                            singleLine = true,
+                            decorationBox = { innerTextField ->
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.CenterStart
+                                ) {
+                                    if (searchQuery.isEmpty()) {
+                                        Text(
+                                            "Search",
+                                            color = Color(0xFF8B9BA8),
+                                            fontSize = 14.sp
+                                        )
+                                    }
+                                    innerTextField()
+                                }
+                            }
                         )
                         Icon(
                             imageVector = Icons.Outlined.Search,
                             contentDescription = "Search",
                             tint = Color(0xFF8B9BA8),
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                     }
-                 }
+                }
             }
 
             Spacer(modifier = Modifier.height(40.dp))
@@ -493,7 +521,10 @@ fun ContactsScreen(
                         ),
                     contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 300.dp)
             ) {
-                val filteredContacts = contacts.filter { it.type == selectedTab }
+                val filteredContacts = contacts.filter { 
+                    it.type == selectedTab && 
+                    (searchQuery.isEmpty() || it.name.contains(searchQuery, ignoreCase = true))
+                }
                 val groupedContacts = filteredContacts.groupBy { it.name.first().toString() }
 
                 val groupedContactsList = groupedContacts.entries.toList()
@@ -515,7 +546,8 @@ fun ContactsScreen(
                             onToggleExpand = {
                                 expandedContactId = if (expandedContactId == contact.id) null else contact.id
                             },
-                            onViewClick = onContactClick
+                            onViewClick = { name -> onContactClick(name, true) },
+                            onQuickViewClick = { name -> onContactClick(name, false) }
                         )
                     }
 
@@ -569,7 +601,8 @@ fun ContactItem(
     contact: Contact,
     isExpanded: Boolean,
     onToggleExpand: () -> Unit,
-    onViewClick: (String) -> Unit = {}
+    onViewClick: (String) -> Unit = {},
+    onQuickViewClick: (String) -> Unit = {}
 ) {
     val rotationAngle by animateFloatAsState(
         targetValue = if (isExpanded) 180f else 0f,
@@ -650,7 +683,7 @@ fun ContactItem(
                         )
                         ActionButton (
                             painter = painterResource(R.drawable.sms),
-                            onClick = { },
+                            onClick = { onQuickViewClick(contact.name) },
                         )
                         ActionButton (
                             painter = painterResource(R.drawable.eye),
@@ -741,7 +774,8 @@ fun BottomNavIcon(
     }
 }
 
-private class ContactsHeaderWithSearchCutoutShape : Shape {
+// Shared shape for header with search cutout (used by ContactsScreen and ThirdScreen)
+internal class HeaderWithSearchCutoutShape : Shape {
     override fun createOutline(
         size: Size,
         layoutDirection: LayoutDirection,

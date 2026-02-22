@@ -7,7 +7,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
@@ -21,11 +24,13 @@ import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
+import androidx.compose.ui.unit.sp
 import com.coffeecodedevs.clientflow.ui.screens.*
 import com.coffeecodedevs.clientflow.ui.theme.ClientFlowTheme
 
@@ -43,14 +48,22 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppNavigation() {
-    var currentScreen by remember { mutableStateOf(5) }
+    var currentScreen by remember { mutableStateOf(0) }
     var selectedBottomTab by remember { mutableStateOf(0) }
+    var showCreateDialog by remember { mutableStateOf(false) }
+    var selectedContactName by remember { mutableStateOf("Daniel Brooks") }
+    var showContactActivity by remember { mutableStateOf(true) }
     
     Box(modifier = Modifier.fillMaxSize()) {
         // Экраны
         when (currentScreen) {
             0 -> ContactsScreen(
-                onContactClick = { currentScreen = 5 }
+                onContactClick = { name, full ->
+                    selectedContactName = name
+                    showContactActivity = full
+                    currentScreen = 5
+                },
+                onCreateClick = { showCreateDialog = true }
             )
             1 -> ThirdScreen(
                 onBackClick = { currentScreen = 0 },
@@ -69,6 +82,8 @@ fun AppNavigation() {
                 }
             )
             5 -> ContactDetailScreen(
+                contactName = selectedContactName,
+                showActivity = showContactActivity,
                 onBackClick = { currentScreen = 0 }
             )
         }
@@ -128,7 +143,7 @@ fun AppNavigation() {
                     }
                 }
                 FloatingActionButton(
-                    onClick = {},
+                    onClick = { showCreateDialog = true },
                     modifier = Modifier.align(Alignment.TopCenter).offset(y = (-25).dp).size(56.dp),
                     containerColor = Color(0xFF313131),
                     shape = CircleShape,
@@ -137,6 +152,14 @@ fun AppNavigation() {
                     Icon(Icons.Default.Add, contentDescription = "Add", tint = Color.White, modifier = Modifier.size(24.dp))
                 }
             }
+        }
+        
+        // Create Dialog
+        if (showCreateDialog) {
+            CreateContactDialog(
+                onDismiss = { showCreateDialog = false },
+                onSave = { showCreateDialog = false }
+            )
         }
     }
 }
@@ -204,4 +227,204 @@ fun GoalsScreenPreview() {
     ClientFlowTheme {
         ContactsScreen()
     }
+}
+
+
+@Composable
+private fun CreateContactDialog(
+    onDismiss: () -> Unit,
+    onSave: () -> Unit
+) {
+    var createType by remember { mutableStateOf("CONTACT") }
+    var firstName by remember { mutableStateOf("") }
+    var lastName by remember { mutableStateOf("") }
+    var phone1 by remember { mutableStateOf("") }
+    var phone2 by remember { mutableStateOf("") }
+    var notes by remember { mutableStateOf("") }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Create",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                   color = Color(0xFF334D6F)
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+            ) {
+                // Type tabs
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf("CONTACT", "ORDER", "REMINDER", "NOTE").forEach { type ->
+                        Button(
+                            onClick = { createType = type },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(36.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (createType == type) Color(0xFFAEDEF4) else Color(0xFFE8E8E8),
+                                contentColor = Color(0xFF334D6F)
+                            ),
+                            shape = RoundedCornerShape(20.dp)
+                        ) {
+                            Text(type, fontSize = 12.sp)
+                        }
+                    }
+                }
+                
+                // Input fields
+                TextField(
+                    value = firstName,
+                    onValueChange = { firstName = it },
+                    placeholder = { Text("First Name") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = TextFieldDefaults.colors(
+                        unfocusedContainerColor = Color(0xFFF5F5F5),
+                        focusedContainerColor = Color.White
+                    )
+                )
+                
+                TextField(
+                    value = lastName,
+                    onValueChange = { lastName = it },
+                    placeholder = { Text("Last Name") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = TextFieldDefaults.colors(
+                        unfocusedContainerColor = Color(0xFFF5F5F5),
+                        focusedContainerColor = Color.White
+                    )
+                )
+                
+                // Phone fields
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextField(
+                        value = phone1,
+                        onValueChange = { phone1 = it },
+                        placeholder = { Text("+380 67 895 50 89") },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = TextFieldDefaults.colors(
+                            unfocusedContainerColor = Color(0xFFF5F5F5),
+                            focusedContainerColor = Color.White
+                        )
+                    )
+                    if (phone1.isNotEmpty()) {
+                        Icon(
+                            painter = painterResource(R.drawable.trash),
+                            contentDescription = "Remove",
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clickable { phone1 = "" },
+                            tint = Color(0xFF999999)
+                        )
+                    }
+                }
+                
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextField(
+                        value = phone2,
+                        onValueChange = { phone2 = it },
+                        placeholder = { Text("+380 93 578 90 28") },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = TextFieldDefaults.colors(
+                            unfocusedContainerColor = Color(0xFFF5F5F5),
+                            focusedContainerColor = Color.White
+                        )
+                    )
+                    if (phone2.isNotEmpty()) {
+                        Icon(
+                            painter = painterResource(R.drawable.trash),
+                            contentDescription = "Remove",
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clickable { phone2 = "" },
+                            tint = Color(0xFF999999)
+                        )
+                    }
+                }
+                
+                // Add phone button
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF313131))
+                        .clickable { },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add phone",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                TextField(
+                    value = notes,
+                    onValueChange = { notes = it },
+                    placeholder = { Text("Works on Sun, Mon, Wed and Fri.\nDon't call after 16:00.") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = TextFieldDefaults.colors(
+                        unfocusedContainerColor = Color(0xFFF5F5F5),
+                        focusedContainerColor = Color.White
+                    )
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onSave,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF313131))
+            ) {
+                Text("SAVE", color = Color.White)
+            }
+        },
+        dismissButton = {
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+            ) {
+                Text("CANCEL", color = Color(0xFF334D6F))
+            }
+        },
+        modifier = Modifier
+            .fillMaxWidth(0.9f)
+            .clip(RoundedCornerShape(16.dp))
+    )
 }

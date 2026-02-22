@@ -190,50 +190,6 @@ fun FourthScreen(onNavigate: (Int) -> Unit) {
                 TabItem("REMINDER", selectedTab == "REMINDER") { selectedTab = "REMINDER" }
             }
         }
-
-        // Bottom Navigation
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .padding(start = 64.dp, end = 64.dp, bottom = 57.dp)
-        ) {
-            Surface(
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = FourthScreenBottomBarShape(cutoutRadiusDp = 36.dp),
-                color = Color(0xFF313131),
-                shadowElevation = 12.dp
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    BottomNavIcon(painterResource(R.drawable.contact), selectedBottomTab == 0) {
-                        onNavigate(0)
-                    }
-                    BottomNavIcon(painterResource(R.drawable.notes), selectedBottomTab == 1) {
-                        onNavigate(1)
-                    }
-                    Spacer(modifier = Modifier.width(70.dp))
-                    BottomNavIcon(painterResource(R.drawable.dial), selectedBottomTab == 2) {
-                        onNavigate(2)
-                    }
-                    BottomNavIcon(painterResource(R.drawable.calendar), selectedBottomTab == 3) {
-                        // Already on this screen
-                    }
-                }
-            }
-            FloatingActionButton(
-                onClick = {},
-                modifier = Modifier.align(Alignment.TopCenter).offset(y = (-25).dp).size(56.dp),
-                containerColor = Color(0xFF313131),
-                shape = CircleShape,
-                elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 8.dp, pressedElevation = 12.dp)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add", tint = Color.White, modifier = Modifier.size(24.dp))
-            }
-        }
     }
 }
 
