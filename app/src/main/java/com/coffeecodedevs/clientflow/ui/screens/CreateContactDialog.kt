@@ -115,23 +115,11 @@ fun CreateContactDialog(
                             .fillMaxWidth()
                             .weight(1f)
                             .padding(horizontal = 12.dp)
-                            .verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.Top
+                            .verticalScroll(rememberScrollState())
                     ) {
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                        // Always visible Name fields
-                        Column(
-                            modifier = Modifier.padding(horizontal = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            UnderlineTextField(value = firstName, onValueChange = { firstName = it }, placeholder = "Name")
-                            UnderlineTextField(value = lastName, onValueChange = { lastName = it }, placeholder = "Surname")
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Tabs
+                        // 1. Tabs first
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -143,40 +131,55 @@ fun CreateContactDialog(
                             TabPill("REMINDER", Color(0xFFFDECDA), Color(0xFFD5A665), selectedTab == "REMINDER") { selectedTab = "REMINDER" }
                             TabPill("NOTE", Color(0xFF9BE5D6), Color(0xFF1ABBA8), selectedTab == "NOTE") { selectedTab = "NOTE" }
                         }
-                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        // 2. Name fields second
+                        Column(
+                            modifier = Modifier.padding(horizontal = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            GrayFrameTextField(value = firstName, onValueChange = { firstName = it }, placeholder = "Name")
+                            GrayFrameTextField(value = lastName, onValueChange = { lastName = it }, placeholder = "Surname")
+                        }
+
+                        Spacer(modifier = Modifier.height(20.dp))
 
                         if (selectedTab == "CONTACT") {
                             Column(
                                 modifier = Modifier.padding(horizontal = 8.dp),
                                  verticalArrangement = Arrangement.spacedBy(20.dp)
                             ) {
-                                UnderlineTextField(value = company, onValueChange = { company = it }, placeholder = "Company")
+                                GrayFrameTextField(value = company, onValueChange = { company = it }, placeholder = "Company")
 
                                 // Phone field
-                                phones.forEachIndexed { index, phone ->
-                                    PhoneFieldWithPlus(
-                                        value = phone,
-                                        onValueChange = { newValue ->
-                                            val newList = phones.toMutableList()
-                                            newList[index] = newValue
-                                            phones = newList
-                                        },
-                                        onRemove = {
-                                            if (phones.size > 1) {
-                                                phones = phones.toMutableList().apply { removeAt(index) }
-                                            }
-                                        },
-                                        onAdd = { phones = phones + "+380" },
-                                        showPlus = index == phones.size - 1
-                                    )
+                                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    phones.forEachIndexed { index, phone ->
+                                        PhoneFieldWithPlus(
+                                            value = phone,
+                                            onValueChange = { newValue ->
+                                                val newList = phones.toMutableList()
+                                                newList[index] = newValue
+                                                phones = newList
+                                            },
+                                            onRemove = {
+                                                if (phones.size > 1) {
+                                                    phones = phones.toMutableList().apply { removeAt(index) }
+                                                }
+                                            },
+                                            onAdd = { phones = phones + "+380" },
+                                            showPlus = index == phones.size - 1
+                                        )
+                                    }
                                 }
 
-                                ModernTextField(
+                                GrayFrameTextField(
                                     value = description,
                                     onValueChange = { description = it },
                                     placeholder = "Description",
-                                    modifier = Modifier.height(100.dp),
-                                    singleLine = false
+                                    modifier = Modifier.height(80.dp),
+                                    singleLine = false,
+                                    fontWeight = FontWeight.Normal
                                 )
                             }
                         } else if (selectedTab == "REMINDER") {
@@ -429,66 +432,6 @@ private fun TabPill(text: String, bgColor: Color, textColor: Color, selected: Bo
     }
 }
 
-@Composable
-private fun ModernTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholder: String,
-    modifier: Modifier = Modifier,
-    singleLine: Boolean = true
-) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(if (singleLine) 44.dp else 100.dp)
-            .border(1.dp, Color(0xFFEEEEEE), RoundedCornerShape(12.dp))
-            .background(Color.White, RoundedCornerShape(12.dp))
-            .padding(horizontal = 16.dp, vertical = if (singleLine) 0.dp else 12.dp),
-        contentAlignment = if (singleLine) Alignment.CenterStart else Alignment.TopStart
-    ) {
-        if (value.isEmpty()) {
-            Text(placeholder, color = Color(0xFFAAAAAA), fontSize = 16.sp)
-        }
-        BasicTextField(
-            value = value,
-            onValueChange = onValueChange,
-            textStyle = TextStyle(fontSize = 16.sp, color = Color.Black),
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = singleLine,
-            cursorBrush = SolidColor(Color(0xFF313131))
-        )
-    }
-}
-
-@Composable
-private fun UnderlineTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholder: String,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(44.dp)
-            .border(1.dp, Color(0xFFEEEEEE), RoundedCornerShape(12.dp))
-            .background(Color.White, RoundedCornerShape(12.dp))
-            .padding(horizontal = 16.dp),
-        contentAlignment = Alignment.CenterStart
-    ) {
-        if (value.isEmpty()) {
-            Text(placeholder, color = Color(0xFFAAAAAA), fontSize = 16.sp)
-        }
-        BasicTextField(
-            value = value,
-            onValueChange = onValueChange,
-            textStyle = TextStyle(fontSize = 16.sp, color = Color.Black, fontWeight = FontWeight.Medium),
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            cursorBrush = SolidColor(Color(0xFF313131))
-        )
-    }
-}
 
 @Composable
 private fun PhoneFieldWithPlus(
@@ -610,6 +553,55 @@ private fun SimpleUnderlineTextField(
                     .height(1.dp)
                     .background(Color(0xFFDDDDDD))
             )
+        }
+    }
+}
+
+@Composable
+private fun GrayFrameTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    modifier: Modifier = Modifier,
+    singleLine: Boolean = true,
+    fontWeight: FontWeight = FontWeight.Bold
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(if (singleLine) 48.dp else 100.dp)
+            .border(1.dp, Color(0xFFE0E0E0), RoundedCornerShape(12.dp))
+            .background(Color.White, RoundedCornerShape(12.dp))
+            .padding(horizontal = 16.dp),
+        contentAlignment = if (singleLine) Alignment.CenterStart else Alignment.TopStart
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = if (singleLine) Arrangement.Center else Arrangement.Top
+        ) {
+            if (!singleLine) Spacer(modifier = Modifier.height(12.dp))
+            Box(contentAlignment = Alignment.CenterStart) {
+                if (value.isEmpty()) {
+                    Text(
+                        text = placeholder,
+                        color = Color(0xFFAAAAAA),
+                        fontSize = 16.sp,
+                        fontWeight = fontWeight
+                    )
+                }
+                BasicTextField(
+                    value = value,
+                    onValueChange = onValueChange,
+                    textStyle = TextStyle(
+                        fontSize = 16.sp,
+                        color = Color(0xFF313131),
+                        fontWeight = fontWeight
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = singleLine,
+                    cursorBrush = SolidColor(Color(0xFF313131))
+                )
+            }
         }
     }
 }
