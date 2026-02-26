@@ -1,60 +1,69 @@
 package com.coffeecodedevs.clientflow.ui.screens
 
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.PathFillType
-import androidx.compose.ui.graphics.vector.path
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.zIndex
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.path
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.text.TextStyle
-import com.coffeecodedevs.clientflow.data.Contact
-import com.coffeecodedevs.clientflow.data.ContactType
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.zIndex
 import com.coffeecodedevs.clientflow.R
-
-
-
-import androidx.compose.ui.unit.Dp
 
 
 // Custom shape for bottom bar with smooth semicircular cutout
@@ -302,42 +311,27 @@ class CommentBoxWithCutoutShape : Shape {
 // Custom shape for header with cutout on the right for search bar
 @Composable
 fun ContactsScreen(
-    onContactClick: (String, Boolean) -> Unit = { _, _ -> },
-    onCreateClick: () -> Unit = {}
+    onContactClick: (com.coffeecodedevs.clientflow.data.Contact, Boolean) -> Unit = { _, _ -> },
+    onCreateClick: () -> Unit = {},
+    viewModel: com.coffeecodedevs.clientflow.data.ContactViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
-    var selectedTab by remember { mutableStateOf(ContactType.CLIENT) }
+
+    var selectedTab by remember { mutableStateOf("CLIENT") }
     var searchQuery by remember { mutableStateOf("") }
     var expandedContactId by remember { mutableStateOf<Int?>(null) }
+    val context = androidx.compose.ui.platform.LocalContext.current
 
-    // Sample data
-    val contacts = remember {
-        listOf(
-            // Clients
-            Contact(1, "Alan Smith", ContactType.CLIENT),
-            Contact(2, "Ali Conors", ContactType.CLIENT),
-            Contact(3, "Bailey Brown", ContactType.CLIENT),
-            Contact(4, "Benjamin Smith", ContactType.CLIENT),
-            Contact(5, "Brandon Johnson", ContactType.CLIENT),
-            Contact(6, "Dan Dilan", ContactType.CLIENT),
-            Contact(7, "Daniel Brooks", ContactType.CLIENT, "Works on San, Mon, Wed and Fri. And sth else.... Don' t call after 16:00."),
-            Contact(8, "David Carter", ContactType.CLIENT),
-            Contact(9, "Diana Collins", ContactType.CLIENT),
-            Contact(10, "Eleanor Smith", ContactType.CLIENT),
-            Contact(11, "Ethan Williams", ContactType.CLIENT),
+    val allContacts by viewModel.allContacts.collectAsState(initial = emptyList())
 
-            // Employees
-            Contact(12, "Amelia Rodriguez", ContactType.EMPLOYEE),
-            Contact(13, "Andrew Martinez", ContactType.EMPLOYEE),
-            Contact(14, "Anna Thompson", ContactType.EMPLOYEE),
-            Contact(15, "Brian Anderson", ContactType.EMPLOYEE),
-            Contact(16, "Carlos Garcia", ContactType.EMPLOYEE),
-            Contact(17, "Charlotte Davis", ContactType.EMPLOYEE),
-            Contact(18, "Christopher Lee", ContactType.EMPLOYEE),
-            Contact(19, "Emma Wilson", ContactType.EMPLOYEE),
-            Contact(20, "Frank Miller", ContactType.EMPLOYEE),
-            Contact(21, "George Taylor", ContactType.EMPLOYEE),
-            Contact(22, "Hannah Moore", ContactType.EMPLOYEE),
-        )
+    val filteredContacts = allContacts.filter {
+        val matchesType = when (selectedTab) {
+            "CLIENT" -> it.isClient
+            "EMPLOYEE" -> it.isEmployee
+            else -> true
+        }
+        val matchesSearch = it.firstName.contains(searchQuery, ignoreCase = true) ||
+                it.lastName.contains(searchQuery, ignoreCase = true)
+        matchesType && matchesSearch
     }
 
     Box(
@@ -346,32 +340,25 @@ fun ContactsScreen(
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFFAEDEF4), // Even lighter blue
-                        Color(0xFFFFDAB9)  // Brighter beige
+                        Color(0xFFAEDEF4),
+                        Color(0xFFFFDAB9)
                     )
                 )
             )
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // Spacer for status bar area to show gradient
+        Column(modifier = Modifier.fillMaxSize()) {
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Header section with CONTACTS text and cutout
+            // Header section
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(60.dp)
             ) {
-                // White background with cutout
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(
-                            color = Color.White,
-                            shape = HeaderWithSearchCutoutShape()
-                        )
+                        .background(color = Color.White, shape = HeaderWithSearchCutoutShape())
                         .padding(start = 16.dp, top = 20.dp, bottom = 5.dp)
                 ) {
                     Text(
@@ -382,7 +369,6 @@ fun ContactsScreen(
                     )
                 }
 
-                // Search bar positioned in the cutout
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
@@ -395,45 +381,25 @@ fun ContactsScreen(
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 12.dp),
+                        modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         BasicTextField(
                             value = searchQuery,
                             onValueChange = { searchQuery = it },
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight()
-                                .padding(end = 8.dp),
-                            textStyle = TextStyle(
-                                color = Color(0xFF334D6F),
-                                fontSize = 14.sp
-                            ),
+                            modifier = Modifier.weight(1f).fillMaxHeight().padding(end = 8.dp),
+                            textStyle = TextStyle(color = Color(0xFF334D6F), fontSize = 14.sp),
                             singleLine = true,
                             decorationBox = { innerTextField ->
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.CenterStart
-                                ) {
+                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.CenterStart) {
                                     if (searchQuery.isEmpty()) {
-                                        Text(
-                                            "Search",
-                                            color = Color(0xFF8B9BA8),
-                                            fontSize = 14.sp
-                                        )
+                                        Text("Search", color = Color(0xFF8B9BA8), fontSize = 14.sp)
                                     }
                                     innerTextField()
                                 }
                             }
                         )
-                        Icon(
-                            imageVector = Icons.Outlined.Search,
-                            contentDescription = "Search",
-                            tint = Color(0xFF8B9BA8),
-                            modifier = Modifier.size(20.dp)
-                        )
+                        Icon(imageVector = Icons.Outlined.Search, contentDescription = "Search", tint = Color(0xFF8B9BA8), modifier = Modifier.size(20.dp))
                     }
                 }
             }
@@ -442,128 +408,109 @@ fun ContactsScreen(
 
             // Tabs and Content
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(horizontal = 20.dp)
+                modifier = Modifier.fillMaxWidth().weight(1f).padding(horizontal = 20.dp)
             ) {
-                // Tabs Row
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(37.dp),
+                    modifier = Modifier.fillMaxWidth().height(37.dp),
                     verticalAlignment = Alignment.Bottom
                 ) {
-                    // Clients Tab
                     Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .graphicsLayer { clip = false }
-                            .zIndex(if (selectedTab == ContactType.CLIENT) 1f else 0f)
+                        modifier = Modifier.weight(1f).fillMaxHeight().graphicsLayer { clip = false }.zIndex(if (selectedTab == "CLIENT") 1f else 0f)
                             .drawBehind {
-                                if (selectedTab == ContactType.CLIENT) {
+                                if (selectedTab == "CLIENT") {
                                     val outline = ClientsTabShape().createOutline(size, layoutDirection, this)
-                                    if (outline is Outline.Generic) {
-                                        drawPath(outline.path, Color.White)
-                                    }
+                                    if (outline is Outline.Generic) drawPath(outline.path, Color.White)
                                 }
                             }
-                            .clickable { selectedTab = ContactType.CLIENT },
+                            .clickable { selectedTab = "CLIENT" },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "CLIENTS",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF334D6F)
-                        )
+                        Text("CLIENTS", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF334D6F))
                     }
 
-                    // Employees Tab
                     Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .graphicsLayer { clip = false }
-                            .zIndex(if (selectedTab == ContactType.EMPLOYEE) 1f else 0f)
+                        modifier = Modifier.weight(1f).fillMaxHeight().graphicsLayer { clip = false }.zIndex(if (selectedTab == "EMPLOYEE") 1f else 0f)
                             .drawBehind {
-                                if (selectedTab == ContactType.EMPLOYEE) {
+                                if (selectedTab == "EMPLOYEE") {
                                     val outline = EmployeesTabShape().createOutline(size, layoutDirection, this)
-                                    if (outline is Outline.Generic) {
-                                        drawPath(outline.path, Color.White)
-                                    }
+                                    if (outline is Outline.Generic) drawPath(outline.path, Color.White)
                                 }
                             }
-                            .clickable { selectedTab = ContactType.EMPLOYEE },
+                            .clickable { selectedTab = "EMPLOYEE" },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "EMPLOYEES",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF334D6F)
-                        )
+                        Text("EMPLOYEES", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF334D6F))
                     }
                 }
 
-                // Contact list in White Card
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
+                // List background
+                Box(
+                    modifier = Modifier.fillMaxWidth().weight(1f)
                         .background(
                             Color.White,
-                            when (selectedTab) {
-                                ContactType.CLIENT -> RoundedCornerShape(topEnd = 10.dp)
-                                ContactType.EMPLOYEE -> RoundedCornerShape(topStart = 10.dp)
+                            if (selectedTab == "CLIENT") RoundedCornerShape(topEnd = 10.dp)
+                            else RoundedCornerShape(topStart = 10.dp)
+                        )
+                ) {
+                    if (filteredContacts.isEmpty()) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    painter = painterResource(R.drawable.contact), 
+                                    contentDescription = null, 
+                                    tint = Color(0xFF8B9BA8).copy(alpha = 0.5f),
+                                    modifier = Modifier.size(64.dp)
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = "No contacts",
+                                    fontSize = 18.sp,
+                                    color = Color(0xFF8B9BA8),
+                                    fontWeight = FontWeight.Medium
+                                )
                             }
-                        ),
-                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 300.dp)
-            ) {
-                val filteredContacts = contacts.filter { 
-                    it.type == selectedTab && 
-                    (searchQuery.isEmpty() || it.name.contains(searchQuery, ignoreCase = true))
-                }
-                val groupedContacts = filteredContacts.groupBy { it.name.first().toString() }
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 120.dp)
+                        ) {
+                            val groupedContacts = filteredContacts.groupBy { it.firstName.first().toString().uppercase() }
+                            groupedContacts.entries.sortedBy { it.key }.forEach { (letter, contactsInGroup) ->
+                                item {
+                                    Text(
+                                        text = "${letter}${letter.lowercase()}",
+                                        fontSize = 13.sp,
+                                        color = Color(0xFF7A8C99),
+                                        modifier = Modifier.padding(top = 10.dp, bottom = 6.dp)
+                                    )
+                                }
+                                items(contactsInGroup) { contact ->
+                                    ContactItem(
+                                        contact = contact,
+                                        isExpanded = expandedContactId == contact.id,
+                                        onToggleExpand = {
+                                            expandedContactId = if (expandedContactId == contact.id) null else contact.id
+                                        },
+                                        onCallClick = { 
+                                            contact.phones.firstOrNull()?.let { 
+                                                com.coffeecodedevs.clientflow.utils.ContactActions.callContact(context, it)
+                                            }
+                                        },
+                                        onSmsClick = {
+                                            contact.phones.firstOrNull()?.let { 
+                                                com.coffeecodedevs.clientflow.utils.ContactActions.sendSms(context, it)
+                                            }
+                                        },
+                                        onViewClick = { 
+                                            onContactClick(contact, true) 
+                                        }
 
-                val groupedContactsList = groupedContacts.entries.toList()
-                groupedContactsList.forEachIndexed { index, (letter, contactsInGroup) ->
-                    item {
-                        Text(
-                            text = "${letter}${letter.lowercase()}",
-                            fontSize = 13.sp,
-                            color = Color(0xFF7A8C99),
-                            fontWeight = FontWeight.Normal,
-                            modifier = Modifier.padding(top = 10.dp, bottom = 6.dp)
-                        )
-                    }
-
-                    items(contactsInGroup) { contact ->
-                        ContactItem(
-                            contact = contact,
-                            isExpanded = expandedContactId == contact.id,
-                            onToggleExpand = {
-                                expandedContactId = if (expandedContactId == contact.id) null else contact.id
-                            },
-                            onViewClick = { name -> onContactClick(name, true) },
-                            onQuickViewClick = { name -> onContactClick(name, false) }
-                        )
-                    }
-
-                    // Divider after each letter group except the last one
-                    if (index < groupedContactsList.size - 1) {
-                        item {
-                            androidx.compose.material3.HorizontalDivider(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 8.dp),
-                                thickness = 1.dp,
-                                color = Color(0xFFE0E0E0)
-                            )
+                                    )
+                                }
+                            }
                         }
                     }
-                }
                 }
             }
         }
@@ -598,11 +545,12 @@ fun TabButton(
 
 @Composable
 fun ContactItem(
-    contact: Contact,
+    contact: com.coffeecodedevs.clientflow.data.Contact,
     isExpanded: Boolean,
     onToggleExpand: () -> Unit,
-    onViewClick: (String) -> Unit = {},
-    onQuickViewClick: (String) -> Unit = {}
+    onCallClick: () -> Unit = {},
+    onSmsClick: () -> Unit = {},
+    onViewClick: () -> Unit = {}
 ) {
     val rotationAngle by animateFloatAsState(
         targetValue = if (isExpanded) 180f else 0f,
@@ -610,8 +558,7 @@ fun ContactItem(
     )
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = Modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
@@ -622,7 +569,7 @@ fun ContactItem(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = contact.name,
+                text = "${contact.firstName} ${contact.lastName}",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF334D6F)
@@ -651,11 +598,10 @@ fun ContactItem(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     if (contact.note != null) {
-                        // Comment box with cutout for buttons
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(bottom = 13.dp) // Extended left side down more
+                                .padding(bottom = 13.dp)
                                 .clip(CommentBoxWithCutoutShape())
                                 .background(Color(0xFFAEE0FF))
                                 .padding(start = 7.dp, top = 10.dp, end = 15.dp, bottom = 35.dp)
@@ -669,25 +615,24 @@ fun ContactItem(
                         }
                     }
 
-                    // Action buttons positioned in the cutout area
                     Row(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
                             .padding(end = 8.dp, bottom = 0.dp)
-                            .offset(y = 12.dp), // Just lower the buttons
+                            .offset(y = 12.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        ActionButton (
+                        ActionButton(
                             painter = painterResource(R.drawable.phone),
-                            onClick = { },
+                            onClick = onCallClick,
                         )
-                        ActionButton (
+                        ActionButton(
                             painter = painterResource(R.drawable.sms),
-                            onClick = { onQuickViewClick(contact.name) },
+                            onClick = onSmsClick,
                         )
-                        ActionButton (
+                        ActionButton(
                             painter = painterResource(R.drawable.eye),
-                            onClick = { onViewClick(contact.name) },
+                            onClick = onViewClick,
                         )
                     }
                 }

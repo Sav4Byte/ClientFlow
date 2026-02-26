@@ -33,6 +33,9 @@ import androidx.compose.ui.unit.offset
 import androidx.compose.ui.unit.sp
 import com.coffeecodedevs.clientflow.ui.screens.*
 import com.coffeecodedevs.clientflow.ui.theme.ClientFlowTheme
+import com.coffeecodedevs.clientflow.data.ContactViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,50 +49,96 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+sealed class Screen {
+    object Contacts : Screen()
+    object Notes : Screen()
+    object Goals : Screen()
+    object Calendar : Screen()
+    data class ContactDetail(val contact: com.coffeecodedevs.clientflow.data.Contact, val showActivity: Boolean) : Screen()
+}
+
+
+
 @Composable
 fun AppNavigation() {
-    var currentScreen by remember { mutableStateOf(0) }
-    var selectedBottomTab by remember { mutableStateOf(0) }
+    val viewModel: ContactViewModel = viewModel()
+    val screenStack = remember { mutableStateListOf<Screen>(Screen.Contacts) }
+    val currentScreen = screenStack.last()
+
+    
     var showCreateDialog by remember { mutableStateOf(false) }
-    var selectedContactName by remember { mutableStateOf("Daniel Brooks") }
-    var showContactActivity by remember { mutableStateOf(true) }
+    
+    val selectedBottomTab = when (currentScreen) {
+        is Screen.Contacts -> 0
+        is Screen.Notes -> 1
+        is Screen.Goals -> 2
+        is Screen.Calendar -> 3
+        else -> 0
+    }
+
+    androidx.activity.compose.BackHandler(enabled = screenStack.size > 1) {
+        screenStack.removeAt(screenStack.size - 1)
+    }
     
     Box(modifier = Modifier.fillMaxSize()) {
         // Экраны
         when (currentScreen) {
-            0 -> ContactsScreen(
-                onContactClick = { name, full ->
-                    selectedContactName = name
-                    showContactActivity = full
-                    currentScreen = 5
+            is Screen.Contacts -> ContactsScreen(
+                onContactClick = { contact, full ->
+                    screenStack.add(Screen.ContactDetail(contact, full))
                 },
                 onCreateClick = { showCreateDialog = true }
             )
-            1 -> ThirdScreen(
-                onBackClick = { currentScreen = 0 },
+            is Screen.Notes -> NotesScreen(
+                onBackClick = { 
+                    if (screenStack.size > 1) screenStack.removeAt(screenStack.size - 1)
+                    else {
+                        screenStack.clear()
+                        screenStack.add(Screen.Contacts)
+                    }
+                },
                 onGoalsClick = {
-                    currentScreen = 2
-                    selectedBottomTab = 2
+                    screenStack.clear()
+                    screenStack.add(Screen.Contacts)
+                    screenStack.add(Screen.Goals)
                 }
             )
-            2 -> GoalsScreen(
-                onBackClick = { currentScreen = 0 }
-            )
-            3 -> FourthScreen(
-                onNavigate = { screenIndex ->
-                    currentScreen = screenIndex
-                    selectedBottomTab = screenIndex
+            is Screen.Goals -> GoalsScreen(
+                onBackClick = { 
+                    if (screenStack.size > 1) screenStack.removeAt(screenStack.size - 1)
+                    else {
+                        screenStack.clear()
+                        screenStack.add(Screen.Contacts)
+                    }
                 }
             )
-            5 -> ContactDetailScreen(
-                contactName = selectedContactName,
-                showActivity = showContactActivity,
-                onBackClick = { currentScreen = 0 }
+            is Screen.Calendar -> CalendarScreen(
+                onNavigate = { index ->
+                    val nextScreen = when(index) {
+                        0 -> Screen.Contacts
+                        1 -> Screen.Notes
+                        2 -> Screen.Goals
+                        3 -> Screen.Calendar
+                        else -> Screen.Contacts
+                    }
+                    screenStack.clear()
+                    screenStack.add(nextScreen)
+                }
             )
+            is Screen.ContactDetail -> ContactDetailScreen(
+                contactName = "${currentScreen.contact.firstName} ${currentScreen.contact.lastName}",
+                contactNote = currentScreen.contact.note,
+                company = currentScreen.contact.company,
+                phoneNumbers = currentScreen.contact.phones,
+                showActivity = currentScreen.showActivity,
+                onBackClick = { screenStack.removeAt(screenStack.size - 1) }
+            )
+
+
         }
         
-        // Нижняя панель навигации (скрыта только для экрана 5)
-        if (currentScreen != 5) {
+        // Нижняя панель навигации (скрыта только для детального экрана)
+        if (currentScreen !is Screen.ContactDetail) {
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -111,16 +160,16 @@ fun AppNavigation() {
                             painter = painterResource(R.drawable.contact),
                             selected = selectedBottomTab == 0,
                             onClick = {
-                                selectedBottomTab = 0
-                                currentScreen = 0
+                                screenStack.clear()
+                                screenStack.add(Screen.Contacts)
                             }
                         )
                         BottomNavIcon(
                             painter = painterResource(R.drawable.notes),
                             selected = selectedBottomTab == 1,
                             onClick = {
-                                selectedBottomTab = 1
-                                currentScreen = 1
+                                screenStack.clear()
+                                screenStack.add(Screen.Notes)
                             }
                         )
                         Spacer(modifier = Modifier.width(70.dp))
@@ -128,16 +177,16 @@ fun AppNavigation() {
                             painter = painterResource(R.drawable.dial),
                             selected = selectedBottomTab == 2,
                             onClick = {
-                                selectedBottomTab = 2
-                                currentScreen = 2
+                                screenStack.clear()
+                                screenStack.add(Screen.Goals)
                             }
                         )
                         BottomNavIcon(
                             painter = painterResource(R.drawable.calendar),
                             selected = selectedBottomTab == 3,
                             onClick = {
-                                selectedBottomTab = 3
-                                currentScreen = 3
+                                screenStack.clear()
+                                screenStack.add(Screen.Calendar)
                             }
                         )
                     }
@@ -158,11 +207,15 @@ fun AppNavigation() {
         if (showCreateDialog) {
             CreateContactDialog(
                 onDismiss = { showCreateDialog = false },
-                onSave = { showCreateDialog = false }
+                onSave = { contact ->
+                    viewModel.addContact(contact)
+                    showCreateDialog = false
+                }
             )
         }
     }
 }
+
 
 @Composable
 private fun BottomNavIcon(
@@ -230,201 +283,4 @@ fun GoalsScreenPreview() {
 }
 
 
-@Composable
-private fun CreateContactDialog(
-    onDismiss: () -> Unit,
-    onSave: () -> Unit
-) {
-    var createType by remember { mutableStateOf("CONTACT") }
-    var firstName by remember { mutableStateOf("") }
-    var lastName by remember { mutableStateOf("") }
-    var phone1 by remember { mutableStateOf("") }
-    var phone2 by remember { mutableStateOf("") }
-    var notes by remember { mutableStateOf("") }
-    
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = "Create",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                   color = Color(0xFF334D6F)
-            )
-        },
-        text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-            ) {
-                // Type tabs
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    listOf("CONTACT", "ORDER", "REMINDER", "NOTE").forEach { type ->
-                        Button(
-                            onClick = { createType = type },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(36.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (createType == type) Color(0xFFAEDEF4) else Color(0xFFE8E8E8),
-                                contentColor = Color(0xFF334D6F)
-                            ),
-                            shape = RoundedCornerShape(20.dp)
-                        ) {
-                            Text(type, fontSize = 12.sp)
-                        }
-                    }
-                }
-                
-                // Input fields
-                TextField(
-                    value = firstName,
-                    onValueChange = { firstName = it },
-                    placeholder = { Text("First Name") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 12.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = TextFieldDefaults.colors(
-                        unfocusedContainerColor = Color(0xFFF5F5F5),
-                        focusedContainerColor = Color.White
-                    )
-                )
-                
-                TextField(
-                    value = lastName,
-                    onValueChange = { lastName = it },
-                    placeholder = { Text("Last Name") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 12.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = TextFieldDefaults.colors(
-                        unfocusedContainerColor = Color(0xFFF5F5F5),
-                        focusedContainerColor = Color.White
-                    )
-                )
-                
-                // Phone fields
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TextField(
-                        value = phone1,
-                        onValueChange = { phone1 = it },
-                        placeholder = { Text("+380 67 895 50 89") },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = TextFieldDefaults.colors(
-                            unfocusedContainerColor = Color(0xFFF5F5F5),
-                            focusedContainerColor = Color.White
-                        )
-                    )
-                    if (phone1.isNotEmpty()) {
-                        Icon(
-                            painter = painterResource(R.drawable.trash),
-                            contentDescription = "Remove",
-                            modifier = Modifier
-                                .size(24.dp)
-                                .clickable { phone1 = "" },
-                            tint = Color(0xFF999999)
-                        )
-                    }
-                }
-                
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TextField(
-                        value = phone2,
-                        onValueChange = { phone2 = it },
-                        placeholder = { Text("+380 93 578 90 28") },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = TextFieldDefaults.colors(
-                            unfocusedContainerColor = Color(0xFFF5F5F5),
-                            focusedContainerColor = Color.White
-                        )
-                    )
-                    if (phone2.isNotEmpty()) {
-                        Icon(
-                            painter = painterResource(R.drawable.trash),
-                            contentDescription = "Remove",
-                            modifier = Modifier
-                                .size(24.dp)
-                                .clickable { phone2 = "" },
-                            tint = Color(0xFF999999)
-                        )
-                    }
-                }
-                
-                // Add phone button
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .size(42.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF313131))
-                        .clickable { },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add phone",
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(12.dp))
-                
-                TextField(
-                    value = notes,
-                    onValueChange = { notes = it },
-                    placeholder = { Text("Works on Sun, Mon, Wed and Fri.\nDon't call after 16:00.") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(100.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = TextFieldDefaults.colors(
-                        unfocusedContainerColor = Color(0xFFF5F5F5),
-                        focusedContainerColor = Color.White
-                    )
-                )
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = onSave,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF313131))
-            ) {
-                Text("SAVE", color = Color.White)
-            }
-        },
-        dismissButton = {
-            Button(
-                onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
-            ) {
-                Text("CANCEL", color = Color(0xFF334D6F))
-            }
-        },
-        modifier = Modifier
-            .fillMaxWidth(0.9f)
-            .clip(RoundedCornerShape(16.dp))
-    )
-}
+

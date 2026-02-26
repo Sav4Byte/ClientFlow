@@ -57,14 +57,18 @@ sealed class ContactTimelineItem {
 @Composable
 fun ContactDetailScreen(
     contactName: String = "Daniel Brooks",
-    contactNote: String = "Works on Sun, Mon, Wed and Fri.\nDon't call after 16:00.",
+    contactNote: String? = "Works on Sun, Mon, Wed and Fri.\nDon't call after 16:00.",
+    company: String? = null,
     phoneNumbers: List<String> = listOf("+380 67 895 50 89", "+380 93 578 90 28"),
     selectedBottomTab: Int = 0,
     onTabSelected: (Int) -> Unit = {},
     showActivity: Boolean = true,
     onBackClick: () -> Unit = {}
 ) {
+
     var selectedTab by remember { mutableStateOf("ALL") }
+    val context = androidx.compose.ui.platform.LocalContext.current
+
 
     val orders = if (showActivity) listOf(
         ContactOrder(
@@ -188,12 +192,23 @@ fun ContactDetailScreen(
                                     tint = Color(0xFF334D6F)
                                 )
                                 Spacer(modifier = Modifier.width(16.dp))
-                                Text(
-                                    text = contactName,
-                                    fontSize = 24.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF334D6F)
-                                )
+                                Column {
+                                    Text(
+                                        text = contactName,
+                                        fontSize = 22.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF334D6F)
+                                    )
+                                    if (!company.isNullOrBlank()) {
+                                        Text(
+                                            text = company,
+                                            fontSize = 14.sp,
+                                            color = Color(0xFF334D6F).copy(alpha = 0.7f),
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                }
+
                             }
                             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                                 Icon(
@@ -214,13 +229,16 @@ fun ContactDetailScreen(
                         Spacer(modifier = Modifier.height(12.dp))
 
                         // Contact note
-                        Text(
-                            text = contactNote,
-                            fontSize = 12.sp,
-                            color = Color(0xFFAAAAAA),
-                            lineHeight = 18.sp,
-                            modifier = Modifier.padding(start = 40.dp)
-                        )
+                        contactNote?.let {
+                            Text(
+                                text = it,
+                                fontSize = 12.sp,
+                                color = Color(0xFFAAAAAA),
+                                lineHeight = 18.sp,
+                                modifier = Modifier.padding(start = 40.dp)
+                            )
+                        }
+
 
                         Spacer(modifier = Modifier.height(18.dp))
 
@@ -250,18 +268,34 @@ fun ContactDetailScreen(
                     ) {
                         ContactActionButton(
                             painter = painterResource(R.drawable.phone),
-                            onClick = { }
+                            onClick = { 
+                                phoneNumbers.firstOrNull()?.let { 
+                                    com.coffeecodedevs.clientflow.utils.ContactActions.callContact(context, it)
+                                }
+                            }
                         )
                         ContactActionButton(
                             painter = painterResource(R.drawable.sms),
-                            onClick = { }
+                            onClick = { 
+                                phoneNumbers.firstOrNull()?.let { 
+                                    com.coffeecodedevs.clientflow.utils.ContactActions.sendSms(context, it)
+                                }
+                            }
                         )
                         ContactActionButton(
                             painter = painterResource(R.drawable.share),
-                            onClick = { }
+                            onClick = { 
+                                com.coffeecodedevs.clientflow.utils.ContactActions.shareContact(
+                                    context, 
+                                    contactName, 
+                                    phoneNumbers, 
+                                    contactNote
+                                )
+                            }
                         )
                     }
                 }
+
             }
 
             Spacer(modifier = Modifier.height(30.dp))
