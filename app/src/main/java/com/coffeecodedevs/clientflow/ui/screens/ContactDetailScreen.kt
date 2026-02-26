@@ -70,71 +70,9 @@ fun ContactDetailScreen(
     val context = androidx.compose.ui.platform.LocalContext.current
 
 
-    val orders = if (showActivity) listOf(
-        ContactOrder(
-            1,
-            "LINEN SUMMER DRESSES",
-            "Restock of lightweight linen dresses in three colors: White, Sage Green, and Soft Coral. Total quantity: 180 pcs across five sizes.",
-            "14:45",
-            "14:45",
-            Color(0xFFE5CCFF)
-        ),
-        ContactOrder(
-            2,
-            "WOMEN'S CASUAL TOPS",
-            "150 casual tops, including ribbed tank tops and relaxed-fit T-shirts in neutral tones.",
-            "Fri, 12:56",
-            "12:56",
-            Color(0xFFE5CCFF)
-        ),
-        ContactOrder(
-            3,
-            "BEACHWEAR SETS",
-            "The client ordered 95 beachwear sets consisting of cover-ups, bikinis, and matching sarongs. They asked for color-coordinated packaging and requested early access to the new Resort Collection lookbook.\nThe client asked for additional sizing options (XS–XXL)",
-            "Oct. 12, 14:45",
-            "14:45",
-            Color(0xFFE5CCFF)
-        ),
-        ContactOrder(
-            4,
-            "SHORT-SLEEVE SHIRTS",
-            "A wholesale order for 220 short-sleeve shirts in cotton and linen blends.",
-            "Oct. 11, 15:40",
-            "15:40",
-            Color(0xFFE5CCFF)
-        )
-    ) else emptyList()
+    val orders = emptyList<ContactOrder>()
 
-    val allTabItems = if (showActivity) listOf(
-        ContactTimelineItem.SimpleCall(time = "15:02"),
-        ContactTimelineItem.DetailedCall(
-            time = "14:45",
-            description = "Client specifically asked about availability of the Linen A-Line Dress in new colors and requested updated pricing for bulk orders."
-        ),
-        ContactTimelineItem.SimpleCall(time = "Sun, 14:34", isIncoming = true),
-        ContactTimelineItem.SimpleCall(time = "Oct. 19, 17:56"),
-        ContactTimelineItem.OrderItem(
-            order = ContactOrder(
-                id = 5,
-                title = "SUMMER COLLECTION",
-                description = "The client requested a lookbook for the July capsule drop and asked to be notified once the new swimwear line becomes available.",
-                date = "Oct. 17,",
-                time = "14:45",
-                color = Color(0xFFE5CCFF)
-            )
-        ),
-        ContactTimelineItem.SimpleCall(time = "Sep. 12, 17:56"),
-        ContactTimelineItem.OrderItem(
-            order = ContactOrder(
-                id = 6,
-                title = "T-SHIRTS",
-                description = "The client requested a lookbook for the July capsule drop and asked to be notified once the new swimwear line becomes available.",
-                date = "Sep. 11,",
-                time = "14:45",
-                color = Color(0xFFE5CCFF)
-            )
-        )
-    ) else emptyList()
+    val allTabItems = emptyList<ContactTimelineItem>()
 
     val gradientColors = listOf(
         Color(0xFFAEDEF4),
