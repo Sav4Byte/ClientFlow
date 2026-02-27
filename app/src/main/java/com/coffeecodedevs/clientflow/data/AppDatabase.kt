@@ -3,7 +3,7 @@ package com.coffeecodedevs.clientflow.data
 import android.content.Context
 import androidx.room.*
 
-@Database(entities = [Contact::class], version = 2, exportSchema = false)
+@Database(entities = [Contact::class], version = 7, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun contactDao(): ContactDao

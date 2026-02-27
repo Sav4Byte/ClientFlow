@@ -493,8 +493,9 @@ fun ContactsScreen(
                                             expandedContactId = if (expandedContactId == contact.id) null else contact.id
                                         },
                                         onCallClick = { 
-                                            contact.phones.firstOrNull()?.let { 
-                                                com.coffeecodedevs.clientflow.utils.ContactActions.callContact(context, it)
+                                            contact.phones.firstOrNull()?.let { phone ->
+                                                viewModel.logCall(contact)
+                                                com.coffeecodedevs.clientflow.utils.ContactActions.callContact(context, phone)
                                             }
                                         },
                                         onSmsClick = {
@@ -597,17 +598,17 @@ fun ContactItem(
                 Box(
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    if (contact.note != null) {
+                    if (!contact.contact.isNullOrEmpty()) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = 13.dp)
                                 .clip(CommentBoxWithCutoutShape())
                                 .background(Color(0xFFAEE0FF))
-                                .padding(start = 7.dp, top = 10.dp, end = 15.dp, bottom = 35.dp)
+                                .padding(start = 12.dp, top = 12.dp, end = 15.dp, bottom = 35.dp)
                         ) {
                             Text(
-                                text = contact.note,
+                                text = contact.contact!!,
                                 fontSize = 13.sp,
                                 color = Color(0xFF2C4A5E),
                                 lineHeight = 18.sp

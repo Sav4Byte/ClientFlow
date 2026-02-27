@@ -1,11 +1,15 @@
 package com.coffeecodedevs.clientflow.ui.screens
 
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -16,6 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -34,8 +39,18 @@ import com.coffeecodedevs.clientflow.R
 
 @Composable
 fun GoalsScreen(
-    onBackClick: () -> Unit = {}
+    noteTitle: String = "Daniel Brooks",
+    noteDescription: String = "",
+    onBackClick: () -> Unit = {},
+    onDeleteClick: () -> Unit = {},
+    onShareClick: () -> Unit = {},
+    onUpdateClick: (String, String) -> Unit = { _, _ -> },
+    onPencilClick: (() -> Unit)? = null
 ) {
+    var isEditing by remember { mutableStateOf(false) }
+    var editedTitle by remember { mutableStateOf(noteTitle) }
+    var editedDescription by remember { mutableStateOf(noteDescription) }
+    
     var selectedTab by remember { mutableStateOf("ORDERS") }
 
     val gradientColors = listOf(
@@ -60,7 +75,8 @@ fun GoalsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 24.dp) // Space for status bar to show gradient
+                .padding(top = 24.dp)
+                .verticalScroll(rememberScrollState())
         ) {
             // Top white block with header and cutout for buttons
             Box(
@@ -92,12 +108,25 @@ fun GoalsScreen(
                             tint = Color(0xFF333333)
                         )
                         Spacer(modifier = Modifier.width(16.dp))
-                        Text(
-                            text = "Daniel Brooks",
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF333333)
-                        )
+                        if (isEditing) {
+                            androidx.compose.foundation.text.BasicTextField(
+                                value = editedTitle,
+                                onValueChange = { editedTitle = it },
+                                textStyle = androidx.compose.ui.text.TextStyle(
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF333333)
+                                ),
+                                modifier = Modifier.weight(1f)
+                            )
+                        } else {
+                            Text(
+                                text = editedTitle,
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF333333)
+                            )
+                        }
                     }
                 }
                 
@@ -112,22 +141,57 @@ fun GoalsScreen(
                 ) {
                     GoalsActionButton(
                         painter = painterResource(R.drawable.trash),
-                        onClick = { }
+                        onClick = { onDeleteClick() }
                     )
                     GoalsActionButton(
                         painter = painterResource(R.drawable.share),
-                        onClick = { }
+                        onClick = { onShareClick() }
                     )
                     GoalsActionButton(
-                        painter = painterResource(R.drawable.pensil),
-                        onClick = { }
+                        painter = if (isEditing) androidx.compose.ui.graphics.vector.rememberVectorPainter(Icons.Default.Add) else painterResource(R.drawable.pensil),
+                        onClick = { 
+                            if (isEditing) {
+                                onUpdateClick(editedTitle, editedDescription)
+                                isEditing = false
+                            } else {
+                                if (onPencilClick != null) {
+                                    onPencilClick()
+                                } else {
+                                    isEditing = true
+                                }
+                            }
+                        }
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(44.dp))
 
-            // TODO: сюда перенести таймлайн как на ContactDetailScreen (ALL / ORDERS)
+            // Display the note description
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color.White.copy(alpha = 0.7f))
+                    .padding(20.dp)
+            ) {
+                if (isEditing) {
+                    androidx.compose.foundation.text.BasicTextField(
+                        value = editedDescription,
+                        onValueChange = { editedDescription = it },
+                        textStyle = androidx.compose.ui.text.TextStyle(
+                            fontSize = 15.sp,
+                            color = Color(0xFF333333),
+                            lineHeight = 22.sp,
+                            letterSpacing = (-0.1).sp
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                } else if (editedDescription.isNotEmpty()) {
+                    GoalParagraph(text = editedDescription)
+                }
+            }
         }
     }
 }
@@ -136,10 +200,10 @@ fun GoalsScreen(
 private fun GoalParagraph(text: String) {
     Text(
         text = text,
-        fontSize = 14.sp,
+        fontSize = 15.sp,
         color = Color(0xFF333333),
-        lineHeight = 24.sp,
-        letterSpacing = (-0.3).sp
+        lineHeight = 22.sp,
+        letterSpacing = (-0.1).sp
     )
 }
 

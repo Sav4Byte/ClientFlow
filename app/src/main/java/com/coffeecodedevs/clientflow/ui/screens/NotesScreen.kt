@@ -37,39 +37,16 @@ data class NoteItem(
     val id: Int,
     val title: String,
     val description: String,
+    val fullDescription: String? = null,
     val isGoalsNote: Boolean = false
 )
 
 @Composable
 fun NotesScreen(
+    notes: List<NoteItem>,
     onBackClick: () -> Unit = {},
-    onGoalsClick: () -> Unit = {}
+    onGoalsClick: (NoteItem) -> Unit = {}
 ) {
-    val notes = remember {
-        listOf(
-            NoteItem(
-                1,
-                "PRICE",
-                "The Cotton Oversized T-Shirt is available in sizes\nXS to XXL. It is priced at $12.50 per piece with a\nminimum order of 50 pieces."
-            ),
-            NoteItem(
-                2,
-                "COASTAL FASHION STORE",
-                "Updated the order in the system and notified the warehouse."
-            ),
-            NoteItem(
-                3,
-                "URBAN STREETWEAR CO.",
-                "Received inquiry about custom oversized T-shirts for their summer drop.\nScheduled an intro call for Friday to go over fabric options, printing techniques, minimum order quantities, and potential delivery timelines.\nPreparing swatch samples and print method references for the call."
-            ),
-            NoteItem(
-                4,
-                "GOALS FOR NEXT MONTH",
-                "Increase overall sales by 15–18% by focusing on promoting the new seasonal collection and highlighting best-selling items across all channels.\n\nClose at least four active deals with boutique retailers and multi-brand stores, especially those interested in our upcoming Fall/Winter line.",
-                isGoalsNote = true
-            )
-        )
-    }
 
     val gradientColors = listOf(
         Color(0xFF87CEEB),
@@ -170,9 +147,7 @@ fun NotesScreen(
                         NotesCard(
                             note = note,
                             onClick = {
-                                if (note.isGoalsNote) {
-                                    onGoalsClick()
-                                }
+                                onGoalsClick(note)
                             }
                         )
                     }

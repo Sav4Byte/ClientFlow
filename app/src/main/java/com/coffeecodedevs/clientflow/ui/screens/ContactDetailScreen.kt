@@ -60,19 +60,27 @@ fun ContactDetailScreen(
     contactNote: String? = "Works on Sun, Mon, Wed and Fri.\nDon't call after 16:00.",
     company: String? = null,
     phoneNumbers: List<String> = listOf("+380 67 895 50 89", "+380 93 578 90 28"),
+    callLog: List<String> = emptyList(),
     selectedBottomTab: Int = 0,
     onTabSelected: (Int) -> Unit = {},
     showActivity: Boolean = true,
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    onCallClick: () -> Unit = {},
+    onEditClick: () -> Unit = {},
+    onDeleteClick: () -> Unit = {}
 ) {
 
     var selectedTab by remember { mutableStateOf("ALL") }
     val context = androidx.compose.ui.platform.LocalContext.current
 
-
     val orders = emptyList<ContactOrder>()
 
-    val allTabItems = emptyList<ContactTimelineItem>()
+    // Build timeline from callLog (show latest first)
+    val allTabItems: List<ContactTimelineItem> = remember(callLog) {
+        callLog.reversed().map { timestamp ->
+            ContactTimelineItem.SimpleCall(time = timestamp)
+        }
+    }
 
     val gradientColors = listOf(
         Color(0xFFAEDEF4),
@@ -153,13 +161,17 @@ fun ContactDetailScreen(
                                     painter = painterResource(R.drawable.thrash),
                                     contentDescription = "Delete",
                                     tint = Color.Unspecified,
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .clickable { onDeleteClick() }
                                 )
                                 Icon(
                                     painter = painterResource(R.drawable.pensil),
                                     contentDescription = "Edit",
                                     tint = Color.Unspecified,
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .clickable { onEditClick() }
                                 )
                             }
                         }
@@ -208,6 +220,7 @@ fun ContactDetailScreen(
                             painter = painterResource(R.drawable.phone),
                             onClick = { 
                                 phoneNumbers.firstOrNull()?.let { 
+                                    onCallClick()
                                     com.coffeecodedevs.clientflow.utils.ContactActions.callContact(context, it)
                                 }
                             }

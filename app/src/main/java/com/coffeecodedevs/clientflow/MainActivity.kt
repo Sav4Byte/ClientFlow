@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -23,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -53,6 +55,7 @@ sealed class Screen {
     object Contacts : Screen()
     object Notes : Screen()
     object Goals : Screen()
+    data class GoalsDetail(val note: NoteItem) : Screen()
     object Calendar : Screen()
     data class ContactDetail(val contact: com.coffeecodedevs.clientflow.data.Contact, val showActivity: Boolean) : Screen()
 }
@@ -61,19 +64,38 @@ sealed class Screen {
 
 @Composable
 fun AppNavigation() {
+    val context = LocalContext.current
     val viewModel: ContactViewModel = viewModel()
     val screenStack = remember { mutableStateListOf<Screen>(Screen.Contacts) }
     val currentScreen = screenStack.last()
 
     
     var showCreateDialog by remember { mutableStateOf(false) }
+    var contactToEdit by remember { mutableStateOf<com.coffeecodedevs.clientflow.data.Contact?>(null) }
     
     val selectedBottomTab = when (currentScreen) {
         is Screen.Contacts -> 0
         is Screen.Notes -> 1
-        is Screen.Goals -> 2
+        is Screen.Goals, is Screen.GoalsDetail -> 2
         is Screen.Calendar -> 3
         else -> 0
+    }
+
+    val allContactsFromDb by viewModel.allContacts.collectAsState(initial = emptyList())
+    val allNotesFromDb by viewModel.allNotes.collectAsState(initial = emptyList())
+    // Мапим контакты-заметки из БД в формат NoteItem для экрана заметок
+    val dbNotes = allNotesFromDb.map { contact ->
+        val fullText = contact.contact ?: ""
+        val lines = fullText.split("\n\n")
+        val preview = if (lines.size >= 2) lines.take(2).joinToString("\n\n") else fullText.take(150)
+        
+        NoteItem(
+            id = contact.id,
+            title = if (contact.noteTitle.isNotBlank()) contact.noteTitle else "New Note",
+            description = preview,
+            fullDescription = fullText,
+            isGoalsNote = true
+        )
     }
 
     androidx.activity.compose.BackHandler(enabled = screenStack.size > 1) {
@@ -90,6 +112,7 @@ fun AppNavigation() {
                 onCreateClick = { showCreateDialog = true }
             )
             is Screen.Notes -> NotesScreen(
+                notes = dbNotes,
                 onBackClick = { 
                     if (screenStack.size > 1) screenStack.removeAt(screenStack.size - 1)
                     else {
@@ -97,12 +120,45 @@ fun AppNavigation() {
                         screenStack.add(Screen.Contacts)
                     }
                 },
-                onGoalsClick = {
-                    screenStack.clear()
-                    screenStack.add(Screen.Contacts)
-                    screenStack.add(Screen.Goals)
+                onGoalsClick = { note ->
+                    screenStack.add(Screen.GoalsDetail(note))
                 }
             )
+            is Screen.GoalsDetail -> {
+                val displayNote = dbNotes.find { it.id == currentScreen.note.id } ?: currentScreen.note
+                GoalsScreen(
+                    noteTitle = displayNote.title,
+                    noteDescription = displayNote.fullDescription ?: displayNote.description,
+                    onBackClick = { screenStack.removeAt(screenStack.size - 1) },
+                    onDeleteClick = {
+                        val contactToDelete = allNotesFromDb.find { it.id == displayNote.id }
+                        if (contactToDelete != null) {
+                            viewModel.deleteContact(contactToDelete)
+                        }
+                        screenStack.removeAt(screenStack.size - 1)
+                    },
+                    onShareClick = {
+                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_SUBJECT, displayNote.title)
+                            putExtra(Intent.EXTRA_TEXT, "${displayNote.title}\n\n${displayNote.fullDescription ?: displayNote.description}")
+                        }
+                        context.startActivity(Intent.createChooser(shareIntent, "Share note via"))
+                    },
+                    onUpdateClick = { newTitle, newFullDescription ->
+                        val contactToUpdate = allNotesFromDb.find { it.id == displayNote.id }
+                        if (contactToUpdate != null) {
+                            viewModel.updateContact(contactToUpdate.copy(
+                                noteTitle = newTitle,
+                                contact = newFullDescription
+                            ))
+                        }
+                    },
+                    onPencilClick = {
+                        contactToEdit = allNotesFromDb.find { it.id == displayNote.id }
+                    }
+                )
+            }
             is Screen.Goals -> GoalsScreen(
                 onBackClick = { 
                     if (screenStack.size > 1) screenStack.removeAt(screenStack.size - 1)
@@ -125,20 +181,34 @@ fun AppNavigation() {
                     screenStack.add(nextScreen)
                 }
             )
-            is Screen.ContactDetail -> ContactDetailScreen(
-                contactName = "${currentScreen.contact.firstName} ${currentScreen.contact.lastName}",
-                contactNote = currentScreen.contact.note,
-                company = currentScreen.contact.company,
-                phoneNumbers = currentScreen.contact.phones,
-                showActivity = currentScreen.showActivity,
-                onBackClick = { screenStack.removeAt(screenStack.size - 1) }
-            )
+            is Screen.ContactDetail -> {
+                val displayContact = allContactsFromDb.find { it.id == currentScreen.contact.id } ?: currentScreen.contact
+                ContactDetailScreen(
+                    contactName = "${displayContact.firstName} ${displayContact.lastName}",
+                    contactNote = displayContact.contact,
+                    company = displayContact.company,
+                    phoneNumbers = displayContact.phones,
+                    callLog = displayContact.callLog,
+                    showActivity = currentScreen.showActivity,
+                    onBackClick = { screenStack.removeAt(screenStack.size - 1) },
+                    onCallClick = {
+                        viewModel.logCall(displayContact)
+                    },
+                    onEditClick = {
+                        contactToEdit = displayContact
+                    },
+                    onDeleteClick = {
+                        viewModel.deleteContact(displayContact)
+                        screenStack.removeAt(screenStack.size - 1)
+                    }
+                )
+            }
 
 
         }
         
-        // Нижняя панель навигации (скрыта только для детального экрана)
-        if (currentScreen !is Screen.ContactDetail) {
+        // Нижняя панель навигации
+        if (currentScreen !is Screen.ContactDetail && currentScreen !is Screen.GoalsDetail) {
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -177,8 +247,8 @@ fun AppNavigation() {
                             painter = painterResource(R.drawable.dial),
                             selected = selectedBottomTab == 2,
                             onClick = {
-                                screenStack.clear()
-                                screenStack.add(Screen.Goals)
+                                val intent = Intent(Intent.ACTION_DIAL)
+                                context.startActivity(intent)
                             }
                         )
                         BottomNavIcon(
@@ -204,12 +274,34 @@ fun AppNavigation() {
         }
         
         // Create Dialog
-        if (showCreateDialog) {
+        if (showCreateDialog || contactToEdit != null) {
             CreateContactDialog(
-                onDismiss = { showCreateDialog = false },
-                onSave = { contact ->
-                    viewModel.addContact(contact)
+                initialTab = when {
+                    contactToEdit?.isStandaloneNote == true -> "NOTE"
+                    contactToEdit != null -> "CONTACT"
+                    currentScreen is Screen.Notes -> "NOTE"
+                    else -> "CONTACT"
+                },
+                editingContact = contactToEdit,
+                onDismiss = { 
                     showCreateDialog = false
+                    contactToEdit = null
+                },
+                onSave = { contact ->
+                    // Определяем, это контакт или просто нотатка
+                    val isNote = (currentScreen is Screen.Notes) || contact.isStandaloneNote
+                    
+                    if (contactToEdit != null) {
+                        viewModel.updateContact(contact)
+                    } else {
+                        viewModel.addContact(contact.copy(
+                            isStandaloneNote = isNote,
+                            firstName = if (contact.firstName.isBlank()) "Note" else contact.firstName
+                        ))
+                    }
+                    
+                    showCreateDialog = false
+                    contactToEdit = null
                 }
             )
         }

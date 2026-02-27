@@ -15,7 +15,16 @@ data class Contact(
     val phones: List<String>,
     val isClient: Boolean,
     val isEmployee: Boolean,
-    val note: String? = null
+    val contact: String? = null,
+    val orderName: String = "",
+    val customerName: String = "",
+    val orderAddress: String = "",
+    val noteTitle: String = "",
+    val reminderText: String = "",
+    val reminderDate: String = "",
+    val reminderTime: String = "",
+    val isStandaloneNote: Boolean = false,
+    val callLog: List<String> = emptyList()
 )
 
 

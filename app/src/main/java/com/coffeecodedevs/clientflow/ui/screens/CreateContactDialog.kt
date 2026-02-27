@@ -41,31 +41,35 @@ import java.text.SimpleDateFormat
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateContactDialog(
+    initialTab: String = "CONTACT",
+    editingContact: Contact? = null,
     onDismiss: () -> Unit,
     onSave: (Contact) -> Unit
 ) {
-    var selectedTab by remember { mutableStateOf("CONTACT") }
+    var selectedTab by remember { 
+        mutableStateOf(if (editingContact?.isStandaloneNote == true) "NOTE" else initialTab) 
+    }
     
     // Contact fields
-    var firstName by remember { mutableStateOf("") }
-    var lastName by remember { mutableStateOf("") }
-    var company by remember { mutableStateOf("") }
-    var phones by remember { mutableStateOf(listOf("+380")) }
+    var firstName by remember { mutableStateOf(editingContact?.firstName ?: "") }
+    var lastName by remember { mutableStateOf(editingContact?.lastName ?: "") }
+    var company by remember { mutableStateOf(editingContact?.company ?: "") }
+    var phones by remember { mutableStateOf(editingContact?.phones ?: listOf("+380")) }
     
     // Order fields
-    var orderTitle by remember { mutableStateOf("") }
-    var orderCustomer by remember { mutableStateOf("") }
-    var orderAddress by remember { mutableStateOf("") }
+    var orderTitle by remember { mutableStateOf(editingContact?.orderName ?: "") }
+    var orderCustomer by remember { mutableStateOf(editingContact?.customerName ?: "") }
+    var orderAddress by remember { mutableStateOf(editingContact?.orderAddress ?: "") }
     
-    var description by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf(editingContact?.contact ?: "") }
     
     // Note fields
-    var noteTitle by remember { mutableStateOf("") }
+    var noteTitle by remember { mutableStateOf(editingContact?.noteTitle ?: "") }
     
     // Reminder fields
-    var reminderText by remember { mutableStateOf("") }
-    var reminderDate by remember { mutableStateOf("07.10.2026") }
-    var reminderTime by remember { mutableStateOf("00:00") }
+    var reminderText by remember { mutableStateOf(editingContact?.reminderText ?: "") }
+    var reminderDate by remember { mutableStateOf(editingContact?.reminderDate ?: "07.10.2026") }
+    var reminderTime by remember { mutableStateOf(editingContact?.reminderTime ?: "00:00") }
     var repeatEnabled by remember { mutableStateOf(false) }
     var selectedDays by remember { mutableStateOf(emptySet<String>()) }
     var showDatePicker by remember { mutableStateOf(false) }
@@ -134,22 +138,16 @@ fun CreateContactDialog(
                         
                         Spacer(modifier = Modifier.height(20.dp))
 
-                        // 2. Name fields second
-                        Column(
-                            modifier = Modifier.padding(horizontal = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            GrayFrameTextField(value = firstName, onValueChange = { firstName = it }, placeholder = "Name")
-                            GrayFrameTextField(value = lastName, onValueChange = { lastName = it }, placeholder = "Surname")
-                        }
-
-                        Spacer(modifier = Modifier.height(20.dp))
-
                         if (selectedTab == "CONTACT") {
                             Column(
                                 modifier = Modifier.padding(horizontal = 8.dp),
                                  verticalArrangement = Arrangement.spacedBy(20.dp)
                             ) {
+                                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    GrayFrameTextField(value = firstName, onValueChange = { firstName = it }, placeholder = "Name")
+                                    GrayFrameTextField(value = lastName, onValueChange = { lastName = it }, placeholder = "Surname")
+                                }
+
                                 GrayFrameTextField(value = company, onValueChange = { company = it }, placeholder = "Company")
 
                                 // Phone field
@@ -356,44 +354,37 @@ fun CreateContactDialog(
                         Spacer(modifier = Modifier.width(12.dp))
                         Button(
                             onClick = {
-                                // Basic validation: require at least a name
-                                if (firstName.isNotBlank() || lastName.isNotBlank()) {
-                                    // Combine additional info into the note if needed
-                                    val finalNote = buildString {
-                                        if (description.isNotEmpty()) append(description)
-                                        
-                                        // If there's info in other tabs, append it to the note
-                                        if (orderTitle.isNotEmpty()) {
-                                            if (this.isNotEmpty()) append("\n\n")
-                                            append("Order: $orderTitle")
-                                            if (orderCustomer.isNotEmpty()) append("\nCustomer: $orderCustomer")
-                                            if (orderAddress.isNotEmpty()) append("\nAddress: $orderAddress")
-                                        }
-                                        
-                                        if (noteTitle.isNotEmpty()) {
-                                            if (this.isNotEmpty()) append("\n\n")
-                                            append("Note Title: $noteTitle")
-                                        }
-
-                                        if (reminderText.isNotEmpty()) {
-                                            if (this.isNotEmpty()) append("\n\n")
-                                            append("Reminder: $reminderText ($reminderDate $reminderTime)")
-                                        }
-                                    }
-
+                                if (firstName.isNotBlank() || lastName.isNotBlank() || 
+                                    orderTitle.isNotBlank() || noteTitle.isNotBlank() || reminderText.isNotBlank()) {
+                                    
                                     onSave(
                                         Contact(
-                                            firstName = firstName,
+                                            id = editingContact?.id ?: 0,
+                                            firstName = when {
+                                                firstName.isNotBlank() -> firstName
+                                                selectedTab == "ORDER" && orderCustomer.isNotBlank() -> orderCustomer
+                                                selectedTab == "ORDER" -> orderTitle
+                                                selectedTab == "NOTE" -> noteTitle
+                                                selectedTab == "REMINDER" -> reminderText
+                                                else -> "New"
+                                            },
                                             lastName = lastName,
                                             company = company,
                                             phones = phones,
-                                            isClient = true, // Everything here is a client
+                                            isClient = true,
                                             isEmployee = false,
-                                            note = if (finalNote.isEmpty()) null else finalNote
+                                            contact = if (description.isNotBlank()) description else null,
+                                            orderName = orderTitle,
+                                            customerName = orderCustomer,
+                                            orderAddress = orderAddress,
+                                            noteTitle = noteTitle,
+                                            reminderText = reminderText,
+                                            reminderDate = reminderDate,
+                                            reminderTime = reminderTime,
+                                            isStandaloneNote = editingContact?.isStandaloneNote ?: (initialTab == "NOTE")
                                         )
                                     )
                                 } else {
-                                    // Optional: show some feedback or just close if empty
                                     onDismiss()
                                 }
                             },
