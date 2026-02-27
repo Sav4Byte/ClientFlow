@@ -72,6 +72,7 @@ fun AppNavigation() {
     
     var showCreateDialog by remember { mutableStateOf(false) }
     var contactToEdit by remember { mutableStateOf<com.coffeecodedevs.clientflow.data.Contact?>(null) }
+    var activeContactTab by remember { mutableStateOf("CLIENT") }
     
     val selectedBottomTab = when (currentScreen) {
         is Screen.Contacts -> 0
@@ -109,7 +110,13 @@ fun AppNavigation() {
                 onContactClick = { contact, full ->
                     screenStack.add(Screen.ContactDetail(contact, full))
                 },
-                onCreateClick = { showCreateDialog = true }
+                onCreateClick = { tab ->
+                    activeContactTab = tab
+                    showCreateDialog = true
+                },
+                onTabChange = { tab ->
+                    activeContactTab = tab
+                }
             )
             is Screen.Notes -> NotesScreen(
                 notes = dbNotes,
@@ -288,13 +295,21 @@ fun AppNavigation() {
                     contactToEdit = null
                 },
                 onSave = { contact ->
-                    // Определяем, это контакт или просто нотатка
                     val isNote = (currentScreen is Screen.Notes) || contact.isStandaloneNote
                     
                     if (contactToEdit != null) {
-                        viewModel.updateContact(contact)
+                        // При редактировании сохраняем исходные флаги isClient/isEmployee
+                        viewModel.updateContact(contact.copy(
+                            isClient = contactToEdit!!.isClient,
+                            isEmployee = contactToEdit!!.isEmployee
+                        ))
                     } else {
+                        // При создании нового — определяем тип по активной вкладке
+                        val isClient = !isNote && (activeContactTab == "CLIENT")
+                        val isEmployee = !isNote && (activeContactTab == "EMPLOYEE")
                         viewModel.addContact(contact.copy(
+                            isClient = isClient,
+                            isEmployee = isEmployee,
                             isStandaloneNote = isNote,
                             firstName = if (contact.firstName.isBlank()) "Note" else contact.firstName
                         ))

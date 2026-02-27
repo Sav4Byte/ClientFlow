@@ -312,7 +312,8 @@ class CommentBoxWithCutoutShape : Shape {
 @Composable
 fun ContactsScreen(
     onContactClick: (com.coffeecodedevs.clientflow.data.Contact, Boolean) -> Unit = { _, _ -> },
-    onCreateClick: () -> Unit = {},
+    onCreateClick: (String) -> Unit = {},
+    onTabChange: (String) -> Unit = {},
     viewModel: com.coffeecodedevs.clientflow.data.ContactViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
 
@@ -422,7 +423,7 @@ fun ContactsScreen(
                                     if (outline is Outline.Generic) drawPath(outline.path, Color.White)
                                 }
                             }
-                            .clickable { selectedTab = "CLIENT" },
+                            .clickable { selectedTab = "CLIENT"; onTabChange("CLIENT") },
                         contentAlignment = Alignment.Center
                     ) {
                         Text("CLIENTS", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF334D6F))
@@ -436,7 +437,7 @@ fun ContactsScreen(
                                     if (outline is Outline.Generic) drawPath(outline.path, Color.White)
                                 }
                             }
-                            .clickable { selectedTab = "EMPLOYEE" },
+                            .clickable { selectedTab = "EMPLOYEE"; onTabChange("EMPLOYEE") },
                         contentAlignment = Alignment.Center
                     ) {
                         Text("EMPLOYEES", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF334D6F))
