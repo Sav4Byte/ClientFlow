@@ -74,6 +74,27 @@ fun AppNavigation() {
     var contactToEdit by remember { mutableStateOf<com.coffeecodedevs.clientflow.data.Contact?>(null) }
     var activeContactTab by remember { mutableStateOf("CLIENT") }
     
+    var callInProgressContact by remember { mutableStateOf<com.coffeecodedevs.clientflow.data.Contact?>(null) }
+    var showCallResultDialog by remember { mutableStateOf(false) }
+
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            // Trigger when app comes back to the foreground
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                if (callInProgressContact != null) {
+                    // Show the dialog anytime they return back after starting a call
+                    showCallResultDialog = true
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+    
     val selectedBottomTab = when (currentScreen) {
         is Screen.Contacts -> 0
         is Screen.Notes -> 1
@@ -176,6 +197,10 @@ fun AppNavigation() {
                 }
             )
             is Screen.Calendar -> CalendarScreen(
+                contacts = allContactsFromDb,
+                onTabChange = { tab ->
+                    activeContactTab = tab
+                },
                 onNavigate = { index ->
                     val nextScreen = when(index) {
                         0 -> Screen.Contacts
@@ -200,6 +225,7 @@ fun AppNavigation() {
                     onBackClick = { screenStack.removeAt(screenStack.size - 1) },
                     onCallClick = {
                         viewModel.logCall(displayContact)
+                        callInProgressContact = displayContact
                     },
                     onEditClick = {
                         contactToEdit = displayContact
@@ -287,6 +313,9 @@ fun AppNavigation() {
                     contactToEdit?.isStandaloneNote == true -> "NOTE"
                     contactToEdit != null -> "CONTACT"
                     currentScreen is Screen.Notes -> "NOTE"
+                    currentScreen is Screen.Calendar && activeContactTab == "ORDERS" -> "ORDER"
+                    currentScreen is Screen.Calendar && activeContactTab == "REMINDER" -> "REMINDER"
+                    currentScreen is Screen.Calendar -> "REMINDER"
                     else -> "CONTACT"
                 },
                 editingContact = contactToEdit,
@@ -304,12 +333,7 @@ fun AppNavigation() {
                             isEmployee = contactToEdit!!.isEmployee
                         ))
                     } else {
-                        // При создании нового — определяем тип по активной вкладке
-                        val isClient = !isNote && (activeContactTab == "CLIENT")
-                        val isEmployee = !isNote && (activeContactTab == "EMPLOYEE")
                         viewModel.addContact(contact.copy(
-                            isClient = isClient,
-                            isEmployee = isEmployee,
                             isStandaloneNote = isNote,
                             firstName = if (contact.firstName.isBlank()) "Note" else contact.firstName
                         ))
@@ -317,6 +341,44 @@ fun AppNavigation() {
                     
                     showCreateDialog = false
                     contactToEdit = null
+                }
+            )
+        }
+
+        // Call Result Dialog
+        if (showCallResultDialog && callInProgressContact != null) {
+            CallResultDialog(
+                contact = callInProgressContact!!,
+                onDismiss = {
+                    showCallResultDialog = false
+                    callInProgressContact = null
+                },
+                onSave = { note, isNewClient, orderValue, reminderText, reminderDate, reminderTime ->
+                    val contactToUpdate = allContactsFromDb.find { it.id == callInProgressContact!!.id } ?: callInProgressContact!!
+                    var updatedContact = contactToUpdate
+
+                    if (note.isNotBlank()) {
+                        val newNoteWithSpace = if (updatedContact.contact.isNullOrBlank()) note else "${updatedContact.contact}\n\n$note"
+                        updatedContact = updatedContact.copy(contact = newNoteWithSpace)
+                    }
+                    if (isNewClient) {
+                        updatedContact = updatedContact.copy(isClient = true, isEmployee = false)
+                    }
+                    if (orderValue != null) {
+                        updatedContact = updatedContact.copy(orderName = orderValue)
+                    }
+                    if (reminderText != null) {
+                        updatedContact = updatedContact.copy(
+                            reminderText = reminderText,
+                            reminderDate = reminderDate ?: updatedContact.reminderDate,
+                            reminderTime = reminderTime ?: updatedContact.reminderTime
+                        )
+                    }
+
+                    viewModel.updateContact(updatedContact)
+
+                    showCallResultDialog = false
+                    callInProgressContact = null
                 }
             )
         }

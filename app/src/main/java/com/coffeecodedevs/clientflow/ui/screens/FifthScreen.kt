@@ -202,7 +202,7 @@ fun FifthScreen(
                         ) {
                             Text(
                                 text = "Works on Sun, Mon, Wed and Fri.",
-                                fontSize = 13.sp,
+                                fontSize = 10.sp,
                                 color = Color(0xFFAAAAAA)
                             )
                             Spacer(modifier = Modifier.height(4.dp))

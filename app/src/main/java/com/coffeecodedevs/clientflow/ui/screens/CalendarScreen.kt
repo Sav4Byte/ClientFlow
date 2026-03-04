@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +29,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.coffeecodedevs.clientflow.R
 
+import android.os.Build
+import androidx.annotation.RequiresApi
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.DayOfWeek
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import kotlinx.coroutines.launch
+
 data class Reminder(val id: Int, val text: String, val time: String)
 data class Order(val id: Int, val title: String, val description: String, val clientName: String, val time: String)
 
@@ -37,47 +50,99 @@ sealed class TimelineItem {
     data class OrderItem(val order: Order, val backgroundColor: Color, val iconRes: Int) : TimelineItem()
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun CalendarScreen(onNavigate: (Int) -> Unit) {
+fun CalendarScreen(
+    contacts: List<com.coffeecodedevs.clientflow.data.Contact> = emptyList(),
+    onTabChange: (String) -> Unit = {},
+    onNavigate: (Int) -> Unit
+) {
     var selectedTab by remember { mutableStateOf("REMINDER") }
+    
+    // Notify parent of initial tab
+    LaunchedEffect(Unit) {
+        onTabChange(selectedTab)
+    }
     var selectedBottomTab by remember { mutableStateOf(3) }
+    
+    val today = remember { LocalDate.now() }
+    var selectedDate by remember { mutableStateOf(today) }
+    
+    // Create a large list of dates (e.g., +/- 1000 days from today)
+    val totalDays = 2000
+    val days = remember {
+        (0 until totalDays).map { today.minusDays((totalDays / 2).toLong()).plusDays(it.toLong()) }
+    }
+    
+    val initialIndex = totalDays / 2
+    val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex - 3)
+    val coroutineScope = rememberCoroutineScope()
+    
+    // Calculate which item is currently near the center/visible to animate the cutout smoothly
+    val selectedGlobalIndex = days.indexOf(selectedDate)
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    
+    var lastKnownTarget by remember { mutableStateOf(0f) }
+    val cutoutCenterX by remember(selectedGlobalIndex) {
+        derivedStateOf<Float> {
+            val layoutInfo = listState.layoutInfo
+            val visibleItems = layoutInfo.visibleItemsInfo
+            val selectedItem = visibleItems.find { it.index == selectedGlobalIndex }
+            if (selectedItem != null) {
+                // Increased offset to 20dp to push the bubble more to the right and keep it centered
+                val center = selectedItem.offset.toFloat() + selectedItem.size / 2f + (20f * density.density)
+                lastKnownTarget = center
+                center
+            } else {
+                lastKnownTarget
+            }
+        }
+    }
 
-    val reminders = listOf(
-        Reminder(1, "Call Daniel Brooks", "9:00"),
-        Reminder(2, "Call Ali Conors", "9:40"),
-        Reminder(3, "Make an order for Sam Watson", "11:10"),
-        Reminder(4, "Ask Fred about \"Gepur\"", "12:00"),
-        Reminder(5, "Prepare documents", "16:00")
-    )
+    val dateString = selectedDate.format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy"))
 
-    val orders = listOf(
-        Order(1, "SUMMER COLLECTION", "The client requested a lookbook for the July capsule drop and asked to be notified once the new swimwear line becomes available.", "Daniel Brooks", "9:10"),
-        Order(2, "FLORAL PRINT DRESSES", "Color: Sand / Coral. Size Range: XS–XXL\nQuantity: 200 pcs. Unit Price: $12.50", "Ali Konnors", "9:45"),
-        Order(3, "SHORT-SLEEVE SHIRTS", "Men’s Linen Short-Sleeve Shirt:\nClient requested fabric swatches for upcoming fall color palette.\nAdd 10 extra units of the Sand Oversized T-Shirt if available in stock.", "Sam Watson", "9:30"),
-        Order(4, "T-SHIRTS", "The client requested a lookbook for the July capsule drop and asked to be notified once the new swimwear line becomes available.", "Fred", "9:25")
-    )
+    val reminders = remember(contacts, dateString) {
+        contacts.filter { it.reminderText.isNotBlank() && it.reminderDate == dateString }
+            .map { Reminder(it.id, it.reminderText, if (it.reminderTime.isNotBlank()) it.reminderTime else "All Day") }
+    }
 
-    val allTabItems = remember {
-        listOf(
-            TimelineItem.ReminderItem(Reminder(1, "Call Daniel Brooks", "9:00")),
-            TimelineItem.CallItem(1, "DANIEL BROOKS", "9:02"),
-            TimelineItem.OrderItem(
-                Order(1, "SUMMER COLLECTION", "The client requested a lookbook for the July capsule drop and asked to be notified once the new swimwear line becomes available.", "Daniel Brooks", "9:10"),
-                backgroundColor = Color(0xFFE5CCFF),
-                iconRes = R.drawable.notess
-            ),
-            TimelineItem.OrderItem(
-                Order(4, "DAN DILAN", "The client expressed interest in upcoming pre-orders for the Resort Wear Capsule, asking to receive the digital lookbook.", "", "9:30"),
-                backgroundColor = Color(0xFFAEDEF4),
-                iconRes = R.drawable.phone
-            ),
-            TimelineItem.ReminderItem(Reminder(2, "Call Ali Conors", "9:40")),
-            TimelineItem.OrderItem(
-                Order(2, "FLORAL PRINT DRESSES", "Color: Sand / Coral. Size Range: XS–XXL\nQuantity: 200 pcs. Unit Price: $12.50", "Ali Konnors", "9:45"),
-                backgroundColor = Color(0xFFE5CCFF),
-                iconRes = R.drawable.notess
-            )
-        )
+    // Orders show all regardless of date
+    val orders = remember(contacts) {
+        contacts.filter { it.orderName.isNotBlank() }
+            .map {
+                Order(
+                    id = it.id,
+                    title = it.orderName,
+                    description = it.contact ?: "",
+                    clientName = it.customerName.ifBlank { "${it.firstName} ${it.lastName}".trim() },
+                    time = if (it.reminderTime.isNotBlank()) it.reminderTime else ""
+                )
+            }
+    }
+
+    val allTabItems = remember(reminders, contacts, dateString) {
+        val items = mutableListOf<TimelineItem>()
+        items.addAll(reminders.map { TimelineItem.ReminderItem(it) })
+        // Orders are no longer shown in the "Daily Timeline" because they don't depend on the calendar date
+        
+        
+        // For calls, it's a bit harder to filter by year, but let's try to match "MMM. d,"
+        val callDatePrefix = selectedDate.format(java.time.format.DateTimeFormatter.ofPattern("MMM. d,", java.util.Locale.ENGLISH))
+        
+        contacts.forEach { contact ->
+            contact.callLog.forEach { timeStr ->
+                if (timeStr.startsWith(callDatePrefix)) {
+                    items.add(
+                        TimelineItem.CallItem(
+                            id = contact.id,
+                            name = "${contact.firstName} ${contact.lastName}".trim().uppercase(),
+                            time = timeStr
+                        )
+                    )
+                }
+            }
+        }
+        items
     }
 
     Box(
@@ -92,45 +157,62 @@ fun CalendarScreen(onNavigate: (Int) -> Unit) {
         Column(modifier = Modifier.fillMaxSize()) {
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Заголовок календаря: ОКТЯБРЬ на белом фоне, даты на градиенте
+            val monthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", java.util.Locale.ENGLISH)
+            val headerText = selectedDate.format(monthFormatter).uppercase()
+
+            // Calendar header: MONTH on white background, dates on gradient
             Column(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // OCTOBER 2025 на белом фоне - с вырезом снизу
+                // White background block with cutout from bottom
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(OctoberHeaderWithCutoutShape())
+                        .clip(OctoberHeaderWithCutoutShape(cutoutCenterX))
                         .background(Color.White)
                         .padding(horizontal = 20.dp, vertical = 20.dp)
                 ) {
                     Text(
-                        text = "OCTOBER 2025",
+                        text = headerText,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF334D6F)
                     )
                 }
 
-                // Даты на градиентном фоне
-                Row(
+                // Dates with smooth scrolling
+                val dayFormatter = DateTimeFormatter.ofPattern("dd")
+                val dayOfWeekFormatter = DateTimeFormatter.ofPattern("E", java.util.Locale.ENGLISH)
+
+                LazyRow(
+                    state = listState,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 10.dp, bottom = 16.dp, start = 20.dp, end = 20.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                        .padding(top = 10.dp, bottom = 16.dp),
+                    contentPadding = PaddingValues(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.spacedBy(0.dp)
                 ) {
-                    CalendarDay("20", "Mon", false)
-                    CalendarDay("21", "Tue", false)
-                    CalendarDay("22", "Wed", false)
-                    CalendarDay("23", "Thu", false)
-                    CalendarDay("24", "Fri", true)
-                    CalendarDay("25", "Sat", false)
-                    CalendarDay("26", "Sun", false)
+                    itemsIndexed(days) { index, date ->
+                        val isSelected = date == selectedDate
+                        Box(
+                            modifier = Modifier.fillParentMaxWidth(fraction = 1f / 7f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CalendarDay(
+                                day = date.format(dayFormatter),
+                                dayName = date.format(dayOfWeekFormatter),
+                                isSelected = isSelected,
+                                onClick = {
+                                    selectedDate = date
+                                }
+                            )
+                        }
+                    }
                 }
             }
         }
 
-        // 1. Белый блок контента (размещен на 175dp для выступа вкладки)
+        // 1. White content block
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -171,23 +253,32 @@ fun CalendarScreen(onNavigate: (Int) -> Unit) {
             }
         }
 
-        // 2. Ряд вкладок (закреплен ровно над белым блоком)
+        // 2. Tabs Row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 175.dp)
                 .height(40.dp)
-                .padding(horizontal = 16.dp), // Совпадает с отступом белого блока
+                .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                TabItem("ALL", selectedTab == "ALL") { selectedTab = "ALL" }
+                TabItem("ALL", selectedTab == "ALL") { 
+                    selectedTab = "ALL"
+                    onTabChange("ALL")
+                }
             }
             Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                TabItem("ORDERS", selectedTab == "ORDERS") { selectedTab = "ORDERS" }
+                TabItem("ORDERS", selectedTab == "ORDERS") { 
+                    selectedTab = "ORDERS"
+                    onTabChange("ORDERS")
+                }
             }
             Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                TabItem("REMINDER", selectedTab == "REMINDER") { selectedTab = "REMINDER" }
+                TabItem("REMINDER", selectedTab == "REMINDER") { 
+                    selectedTab = "REMINDER"
+                    onTabChange("REMINDER")
+                }
             }
         }
     }
@@ -195,54 +286,46 @@ fun CalendarScreen(onNavigate: (Int) -> Unit) {
 
 
 @Composable
-private fun CalendarDay(day: String, dayName: String, isSelected: Boolean) {
-    if (isSelected) {
-        Box(
-            modifier = Modifier
-                .width(80.dp)
-                .height(100.dp),
-            contentAlignment = Alignment.TopCenter
-        ) {
-            // Текст числа (например, "24")
+private fun CalendarDay(day: String, dayName: String, isSelected: Boolean, onClick: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier
+            .fillMaxWidth() // Uses the 1/7 fraction from parent
+            .height(115.dp) // Slightly taller to accommodate large text
+            .offset(y = (-25.dp))
+            .clickable(
+                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                indication = null,
+                onClick = onClick
+            )
+    ) {
+        if (isSelected) {
+            // Reverted to original large fonts
             Text(
                 day,
-                fontSize = 44.sp,
-                fontWeight = FontWeight.Normal,
-                color = Color(0xFF334D6F),
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .offset(y = (-28).dp) // Сместил выше
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF334D6F)
             )
-
-            // Текст названия дня (например, "Fri")
             Text(
                 dayName,
-                fontSize = 32.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Normal,
-                color = Color(0xFF334D6F),
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .offset(y = 20.dp) // Сместил выше вслед за числом
+                color = Color(0xFF334D6F)
             )
-        }
-    } else {
-        // Невыбранный день остается как Column
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .width(40.dp)
-                .padding(vertical = 8.dp)
-        ) {
+        } else {
+            // Unselected state
             Text(
                 day,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Normal,
-                color = Color(0x99334D6F) // Установил запрошенный цвет с прозрачностью
+                color = Color(0x99334D6F)
             )
             Text(
                 dayName,
-                fontSize = 12.sp,
-                color = Color(0x99334D6F) // Установил запрошенный цвет с прозрачностью
+                fontSize = 12.sp, // Reverted to 12
+                color = Color(0x99334D6F)
             )
         }
     }
@@ -252,15 +335,14 @@ private class ContentWithTabShape(val selectedTab: String) : Shape {
     override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
         return Outline.Generic(
             path = Path().apply {
-                val cornerRadius = 32f * density.density // Для "ушек"
-                val bodyCornerRadius = 16f * density.density // Для основных углов блока (сделаем острее)
+                val cornerRadius = 32f * density.density
+                val bodyCornerRadius = 16f * density.density
                 val tabHeight = 40f * density.density
                 val smoothFactor = 28f * density.density
                 val bodyTop = tabHeight
 
-                // Разделяем общую ширину на 3 равные секции для соответствия Row с weight(1f)
                 val sectionWidth = size.width / 3f
-                val tabWidth = sectionWidth // Ширина вкладки соответствует ширине секции для центрирования
+                val tabWidth = sectionWidth
 
                 val tabStartX = when (selectedTab) {
                     "ALL" -> 0f
@@ -270,75 +352,48 @@ private class ContentWithTabShape(val selectedTab: String) : Shape {
                 }
                 val tabEndX = tabStartX + tabWidth
 
-                // Начинаем с левого нижнего угла (прямые углы)
                 moveTo(0f, size.height)
                 lineTo(size.width, size.height)
 
-                // Правый край
                 if (selectedTab == "REMINDER") {
-                    // Правый край вверх во вкладку
                     lineTo(size.width, cornerRadius)
                     quadraticBezierTo(size.width, 0f, size.width - cornerRadius, 0f)
-
-                    // Верх вкладки
                     lineTo(tabStartX + smoothFactor, 0f)
-
-                    // Изгиб вниз к основному телу
                     cubicTo(
                         tabStartX, 0f,
                         tabStartX, bodyTop,
                         tabStartX - smoothFactor, bodyTop
                     )
-
-                    // По левой верхней части основного тела
                     lineTo(bodyCornerRadius, bodyTop)
-                    quadraticBezierTo(0f, bodyTop, 0f, bodyTop + bodyCornerRadius)
+                    quadraticTo(0f, bodyTop, 0f, bodyTop + bodyCornerRadius)
                 } else if (selectedTab == "ALL") {
-                    // Правый край вверх к верху основного тела
                     lineTo(size.width, bodyTop + bodyCornerRadius)
-                    quadraticBezierTo(size.width, bodyTop, size.width - bodyCornerRadius, bodyTop)
-
-                    // По верхнему краю к концу вкладки
+                    quadraticTo(size.width, bodyTop, size.width - bodyCornerRadius, bodyTop)
                     lineTo(tabEndX + smoothFactor, bodyTop)
-
-                    // Изгиб ВВЕРХ во вкладку
                     cubicTo(
                         tabEndX, bodyTop,
                         tabEndX, 0f,
                         tabEndX - smoothFactor, 0f
                     )
-
-                    // От верха вкладки к левому краю
                     lineTo(cornerRadius, 0f)
-                    quadraticBezierTo(0f, 0f, 0f, cornerRadius)
-                } else { // ORDERS (Центр)
-                    // Правый край вверх к верху основного тела
+                    quadraticTo(0f, 0f, 0f, cornerRadius)
+                } else { // ORDERS
                     lineTo(size.width, bodyTop + bodyCornerRadius)
-                    quadraticBezierTo(size.width, bodyTop, size.width - bodyCornerRadius, bodyTop)
-
-                    // Переход к концу вкладки
+                    quadraticTo(size.width, bodyTop, size.width - bodyCornerRadius, bodyTop)
                     lineTo(tabEndX + smoothFactor, bodyTop)
-
-                    // Изгиб ВВЕРХ во вкладку
                     cubicTo(
                         tabEndX, bodyTop,
                         tabEndX, 0f,
                         tabEndX - smoothFactor * 0.8f, 0f
                     )
-
-                    // Верх вкладки
                     lineTo(tabStartX + smoothFactor * 0.8f, 0f)
-
-                    // Изгиб ВНИЗ из вкладки
                     cubicTo(
                         tabStartX, 0f,
                         tabStartX, bodyTop,
                         tabStartX - smoothFactor, bodyTop
                     )
-
-                    // Верхний край к левой стороне
                     lineTo(bodyCornerRadius, bodyTop)
-                    quadraticBezierTo(0f, bodyTop, 0f, bodyTop + bodyCornerRadius)
+                    quadraticTo(0f, bodyTop, 0f, bodyTop + bodyCornerRadius)
                 }
 
                 close()
@@ -347,64 +402,60 @@ private class ContentWithTabShape(val selectedTab: String) : Shape {
     }
 }
 
-private class OctoberHeaderWithCutoutShape : Shape {
+private class OctoberHeaderWithCutoutShape(private val cutoutCenterX: Float) : Shape {
     override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
         return Outline.Generic(
             path = Path().apply {
-                // Параметры выреза
-                val cutoutWidth = 130f * density.density
-                val cutoutHeight = 45f * density.density
-                val centerX = size.width * 0.63f
+                val edgeCornerRadius = 24f * density.density
 
-                val cutoutLeft = centerX - cutoutWidth / 2f
-                val cutoutRight = centerX + cutoutWidth / 2f
-                val cutoutBottom = size.height
-                val cutoutTop = cutoutBottom - cutoutHeight
-
-                val smoothFactor = 30f * density.density
-                val edgeCornerRadius = 24f * density.density // Радиус для краев
-
-                // Начинаем с левого верхнего угла
                 moveTo(0f, 0f)
-
-                // Верхний край
                 lineTo(size.width, 0f)
 
-                // Правый край вниз к началу закругления угла
+                if (cutoutCenterX < 0) {
+                    lineTo(size.width, size.height - edgeCornerRadius)
+                    quadraticBezierTo(size.width, size.height, size.width - edgeCornerRadius, size.height)
+                    lineTo(edgeCornerRadius, size.height)
+                    quadraticBezierTo(0f, size.height, 0f, size.height - edgeCornerRadius)
+                    lineTo(0f, 0f)
+                    close()
+                    return@apply
+                }
+
+                val cutoutWidth = 60f * density.density
+                val cutoutHeight = 40f * density.density
+                val smoothing = 25f * density.density
+
+                val left = cutoutCenterX - cutoutWidth / 2f
+                val right = cutoutCenterX + cutoutWidth / 2f
+                val top = size.height - cutoutHeight
+
+                // Draw clockwise
+                lineTo(size.width, 0f)
                 lineTo(size.width, size.height - edgeCornerRadius)
-
-                // Изгиб в правом нижнем углу (идет "вверх")
                 quadraticBezierTo(size.width, size.height, size.width - edgeCornerRadius, size.height)
-
-                // Нижний край к началу центрального выреза (правая сторона)
-                lineTo(cutoutRight, size.height)
-
-                // Изгиб ВВЕРХ и ВЛЕВО в центральный вырез
+                
+                // Bottom edge with the smooth cutout
+                lineTo(right + smoothing, size.height)
+                
+                // Cubic curve into the cutout
                 cubicTo(
-                    cutoutRight - smoothFactor, size.height,
-                    cutoutRight - smoothFactor, cutoutTop,
-                    cutoutRight - smoothFactor * 2, cutoutTop
+                    right, size.height,
+                    right, top,
+                    right - smoothing, top
                 )
-
-                // Линия по верху центрального выреза
-                lineTo(cutoutLeft + smoothFactor * 2, cutoutTop)
-
-                // Изгиб ВНИЗ и ВЛЕВО из центрального выреза
+                
+                lineTo(left + smoothing, top)
+                
+                // Cubic curve out of the cutout
                 cubicTo(
-                    cutoutLeft + smoothFactor, cutoutTop,
-                    cutoutLeft + smoothFactor, size.height,
-                    cutoutLeft, size.height
+                    left, top,
+                    left, size.height,
+                    left - smoothing, size.height
                 )
-
-                // Линия к началу закругления левого нижнего угла
+                
                 lineTo(edgeCornerRadius, size.height)
-
-                // Изгиб в левом нижнем углу
                 quadraticBezierTo(0f, size.height, 0f, size.height - edgeCornerRadius)
-
-                // Левый край обратно к началу
                 lineTo(0f, 0f)
-
                 close()
             }
         )
@@ -480,14 +531,14 @@ private fun OrderItem(order: Order, backgroundColor: Color = Color(0xFFE5CCFF), 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(end = 2.dp, bottom = 25.dp)
+            .padding(end = 2.dp, bottom = 12.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(FourthScreenOrderItemShape())
                 .background(backgroundColor)
-                .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 10.dp)
+                .padding(start = 16.dp, top = 10.dp, end = 16.dp, bottom = 8.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -516,16 +567,17 @@ private fun OrderItem(order: Order, backgroundColor: Color = Color(0xFFE5CCFF), 
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            if (order.description.isNotBlank()) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = order.description,
+                    fontSize = 13.sp,
+                    color = Color(0xFF334D6F),
+                    lineHeight = 16.sp
+                )
+            }
 
-            Text(
-                text = order.description,
-                fontSize = 13.sp,
-                color = Color(0xFF334D6F),
-                lineHeight = 18.sp
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             Text(
                 text = order.clientName,
@@ -538,7 +590,7 @@ private fun OrderItem(order: Order, backgroundColor: Color = Color(0xFFE5CCFF), 
         Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .offset(x = 0.dp, y = 15.dp) // Выравнивание правого края (x=0)
+                .offset(x = 0.dp, y = 15.dp) // Возвращаем правильный офсет
                 .size(42.dp)
                 .clip(CircleShape)
                 .background(Color(0xFF313131)),
@@ -560,12 +612,12 @@ private class FourthScreenOrderItemShape : Shape {
             path = Path().apply {
                 val cornerRadius = 8f * density.density
 
-                // Уменьшенные параметры для плотного прилегания к кнопке
-                val cutoutHeight = 34f * density.density // Ниже (ближе к верху кнопки)
-                val flatWidth = 30f * density.density   // Уже (ближе к боку кнопки)
+                // Возвращаем проверенные параметры формы для красоты
+                val cutoutHeight = 34f * density.density 
+                val flatWidth = 30f * density.density
                 val slopeWidth = 40f * density.density
-                val smoothing = 20f * density.density   // Компактнее сглаживание
-                val topCornerRadius = 15f * density.density // Аккуратный угол
+                val smoothing = 20f * density.density
+                val topCornerRadius = 15f * density.density
 
                 // Верх
                 moveTo(cornerRadius, 0f)
