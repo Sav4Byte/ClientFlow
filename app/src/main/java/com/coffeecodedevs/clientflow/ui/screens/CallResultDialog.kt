@@ -40,7 +40,7 @@ fun CallResultDialog(
     var isMadeOrder by remember { mutableStateOf(false) }
     var orderValue by remember { mutableStateOf("") }
 
-    var isRemind by remember { mutableStateOf(false) }
+    var isRemind by remember { mutableStateOf(true) }
     var reminderText by remember { mutableStateOf("") }
     var reminderDate by remember { mutableStateOf("07.10.2026") }
     var reminderTime by remember { mutableStateOf("09:00") }
@@ -218,48 +218,46 @@ fun CallResultDialog(
                             )
                         }
                         
-                        if (isRemind) {
-                            BasicTextField(
-                                value = reminderText,
-                                onValueChange = { reminderText = it },
-                                textStyle = TextStyle(
-                                    fontSize = 15.sp,
-                                    color = Color(0xFF313131),
-                                    fontWeight = FontWeight.Normal
-                                ),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(start = 52.dp, top = 2.dp, bottom = 12.dp),
-                                cursorBrush = SolidColor(Color(0xFF313131)),
-                                decorationBox = { innerTextField ->
-                                    if (reminderText.isEmpty()) {
-                                        Text(
-                                            text = "Call ${contact.firstName} ${contact.lastName}",
-                                            color = Color(0xFFAAAAAA),
-                                            fontSize = 15.sp
-                                        )
-                                    }
-                                    innerTextField()
+                        BasicTextField(
+                            value = reminderText,
+                            onValueChange = { reminderText = it },
+                            textStyle = TextStyle(
+                                fontSize = 15.sp,
+                                color = Color(0xFF313131),
+                                fontWeight = FontWeight.Normal
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 52.dp, top = 2.dp, bottom = 12.dp),
+                            cursorBrush = SolidColor(Color(0xFF313131)),
+                            decorationBox = { innerTextField ->
+                                if (reminderText.isEmpty()) {
+                                    Text(
+                                        text = "Call soon",
+                                        color = Color(0xFFAAAAAA),
+                                        fontSize = 15.sp
+                                    )
                                 }
-                            )
-
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(start = 52.dp, bottom = 16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                CallResultOutlinedLabelField(
-                                    label = "Date", 
-                                    value = reminderDate, 
-                                    modifier = Modifier.weight(1f).clickable { showDatePicker = true }
-                                )
-                                CallResultOutlinedLabelField(
-                                    label = "Time", 
-                                    value = reminderTime, 
-                                    modifier = Modifier.weight(1f).clickable { showTimePicker = true }
-                                )
+                                innerTextField()
                             }
+                        )
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 52.dp, bottom = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            CallResultOutlinedLabelField(
+                                label = "Date", 
+                                value = reminderDate, 
+                                modifier = Modifier.weight(1f).clickable { showDatePicker = true }
+                            )
+                            CallResultOutlinedLabelField(
+                                label = "Time", 
+                                value = reminderTime, 
+                                modifier = Modifier.weight(1f).clickable { showTimePicker = true }
+                            )
                         }
 
                         // Date Picker Dialog
@@ -329,7 +327,7 @@ fun CallResultDialog(
                                     callNote,
                                     isNewClient,
                                     if (isMadeOrder) orderValue.ifBlank { "Linen A-Line Dress" } else null,
-                                    if (isRemind) reminderText.ifBlank { "Call ${contact.firstName} ${contact.lastName}" } else null,
+                                    if (isRemind) reminderText.ifBlank { "Call soon" } else null,
                                     if (isRemind) reminderDate else null,
                                     if (isRemind) reminderTime else null
                                 )

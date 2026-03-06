@@ -312,6 +312,7 @@ class CommentBoxWithCutoutShape : Shape {
 @Composable
 fun ContactsScreen(
     onContactClick: (com.coffeecodedevs.clientflow.data.Contact, Boolean) -> Unit = { _, _ -> },
+    onCallInitiated: (com.coffeecodedevs.clientflow.data.Contact) -> Unit = {},
     onCreateClick: (String) -> Unit = {},
     onTabChange: (String) -> Unit = {},
     viewModel: com.coffeecodedevs.clientflow.data.ContactViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
@@ -496,6 +497,7 @@ fun ContactsScreen(
                                         onCallClick = { 
                                             contact.phones.firstOrNull()?.let { phone ->
                                                 viewModel.logCall(contact)
+                                                onCallInitiated(contact)
                                                 com.coffeecodedevs.clientflow.utils.ContactActions.callContact(context, phone)
                                             }
                                         },

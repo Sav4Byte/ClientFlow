@@ -131,6 +131,9 @@ fun AppNavigation() {
                 onContactClick = { contact, full ->
                     screenStack.add(Screen.ContactDetail(contact, full))
                 },
+                onCallInitiated = { contact ->
+                    callInProgressContact = contact
+                },
                 onCreateClick = { tab ->
                     activeContactTab = tab
                     showCreateDialog = true

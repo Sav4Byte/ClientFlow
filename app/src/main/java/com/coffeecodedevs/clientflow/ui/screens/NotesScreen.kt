@@ -2,7 +2,6 @@
 package com.coffeecodedevs.clientflow.ui.screens
 
 import androidx.compose.foundation.background
-
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,7 +11,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,6 +51,14 @@ fun NotesScreen(
     onBackClick: () -> Unit = {},
     onGoalsClick: (NoteItem) -> Unit = {}
 ) {
+    var searchQuery by remember { mutableStateOf("") }
+    
+    val filteredNotes = remember(notes, searchQuery) {
+        notes.filter {
+            it.title.contains(searchQuery, ignoreCase = true) ||
+            it.description.contains(searchQuery, ignoreCase = true)
+        }
+    }
 
     val gradientColors = listOf(
         Color(0xFF87CEEB),
@@ -110,11 +122,27 @@ fun NotesScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "Search",
-                            color = Color(0xFF8B9BA8),
-                            fontSize = 15.sp,
-                            modifier = Modifier.weight(1f)
+                        BasicTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            modifier = Modifier.weight(1f),
+                            textStyle = TextStyle(
+                                color = Color(0xFF334D6F),
+                                fontSize = 15.sp
+                            ),
+                            singleLine = true,
+                            decorationBox = { innerTextField ->
+                                Box(contentAlignment = Alignment.CenterStart) {
+                                    if (searchQuery.isEmpty()) {
+                                        Text(
+                                            text = "Search",
+                                            color = Color(0xFF8B9BA8),
+                                            fontSize = 15.sp
+                                        )
+                                    }
+                                    innerTextField()
+                                }
+                            }
                         )
                         Icon(
                             imageVector = Icons.Outlined.Search,
@@ -143,7 +171,7 @@ fun NotesScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     contentPadding = PaddingValues(bottom = 140.dp)
                 ) {
-                    items(notes) { note ->
+                    items(filteredNotes) { note ->
                         NotesCard(
                             note = note,
                             onClick = {
