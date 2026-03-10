@@ -41,6 +41,10 @@ import com.coffeecodedevs.clientflow.R
 fun GoalsScreen(
     noteTitle: String = "Daniel Brooks",
     noteDescription: String = "",
+    customerName: String? = null,
+    orderAddress: String? = null,
+    orderTime: String? = null,
+    isOrder: Boolean = false,
     onBackClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {},
     onShareClick: () -> Unit = {},
@@ -48,18 +52,28 @@ fun GoalsScreen(
     onPencilClick: (() -> Unit)? = null
 ) {
     var isEditing by remember { mutableStateOf(false) }
-    var editedTitle by remember { mutableStateOf(noteTitle) }
-    var editedDescription by remember { mutableStateOf(noteDescription) }
+    var editedTitle by remember(noteTitle) { mutableStateOf(noteTitle) }
+    var editedDescription by remember(noteDescription) { mutableStateOf(noteDescription) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
     
     var selectedTab by remember { mutableStateOf("ORDERS") }
 
-    val gradientColors = listOf(
-        Color(0xFF9FD9D9), // Turquoise/mint at top
-        Color(0xFFB8F2F2), // Lighter and more saturated mint
-        Color(0xFFB8F2F2),
-        Color(0xFFF5EFE6), // Light beige/cream
-        Color(0xFFF5E6D3)  // Light beige at bottom
-    )
+    val gradientColors = if (isOrder) {
+        listOf(
+            Color(0xFFD3B8E8), // Lilac at top
+            Color(0xFFE5CCFF), 
+            Color(0xFFF5EFE6), // Light beige/cream
+            Color(0xFFF5E6D3)  
+        )
+    } else {
+        listOf(
+            Color(0xFF9FD9D9), // Turquoise/mint at top
+            Color(0xFFB8F2F2), 
+            Color(0xFFB8F2F2),
+            Color(0xFFF5EFE6), 
+            Color(0xFFF5E6D3)  
+        )
+    }
 
     Box(
         modifier = Modifier
@@ -82,7 +96,7 @@ fun GoalsScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(100.dp)
+                    .height(if (isOrder) 180.dp else 100.dp)
             ) {
                 // White block with cutout shape - cutout is at the TOP right
                 Box(
@@ -97,35 +111,51 @@ fun GoalsScreen(
                             .fillMaxWidth()
                             .padding(top = 24.dp)
                             .padding(horizontal = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.Top
                     ) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back",
                             modifier = Modifier
+                                .padding(top = 8.dp)
                                 .size(24.dp)
                                 .clickable { onBackClick() },
                             tint = Color(0xFF333333)
                         )
                         Spacer(modifier = Modifier.width(16.dp))
-                        if (isEditing) {
-                            androidx.compose.foundation.text.BasicTextField(
-                                value = editedTitle,
-                                onValueChange = { editedTitle = it },
-                                textStyle = androidx.compose.ui.text.TextStyle(
+                        Column(modifier = Modifier.weight(1f)) {
+                            if (isEditing) {
+                                androidx.compose.foundation.text.BasicTextField(
+                                    value = editedTitle,
+                                    onValueChange = { editedTitle = it },
+                                    textStyle = androidx.compose.ui.text.TextStyle(
+                                        fontSize = 24.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF333333)
+                                    ),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            } else {
+                                Text(
+                                    text = editedTitle,
                                     fontSize = 24.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF333333)
-                                ),
-                                modifier = Modifier.weight(1f)
-                            )
-                        } else {
-                            Text(
-                                text = editedTitle,
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF333333)
-                            )
+                                )
+                            }
+                            
+                            if (isOrder) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                if (!customerName.isNullOrBlank()) {
+                                    Text(text = customerName, fontSize = 16.sp, color = Color(0xFF888888))
+                                }
+                                if (!orderAddress.isNullOrBlank()) {
+                                    Text(text = orderAddress, fontSize = 16.sp, color = Color(0xFF888888))
+                                }
+                                if (!orderTime.isNullOrBlank()) {
+                                    Text(text = orderTime, fontSize = 16.sp, color = Color(0xFF888888))
+                                }
+                            }
                         }
                     }
                 }
@@ -141,7 +171,7 @@ fun GoalsScreen(
                 ) {
                     GoalsActionButton(
                         painter = painterResource(R.drawable.trash),
-                        onClick = { onDeleteClick() }
+                        onClick = { showDeleteDialog = true }
                     )
                     GoalsActionButton(
                         painter = painterResource(R.drawable.share),
@@ -186,12 +216,36 @@ fun GoalsScreen(
                             lineHeight = 22.sp,
                             letterSpacing = (-0.1).sp
                         ),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp)
                     )
-                } else if (editedDescription.isNotEmpty()) {
-                    GoalParagraph(text = editedDescription)
+                } else {
+                    GoalParagraph(text = if (editedDescription.isEmpty()) "Click the pencil to add a description..." else editedDescription)
                 }
             }
+        }
+
+        if (showDeleteDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                title = { Text("Delete Note?") },
+                text = { Text("Are you sure you want to permanently delete this note?") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showDeleteDialog = false
+                            onDeleteClick()
+                        },
+                        colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
+                    ) {
+                        Text("Delete")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
     }
 }

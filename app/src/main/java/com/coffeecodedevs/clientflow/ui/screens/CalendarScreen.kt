@@ -53,11 +53,13 @@ sealed class TimelineItem {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun CalendarScreen(
+    initialTab: String = "REMINDER",
     contacts: List<com.coffeecodedevs.clientflow.data.Contact> = emptyList(),
     onTabChange: (String) -> Unit = {},
+    onOrderClick: (Order) -> Unit = {},
     onNavigate: (Int) -> Unit
 ) {
-    var selectedTab by remember { mutableStateOf("REMINDER") }
+    var selectedTab by remember { mutableStateOf(initialTab) }
     
     // Notify parent of initial tab
     LaunchedEffect(Unit) {
@@ -231,7 +233,12 @@ fun CalendarScreen(
                     }
                     "ORDERS" -> {
                         LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 120.dp)) {
-                            items(orders) { order -> OrderItem(order) }
+                            items(orders) { order -> 
+                                OrderItem(
+                                    order = order,
+                                    onClick = { onOrderClick(order) }
+                                ) 
+                            }
                         }
                     }
                     "ALL" -> {
@@ -243,7 +250,8 @@ fun CalendarScreen(
                                     is TimelineItem.OrderItem -> OrderItem(
                                         order = item.order,
                                         backgroundColor = item.backgroundColor,
-                                        iconRes = item.iconRes
+                                        iconRes = item.iconRes,
+                                        onClick = { onOrderClick(item.order) }
                                     )
                                 }
                             }
@@ -527,7 +535,12 @@ private fun SimpleCallItem(item: TimelineItem.CallItem) {
 }
 
 @Composable
-private fun OrderItem(order: Order, backgroundColor: Color = Color(0xFFE5CCFF), iconRes: Int = R.drawable.notess) {
+private fun OrderItem(
+    order: Order, 
+    backgroundColor: Color = Color(0xFFE5CCFF), 
+    iconRes: Int = R.drawable.notess,
+    onClick: () -> Unit = {}
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -593,7 +606,8 @@ private fun OrderItem(order: Order, backgroundColor: Color = Color(0xFFE5CCFF), 
                 .offset(x = 0.dp, y = 15.dp) // Возвращаем правильный офсет
                 .size(42.dp)
                 .clip(CircleShape)
-                .background(Color(0xFF313131)),
+                .background(Color(0xFF313131))
+                .clickable(onClick = onClick),
             contentAlignment = Alignment.Center
         ) {
             Icon(

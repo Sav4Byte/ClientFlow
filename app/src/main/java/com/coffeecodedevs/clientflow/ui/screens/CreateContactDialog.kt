@@ -555,7 +555,7 @@ private fun GrayFrameTextField(
     placeholder: String,
     modifier: Modifier = Modifier,
     singleLine: Boolean = true,
-    fontWeight: FontWeight = FontWeight.Bold
+    fontWeight: FontWeight = FontWeight.Normal
 ) {
     Box(
         modifier = modifier

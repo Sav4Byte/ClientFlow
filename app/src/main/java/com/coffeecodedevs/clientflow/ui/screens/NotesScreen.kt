@@ -201,7 +201,6 @@ private fun NotesCard(
                 .heightIn(min = 30.dp)
                 .clip(NotesCardShape())
                 .background(Color(0xFFCCF5F0))
-                .clickable(onClick = onClick)
                 .padding(start = 20.dp, top = 8.dp, end = 20.dp, bottom = 20.dp)
         ) {
             Row(
@@ -243,7 +242,8 @@ private fun NotesCard(
                 .offset(x = 0.dp, y = 15.dp)
                 .size(42.dp)
                 .clip(CircleShape)
-                .background(Color(0xFF313131)),
+                .background(Color(0xFF313131))
+                .clickable(onClick = onClick),
             contentAlignment = Alignment.Center
         ) {
             Icon(

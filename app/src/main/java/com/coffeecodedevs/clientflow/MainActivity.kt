@@ -156,15 +156,29 @@ fun AppNavigation() {
                 }
             )
             is Screen.GoalsDetail -> {
-                val displayNote = dbNotes.find { it.id == currentScreen.note.id } ?: currentScreen.note
+                val contactFromDb = allContactsFromDb.find { it.id == currentScreen.note.id }
+                    ?: allNotesFromDb.find { it.id == currentScreen.note.id }
+                
+                val displayNote = dbNotes.find { it.id == currentScreen.note.id } 
+                    ?: NoteItem(
+                        id = contactFromDb?.id ?: currentScreen.note.id,
+                        title = contactFromDb?.let { if (it.orderName.isNotBlank() && !it.isStandaloneNote) it.orderName else it.noteTitle } ?: currentScreen.note.title,
+                        description = contactFromDb?.contact ?: currentScreen.note.description,
+                        fullDescription = contactFromDb?.contact ?: currentScreen.note.fullDescription,
+                        isGoalsNote = true
+                    )
+                
                 GoalsScreen(
                     noteTitle = displayNote.title,
                     noteDescription = displayNote.fullDescription ?: displayNote.description,
+                    customerName = contactFromDb?.customerName?.ifBlank { "${contactFromDb.firstName} ${contactFromDb.lastName}".trim() },
+                    orderAddress = contactFromDb?.orderAddress,
+                    orderTime = if (contactFromDb?.reminderTime?.isNotBlank() == true) contactFromDb.reminderTime else null,
+                    isOrder = contactFromDb != null && contactFromDb.orderName.isNotBlank() && !contactFromDb.isStandaloneNote,
                     onBackClick = { screenStack.removeAt(screenStack.size - 1) },
                     onDeleteClick = {
-                        val contactToDelete = allNotesFromDb.find { it.id == displayNote.id }
-                        if (contactToDelete != null) {
-                            viewModel.deleteContact(contactToDelete)
+                        if (contactFromDb != null) {
+                            viewModel.deleteContact(contactFromDb)
                         }
                         screenStack.removeAt(screenStack.size - 1)
                     },
@@ -177,16 +191,20 @@ fun AppNavigation() {
                         context.startActivity(Intent.createChooser(shareIntent, "Share note via"))
                     },
                     onUpdateClick = { newTitle, newFullDescription ->
-                        val contactToUpdate = allNotesFromDb.find { it.id == displayNote.id }
+                        val contactToUpdate = allContactsFromDb.find { it.id == displayNote.id }
                         if (contactToUpdate != null) {
-                            viewModel.updateContact(contactToUpdate.copy(
-                                noteTitle = newTitle,
-                                contact = newFullDescription
-                            ))
+                            if (contactToUpdate.orderName.isNotBlank() && !contactToUpdate.isStandaloneNote) {
+                                viewModel.updateContact(contactToUpdate.copy(
+                                    orderName = newTitle,
+                                    contact = newFullDescription
+                                ))
+                            } else {
+                                viewModel.updateContact(contactToUpdate.copy(
+                                    noteTitle = newTitle,
+                                    contact = newFullDescription
+                                ))
+                            }
                         }
-                    },
-                    onPencilClick = {
-                        contactToEdit = allNotesFromDb.find { it.id == displayNote.id }
                     }
                 )
             }
@@ -200,9 +218,21 @@ fun AppNavigation() {
                 }
             )
             is Screen.Calendar -> CalendarScreen(
+                initialTab = if (activeContactTab in listOf("ALL", "ORDERS", "REMINDER")) activeContactTab else "REMINDER",
                 contacts = allContactsFromDb,
                 onTabChange = { tab ->
                     activeContactTab = tab
+                },
+                onOrderClick = { order ->
+                    screenStack.add(Screen.GoalsDetail(
+                        NoteItem(
+                            id = order.id,
+                            title = order.title,
+                            description = order.description,
+                            fullDescription = order.description,
+                            isGoalsNote = true
+                        )
+                    ))
                 },
                 onNavigate = { index ->
                     val nextScreen = when(index) {
