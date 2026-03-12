@@ -10,8 +10,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,6 +28,8 @@ import androidx.compose.ui.window.DialogProperties
 import com.coffeecodedevs.clientflow.data.Contact
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.ui.res.stringResource
+import com.coffeecodedevs.clientflow.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,21 +38,36 @@ fun CallResultDialog(
     onDismiss: () -> Unit,
     onSave: (note: String, isNewClient: Boolean, orderValue: String?, reminderText: String?, reminderDate: String?, reminderTime: String?) -> Unit
 ) {
-    var callNote by remember { mutableStateOf("") }
+    var callNote by remember { mutableStateOf<String>("") }
     
-    var isNewClient by remember { mutableStateOf(false) }
+    var isNewClient by remember { mutableStateOf<Boolean>(false) }
     
-    var isMadeOrder by remember { mutableStateOf(false) }
-    var orderValue by remember { mutableStateOf("") }
+    var isMadeOrder by remember { mutableStateOf<Boolean>(false) }
+    var orderValue by remember { mutableStateOf<String>("") }
 
-    var isRemind by remember { mutableStateOf(true) }
-    var reminderText by remember { mutableStateOf("") }
-    var reminderDate by remember { mutableStateOf("07.10.2026") }
-    var reminderTime by remember { mutableStateOf("09:00") }
+    var isRemind by remember { mutableStateOf<Boolean>(true) }
+    var reminderText by remember { mutableStateOf<String>("") }
+    var reminderDate by remember { mutableStateOf<String>("07.10.2026") }
+    var reminderTime by remember { mutableStateOf<String>("09:00") }
 
-    var showDatePicker by remember { mutableStateOf(false) }
-    var showTimePicker by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf<Boolean>(false) }
+    var showTimePicker by remember { mutableStateOf<Boolean>(false) }
     // No longer need pickingFor as it's only for Remind now
+
+    val defaultOrder = stringResource(R.string.sample_order_item)
+    val defaultRemind = stringResource(R.string.call_soon_placeholder)
+    
+    val talkHowHeader = stringResource(R.string.talk_how_header)
+    val talkPlaceholder = stringResource(R.string.talk_placeholder)
+    val newClientCheckbox = stringResource(R.string.new_client_checkbox)
+    val madeOrderCheckbox = stringResource(R.string.made_order_checkbox)
+    val remindCheckbox = stringResource(R.string.remind_checkbox)
+    val dateLabel = stringResource(R.string.date_label)
+    val timeLabel = stringResource(R.string.time_label)
+    val okButton = stringResource(R.string.ok_button)
+    val cancelButton = stringResource(R.string.cancel_button)
+    val cancelBtnCaps = stringResource(R.string.cancel_button_caps)
+    val saveBtn = stringResource(R.string.save_button)
 
     val datePickerState = rememberDatePickerState()
     val timePickerState = rememberTimePickerState(initialHour = 9, initialMinute = 0)
@@ -80,7 +100,7 @@ fun CallResultDialog(
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Text(
-                            text = "How did the talk go?",
+                            text = talkHowHeader,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF334D6F)
@@ -111,7 +131,7 @@ fun CallResultDialog(
                             decorationBox = { innerTextField ->
                                 if (callNote.isEmpty()) {
                                     Text(
-                                        text = "Client asked about availability of...",
+                                        text = talkPlaceholder,
                                         color = Color(0xFFAAAAAA),
                                         fontSize = 16.sp,
                                         lineHeight = 22.sp
@@ -126,19 +146,15 @@ fun CallResultDialog(
                         // New Client Checkbox
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.clickable { isNewClient = !isNewClient }
+                            modifier = Modifier.padding(vertical = 4.dp).clickable { isNewClient = !isNewClient }
                         ) {
-                            Checkbox(
+                            RoundedSquareCheckbox(
                                 checked = isNewClient,
-                                onCheckedChange = { isNewClient = it },
-                                colors = CheckboxDefaults.colors(
-                                    checkedColor = Color(0xFF4A4A4A),
-                                    uncheckedColor = Color(0xFF4A4A4A)
-                                )
+                                onCheckedChange = { isNewClient = it }
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = "New client",
+                                text = stringResource(R.string.new_client_checkbox),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF313131)
@@ -148,19 +164,15 @@ fun CallResultDialog(
                         // Made an order Checkbox
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.clickable { isMadeOrder = !isMadeOrder }
+                            modifier = Modifier.padding(vertical = 4.dp).clickable { isMadeOrder = !isMadeOrder }
                         ) {
-                            Checkbox(
+                            RoundedSquareCheckbox(
                                 checked = isMadeOrder,
-                                onCheckedChange = { isMadeOrder = it },
-                                colors = CheckboxDefaults.colors(
-                                    checkedColor = Color(0xFF4A4A4A),
-                                    uncheckedColor = Color(0xFF4A4A4A)
-                                )
+                                onCheckedChange = { isMadeOrder = it }
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = "Made an order",
+                                text = stringResource(R.string.made_order_checkbox),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF313131)
@@ -184,7 +196,7 @@ fun CallResultDialog(
                                 decorationBox = { innerTextField ->
                                     if (orderValue.isEmpty()) {
                                         Text(
-                                            text = "Linen A-Line Dress",
+                                            text = defaultOrder,
                                             color = Color(0xFFAAAAAA),
                                             fontSize = 15.sp
                                         )
@@ -199,19 +211,15 @@ fun CallResultDialog(
                         // Remind Checkbox
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.clickable { isRemind = !isRemind }
+                            modifier = Modifier.padding(vertical = 4.dp).clickable { isRemind = !isRemind }
                         ) {
-                            Checkbox(
+                            RoundedSquareCheckbox(
                                 checked = isRemind,
-                                onCheckedChange = { isRemind = it },
-                                colors = CheckboxDefaults.colors(
-                                    checkedColor = Color(0xFF4A4A4A),
-                                    uncheckedColor = Color(0xFF4A4A4A)
-                                )
+                                onCheckedChange = { isRemind = it }
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = "Remind",
+                                text = remindCheckbox,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF313131)
@@ -233,7 +241,7 @@ fun CallResultDialog(
                             decorationBox = { innerTextField ->
                                 if (reminderText.isEmpty()) {
                                     Text(
-                                        text = "Call soon",
+                                        text = defaultRemind,
                                         color = Color(0xFFAAAAAA),
                                         fontSize = 15.sp
                                     )
@@ -249,14 +257,14 @@ fun CallResultDialog(
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             CallResultOutlinedLabelField(
-                                label = "Date", 
+                                label = dateLabel, 
                                 value = reminderDate, 
-                                modifier = Modifier.weight(1f).clickable { showDatePicker = true }
+                                modifier = Modifier.width(130.dp).clickable { showDatePicker = true }
                             )
                             CallResultOutlinedLabelField(
-                                label = "Time", 
+                                label = timeLabel, 
                                 value = reminderTime, 
-                                modifier = Modifier.weight(1f).clickable { showTimePicker = true }
+                                modifier = Modifier.width(100.dp).clickable { showTimePicker = true }
                             )
                         }
 
@@ -271,10 +279,10 @@ fun CallResultDialog(
                                             reminderDate = sdf.format(Date(millis))
                                         }
                                         showDatePicker = false
-                                    }) { Text("OK") }
+                                    }) { Text(okButton) }
                                 },
                                 dismissButton = {
-                                    TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+                                    TextButton(onClick = { showDatePicker = false }) { Text(cancelButton) }
                                 }
                             ) {
                                 DatePicker(state = datePickerState)
@@ -289,10 +297,10 @@ fun CallResultDialog(
                                     TextButton(onClick = {
                                         reminderTime = String.format("%02d:%02d", timePickerState.hour, timePickerState.minute)
                                         showTimePicker = false
-                                    }) { Text("OK") }
+                                    }) { Text(okButton) }
                                 },
                                 dismissButton = {
-                                    TextButton(onClick = { showTimePicker = false }) { Text("Cancel") }
+                                    TextButton(onClick = { showTimePicker = false }) { Text(cancelButton) }
                                 },
                                 text = {
                                     TimePicker(state = timePickerState)
@@ -312,10 +320,10 @@ fun CallResultDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "CANCEL",
+                            text = stringResource(R.string.cancel_button_caps),
                             color = Color(0xFF333333),
                             fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.Normal,
                             modifier = Modifier
                                     .clickable { onDismiss() }
                                     .padding(horizontal = 12.dp, vertical = 6.dp)
@@ -326,8 +334,8 @@ fun CallResultDialog(
                                 onSave(
                                     callNote,
                                     isNewClient,
-                                    if (isMadeOrder) orderValue.ifBlank { "Linen A-Line Dress" } else null,
-                                    if (isRemind) reminderText.ifBlank { "Call soon" } else null,
+                                    if (isMadeOrder) orderValue.ifBlank { defaultOrder } else null,
+                                    if (isRemind) reminderText.ifBlank { defaultRemind } else null,
                                     if (isRemind) reminderDate else null,
                                     if (isRemind) reminderTime else null
                                 )
@@ -337,13 +345,38 @@ fun CallResultDialog(
                             contentPadding = PaddingValues(horizontal = 24.dp, vertical = 0.dp),
                             modifier = Modifier.height(40.dp)
                         ) {
-                            Text("SAVE", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            Text(stringResource(R.string.save_button), fontSize = 14.sp, fontWeight = FontWeight.Normal, color = Color.White)
                         }
                     }
                 }
             }
         }
     )
+}
+
+@Composable
+private fun RoundedSquareCheckbox(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(24.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .background(if (checked) Color(0xFF313131) else Color.Transparent)
+            .border(2.dp, Color(0xFF313131), RoundedCornerShape(4.dp))
+            .clickable { onCheckedChange(!checked) },
+        contentAlignment = Alignment.Center
+    ) {
+        if (checked) {
+            Icon(
+                imageVector = androidx.compose.material.icons.Icons.Default.Check,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+    }
 }
 
 @Composable

@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.coffeecodedevs.clientflow.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun GoalsScreen(
@@ -57,6 +58,15 @@ fun GoalsScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     
     var selectedTab by remember { mutableStateOf("ORDERS") }
+    
+    val backDesc = stringResource(R.string.back_desc)
+    val deleteNoteTitle = stringResource(R.string.delete_note_title)
+    val deleteNoteConfirm = stringResource(R.string.delete_note_confirm)
+    val deleteBtnText = stringResource(R.string.delete_desc)
+    val cancelBtnText = stringResource(R.string.cancel_button)
+    val defaultDescHint = stringResource(R.string.click_pencil_to_add_desc)
+    val shareDesc = stringResource(R.string.share_desc)
+    val editDesc = stringResource(R.string.edit_desc)
 
     val gradientColors = if (isOrder) {
         listOf(
@@ -115,7 +125,7 @@ fun GoalsScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = backDesc,
                             modifier = Modifier
                                 .padding(top = 8.dp)
                                 .size(24.dp)
@@ -170,7 +180,7 @@ fun GoalsScreen(
                     horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterHorizontally)
                 ) {
                     GoalsActionButton(
-                        painter = painterResource(R.drawable.trash),
+                        painter = painterResource(R.drawable.thrash),
                         onClick = { showDeleteDialog = true }
                     )
                     GoalsActionButton(
@@ -219,7 +229,7 @@ fun GoalsScreen(
                         modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp)
                     )
                 } else {
-                    GoalParagraph(text = if (editedDescription.isEmpty()) "Click the pencil to add a description..." else editedDescription)
+                    GoalParagraph(text = if (editedDescription.isEmpty()) defaultDescHint else editedDescription)
                 }
             }
         }
@@ -227,8 +237,8 @@ fun GoalsScreen(
         if (showDeleteDialog) {
             AlertDialog(
                 onDismissRequest = { showDeleteDialog = false },
-                title = { Text("Delete Note?") },
-                text = { Text("Are you sure you want to permanently delete this note?") },
+                title = { Text(deleteNoteTitle) },
+                text = { Text(deleteNoteConfirm) },
                 confirmButton = {
                     TextButton(
                         onClick = {
@@ -237,12 +247,12 @@ fun GoalsScreen(
                         },
                         colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
                     ) {
-                        Text("Delete")
+                        Text(deleteBtnText)
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showDeleteDialog = false }) {
-                        Text("Cancel")
+                        Text(cancelBtnText)
                     }
                 }
             )

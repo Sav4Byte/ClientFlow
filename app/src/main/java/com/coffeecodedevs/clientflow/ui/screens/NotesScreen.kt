@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.coffeecodedevs.clientflow.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Search
 
@@ -52,6 +53,9 @@ fun NotesScreen(
     onGoalsClick: (NoteItem) -> Unit = {}
 ) {
     var searchQuery by remember { mutableStateOf("") }
+    
+    val notesTitle = stringResource(R.string.notes_title)
+    val searchPlaceholder = stringResource(R.string.search_placeholder)
     
     val filteredNotes = remember(notes, searchQuery) {
         notes.filter {
@@ -98,7 +102,7 @@ fun NotesScreen(
                         .padding(start = 30.dp, top = 20.dp, bottom = 5.dp)
                 ) {
                     Text(
-                        text = "NOTES",
+                        text = notesTitle,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF334D6F)
@@ -135,7 +139,7 @@ fun NotesScreen(
                                 Box(contentAlignment = Alignment.CenterStart) {
                                     if (searchQuery.isEmpty()) {
                                         Text(
-                                            text = "Search",
+                                            text = searchPlaceholder,
                                             color = Color(0xFF8B9BA8),
                                             fontSize = 15.sp
                                         )
@@ -146,7 +150,7 @@ fun NotesScreen(
                         )
                         Icon(
                             imageVector = Icons.Outlined.Search,
-                            contentDescription = "Search",
+                            contentDescription = searchPlaceholder,
                             tint = Color(0xFF8B9BA8),
                             modifier = Modifier.size(24.dp)
                         )

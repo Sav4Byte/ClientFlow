@@ -63,6 +63,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.compose.ui.res.stringResource
 import com.coffeecodedevs.clientflow.R
 
 
@@ -318,6 +319,14 @@ fun ContactsScreen(
     viewModel: com.coffeecodedevs.clientflow.data.ContactViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
 
+    val contactsTitle = stringResource(R.string.contacts_title)
+    val searchPlaceholder = stringResource(R.string.search_placeholder)
+    val clientsTab = stringResource(R.string.clients_tab)
+    val employeesTab = stringResource(R.string.employees_tab)
+    val noContacts = stringResource(R.string.no_contacts)
+    val collapseDesc = stringResource(R.string.collapse_desc)
+    val expandDesc = stringResource(R.string.expand_desc)
+
     var selectedTab by remember { mutableStateOf("CLIENT") }
     var searchQuery by remember { mutableStateOf("") }
     var expandedContactId by remember { mutableStateOf<Int?>(null) }
@@ -364,7 +373,7 @@ fun ContactsScreen(
                         .padding(start = 16.dp, top = 20.dp, bottom = 5.dp)
                 ) {
                     Text(
-                        text = "CONTACTS",
+                        text = contactsTitle,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF334D6F)
@@ -395,13 +404,13 @@ fun ContactsScreen(
                             decorationBox = { innerTextField ->
                                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.CenterStart) {
                                     if (searchQuery.isEmpty()) {
-                                        Text("Search", color = Color(0xFF8B9BA8), fontSize = 14.sp)
+                                        Text(searchPlaceholder, color = Color(0xFF8B9BA8), fontSize = 14.sp)
                                     }
                                     innerTextField()
                                 }
                             }
                         )
-                        Icon(imageVector = Icons.Outlined.Search, contentDescription = "Search", tint = Color(0xFF8B9BA8), modifier = Modifier.size(20.dp))
+                        Icon(imageVector = Icons.Outlined.Search, contentDescription = searchPlaceholder, tint = Color(0xFF8B9BA8), modifier = Modifier.size(20.dp))
                     }
                 }
             }
@@ -427,7 +436,7 @@ fun ContactsScreen(
                             .clickable { selectedTab = "CLIENT"; onTabChange("CLIENT") },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("CLIENTS", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF334D6F))
+                        Text(clientsTab, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF334D6F))
                     }
 
                     Box(
@@ -441,7 +450,7 @@ fun ContactsScreen(
                             .clickable { selectedTab = "EMPLOYEE"; onTabChange("EMPLOYEE") },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("EMPLOYEES", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF334D6F))
+                        Text(employeesTab, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF334D6F))
                     }
                 }
 
@@ -465,7 +474,7 @@ fun ContactsScreen(
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Text(
-                                    text = "No contacts",
+                                    text = noContacts,
                                     fontSize = 18.sp,
                                     color = Color(0xFF8B9BA8),
                                     fontWeight = FontWeight.Medium
@@ -491,6 +500,8 @@ fun ContactsScreen(
                                     ContactItem(
                                         contact = contact,
                                         isExpanded = expandedContactId == contact.id,
+                                        collapseDesc = collapseDesc,
+                                        expandDesc = expandDesc,
                                         onToggleExpand = {
                                             expandedContactId = if (expandedContactId == contact.id) null else contact.id
                                         },
@@ -551,6 +562,8 @@ fun TabButton(
 fun ContactItem(
     contact: com.coffeecodedevs.clientflow.data.Contact,
     isExpanded: Boolean,
+    collapseDesc: String,
+    expandDesc: String,
     onToggleExpand: () -> Unit,
     onCallClick: () -> Unit = {},
     onSmsClick: () -> Unit = {},
@@ -580,7 +593,7 @@ fun ContactItem(
             )
             Icon(
                 imageVector = Icons.Default.KeyboardArrowDown,
-                contentDescription = if (isExpanded) "Collapse" else "Expand",
+                contentDescription = if (isExpanded) collapseDesc else expandDesc,
                 tint = Color(0xFF8B9BA8),
                 modifier = Modifier
                     .size(22.dp)

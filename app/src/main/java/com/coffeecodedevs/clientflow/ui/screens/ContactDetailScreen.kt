@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.coffeecodedevs.clientflow.R
+import androidx.compose.ui.res.stringResource
 
 data class ContactOrder(
     val id: Int,
@@ -72,6 +73,15 @@ fun ContactDetailScreen(
 
     var selectedTab by remember { mutableStateOf("ALL") }
     val context = androidx.compose.ui.platform.LocalContext.current
+    
+    val backDesc = stringResource(R.string.back_desc)
+    val deleteBtn = stringResource(R.string.delete_desc)
+    val shareDesc = stringResource(R.string.share_desc)
+    val editDesc = stringResource(R.string.edit_desc)
+    val allTab = stringResource(R.string.all_tab)
+    val ordersTab = stringResource(R.string.orders_tab)
+    val activityTab = stringResource(R.string.activity_tab)
+    val callLabel = stringResource(R.string.call_label)
 
     val orders = emptyList<ContactOrder>()
 
@@ -131,7 +141,7 @@ fun ContactDetailScreen(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Back",
+                                    contentDescription = backDesc,
                                     modifier = Modifier
                                         .size(24.dp)
                                         .clickable { onBackClick() },
@@ -159,19 +169,21 @@ fun ContactDetailScreen(
                             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                                 Icon(
                                     painter = painterResource(R.drawable.thrash),
-                                    contentDescription = "Delete",
-                                    tint = Color.Unspecified,
-                                    modifier = Modifier
-                                        .size(24.dp)
-                                        .clickable { onDeleteClick() }
+                                    contentDescription = deleteBtn,
+                                    modifier = Modifier.size(24.dp).clickable { onDeleteClick() },
+                                    tint = Color.Red.copy(alpha = 0.6f)
+                                )
+                                Icon(
+                                    painter = painterResource(R.drawable.share),
+                                    contentDescription = shareDesc,
+                                    modifier = Modifier.size(24.dp).clickable { /* Share */ },
+                                    tint = Color(0xFF334D6F)
                                 )
                                 Icon(
                                     painter = painterResource(R.drawable.pensil),
-                                    contentDescription = "Edit",
-                                    tint = Color.Unspecified,
-                                    modifier = Modifier
-                                        .size(24.dp)
-                                        .clickable { onEditClick() }
+                                    contentDescription = editDesc,
+                                    modifier = Modifier.size(24.dp).clickable { onEditClick() },
+                                    tint = Color(0xFF334D6F)
                                 )
                             }
                         }
@@ -294,9 +306,9 @@ fun ContactDetailScreen(
                                     ) {
                                         items(allTabItems) { item ->
                                             when (item) {
-                                                is ContactTimelineItem.SimpleCall -> ContactSimpleCallItem(item)
-                                                is ContactTimelineItem.DetailedCall -> ContactDetailedCallItem(item)
-                                                is ContactTimelineItem.OrderItem -> ContactOrderItem(item.order)
+                                                is ContactTimelineItem.SimpleCall -> ContactSimpleCallItem(item, callLabel)
+                                                is ContactTimelineItem.DetailedCall -> ContactDetailedCallItem(item, callLabel)
+                                                is ContactTimelineItem.OrderItem -> ContactTimelineOrderItem(item.order)
                                             }
                                         }
                                     }
@@ -314,10 +326,10 @@ fun ContactDetailScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                            ContactTabItem("ALL", selectedTab == "ALL") { selectedTab = "ALL" }
+                            TabItem(stringResource(R.string.all_tab), selectedTab == "ALL") { selectedTab = "ALL" }
                         }
                         Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                            ContactTabItem("ORDERS", selectedTab == "ORDERS") { selectedTab = "ORDERS" }
+                            TabItem(stringResource(R.string.orders_tab), selectedTab == "ORDERS") { selectedTab = "ORDERS" }
                         }
                     }
                 }
@@ -345,10 +357,13 @@ fun ContactDetailScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    ContactTabItem("ALL", selectedTab == "ALL") { selectedTab = "ALL" }
+                TabItem(allTab, selectedTab == "ALL") { selectedTab = "ALL" }
                 }
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    ContactTabItem("ORDERS", selectedTab == "ORDERS") { selectedTab = "ORDERS" }
+                    TabItem(ordersTab, selectedTab == "ORDERS") { selectedTab = "ORDERS" }
+                }
+                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    TabItem(activityTab, selectedTab == "ACTIVITY") { selectedTab = "ACTIVITY" }
                 }
             }
         }
@@ -356,7 +371,7 @@ fun ContactDetailScreen(
 
 
 @Composable
-private fun ContactTabItem(text: String, selected: Boolean, onClick: () -> Unit) {
+private fun TabItem(text: String, selected: Boolean, onClick: () -> Unit) {
     Text(
         text = text,
         fontSize = 16.sp,
@@ -460,13 +475,83 @@ private fun ContactOrderItem(order: ContactOrder) {
 }
 
 @Composable
-private fun ContactSimpleCallItem(item: ContactTimelineItem.SimpleCall) {
+private fun ContactTimelineOrderItem(order: ContactOrder) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(end = 2.dp, bottom = 18.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(ContactDetailOrderItemShape())
+                .background(order.color)
+                .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 40.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        painter = painterResource(R.drawable.notess),
+                        contentDescription = null,
+                        tint = Color(0xFF334D6F),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = order.title,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF334D6F)
+                    )
+                }
+                Text(
+                    text = order.date,
+                    fontSize = 12.sp,
+                    color = Color(0xFF334D6F).copy(alpha = 0.6f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = order.description,
+                fontSize = 13.sp,
+                color = Color(0xFF334D6F),
+                lineHeight = 20.sp
+            )
+        }
+
+        // Кнопка со стрелкой (в центре тройной выемки)
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .offset(x = 0.dp, y = 15.dp) // Выравнивание правого края (x=0)
+                .size(42.dp)
+                .clip(CircleShape)
+                .background(Color(0xFF313131)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.arrow_up_right),
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ContactSimpleCallItem(item: ContactTimelineItem.SimpleCall, callLabel: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFFAEDEF4))
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+            .padding(bottom = 18.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(
@@ -481,8 +566,8 @@ private fun ContactSimpleCallItem(item: ContactTimelineItem.SimpleCall) {
             )
             Spacer(modifier = Modifier.width(12.dp))
             Text(
-                text = "CALL",
-                fontSize = 14.sp,
+                text = callLabel,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF334D6F)
             )
@@ -505,7 +590,7 @@ private fun ContactSimpleCallItem(item: ContactTimelineItem.SimpleCall) {
 }
 
 @Composable
-private fun ContactDetailedCallItem(item: ContactTimelineItem.DetailedCall) {
+private fun ContactDetailedCallItem(item: ContactTimelineItem.DetailedCall, callLabel: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -532,7 +617,7 @@ private fun ContactDetailedCallItem(item: ContactTimelineItem.DetailedCall) {
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "CALL",
+                        text = callLabel,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF334D6F)

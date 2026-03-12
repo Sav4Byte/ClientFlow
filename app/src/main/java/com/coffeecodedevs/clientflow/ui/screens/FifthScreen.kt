@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.coffeecodedevs.clientflow.R
+import androidx.compose.ui.res.stringResource
 
 data class FifthOrder(
     val id: Int,
@@ -64,88 +65,72 @@ fun FifthScreen(
 ) {
     var selectedTab by remember { mutableStateOf("ORDERS") }
     var selectedBottomTab by remember { mutableStateOf(1) }
+    val context = androidx.compose.ui.platform.LocalContext.current
     
-    val orders = listOf(
-        FifthOrder(
-            1,
-            "ЛЕТНИЕ ЛЬНЯНЫЕ ПЛАТЬЯ",
-            "Пополнение запасов легких льняных платьев в трех цветах: Белый, Шалфей и Нежный Коралл. Общее количество: 180 шт. в пяти размерах.",
-            "14:45",
-            ""
-        ),
-        FifthOrder(
-            2,
-            "ЛЕТНЯЯ КОЛЛЕКЦИЯ",
-            "Клиент попросил лукбук для июльской капсульной коллекции и попросил уведомить о появлении новой линии пляжной одежды.",
-            "17 окт.,",
-            "14:45"
-        ),
-        FifthOrder(
-            3,
-            "ФУТБОЛКИ",
-            "Клиент попросил лукбук для июльской капсульной коллекции и попросил уведомить о появлении новой линии пляжной одежды.",
-            "11 сен.,",
-            "14:45"
-        ),
-        FifthOrder(
-            4,
-            "ЖЕНСКИЕ ПОВСЕДНЕВНЫЕ ТОПЫ",
-            "150 повседневных топов, включая майки в рубчик и свободные футболки нейтральных тонов.",
-            "Пт, 12:56",
-            ""
-        ),
-        FifthOrder(
-            5,
-            "ПЛЯЖНЫЕ КОМПЛЕКТЫ",
-            "Клиент заказал 95 пляжных комплектов, состоящих из накидок, бикини и подходящих парео. Попросил упаковку в цвет и ранний доступ к лукбуку новой круизной коллекции.\nКлиент попросил дополнительные варианты размеров (XS–XXL)",
-            "12 окт., 14:45",
-            ""
-        ),
-        FifthOrder(
-            6,
-            "РУБАШКИ С КОРОТКИМ РУКАВОМ",
-            "Оптовый заказ на 220 рубашек с коротким рукавом из смесовых тканей (хлопок и лен).",
-            "11 окт., 15:40",
-            ""
+    val backDesc = stringResource(R.string.back_desc)
+    val workDaysSample = stringResource(R.string.work_days_sample)
+    val callTimeLimitSample = stringResource(R.string.call_time_limit_sample)
+    val allTab = stringResource(R.string.all_tab)
+    val ordersTab = stringResource(R.string.orders_tab)
+    val activityTab = stringResource(R.string.activity_tab)
+    val addDesc = stringResource(R.string.add_desc)
+    val callLabel = stringResource(R.string.call_label)
+    val shareDesc = stringResource(R.string.share_desc)
+    val editDesc = stringResource(R.string.edit_desc)
+    val deleteBtn = stringResource(R.string.delete_desc)
+    
+    val orders = remember(context) {
+        listOf(
+            FifthOrder(
+                id = 1,
+                title = context.getString(R.string.sample_order_title_1),
+                description = context.getString(R.string.sample_order_desc_1),
+                time = "14:45",
+                date = ""
+            ),
+            FifthOrder(
+                id = 2,
+                title = context.getString(R.string.sample_order_title_2),
+                description = context.getString(R.string.sample_order_desc_2),
+                time = "16:20",
+                date = ""
+            )
         )
-    )
+    }
 
-    val allTabItems = listOf(
-        FifthTimelineItem.SimpleCall("15:02"),
-        FifthTimelineItem.DetailedCall(
-            "14:45",
-            "Клиент специально интересовался наличием льняного платья А-силуэта в новых расцветках и запросил обновленные цены для оптовых заказов."
-        ),
-        FifthTimelineItem.SimpleCall("Вс, 14:34", isIncoming = true),
-        FifthTimelineItem.SimpleCall("19 окт., 17:56"),
-        FifthTimelineItem.DetailedOrder(
-            "ЛЕТНЯЯ КОЛЛЕКЦИЯ",
-            "17 окт.,",
-            "14:45",
-            "Клиент попросил лукбук для июльской капсульной коллекции и попросил уведомить о появлении новой линии пляжной одежды."
-        ),
-        FifthTimelineItem.SimpleCall("12 сен., 17:56"),
-        FifthTimelineItem.DetailedOrder(
-            "ФУТБОЛКИ",
-            "11 сен.,",
-            "14:45",
-            "Клиент попросил лукбук для июльской капсульной коллекции и попросил уведомить о появлении новой линии пляжной одежды."
+    val allTabItems = remember(context) {
+        listOf(
+            FifthTimelineItem.SimpleCall("15:02"),
+            FifthTimelineItem.DetailedCall(
+                "14:45",
+                context.getString(R.string.sample_order_desc_1)
+            ),
+            FifthTimelineItem.SimpleCall("Вс, 14:34", isIncoming = true),
+            FifthTimelineItem.SimpleCall("19 окт., 17:56"),
+            FifthTimelineItem.DetailedOrder(
+                context.getString(R.string.sample_order_title_2),
+                "17 окт.,",
+                "14:45",
+                context.getString(R.string.sample_order_desc_2)
+            ),
+            FifthTimelineItem.SimpleCall("12 сен., 17:56"),
+            FifthTimelineItem.DetailedOrder(
+                context.getString(R.string.sample_order_title_1),
+                "11 сен.,",
+                "14:45",
+                context.getString(R.string.sample_order_desc_1)
+            )
         )
-    )
-
-    val gradientColors = listOf(
-        Color(0xFF87CEEB),
-        Color(0xFFF5F5DC)
-    )
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                Brush.linearGradient(
-                    colors = gradientColors,
-                    start = Offset(0f, 0f),
-                    end = Offset(0f, Float.POSITIVE_INFINITY)
+                Brush.verticalGradient(
+                    colors = listOf(Color(0xFF9BE5D6), Color(0xFFF7F2E9)),
+                    startY = 0f,
+                    endY = 1200f
                 )
             )
     ) {
@@ -158,7 +143,7 @@ fun FifthScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp)
+                    .height(250.dp)
             ) {
                 // White block with cutout
                 Box(
@@ -174,24 +159,50 @@ fun FifthScreen(
                     ) {
                         // Back button and name
                         Row(
-                            verticalAlignment = Alignment.CenterVertically
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Icon(
-                                painter = painterResource(R.drawable.back),
-                                contentDescription = "Back",
-                                modifier = Modifier
-                                    .size(28.dp)
-                                    .offset(y = (-3).dp)
-                                    .clickable { onBackClick() },
-                                tint = Color.Unspecified
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(
-                                text = "Daniel Brooks",
-                                fontSize = 28.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF333333)
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    painter = painterResource(R.drawable.back),
+                                    contentDescription = backDesc,
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clickable { onBackClick() },
+                                    tint = Color(0xFF334D6F)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = "Daniel Brooks",
+                                    fontSize = 28.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF333333)
+                                )
+                            }
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.thrash),
+                                    contentDescription = deleteBtn,
+                                    modifier = Modifier.size(24.dp).clickable { /* Delete */ },
+                                    tint = Color.Red.copy(alpha = 0.6f)
+                                )
+                                Icon(
+                                    painter = painterResource(R.drawable.share),
+                                    contentDescription = shareDesc,
+                                    modifier = Modifier.size(24.dp).clickable { /* Share */ },
+                                    tint = Color(0xFF334D6F)
+                                )
+                                Icon(
+                                    painter = painterResource(R.drawable.pensil),
+                                    contentDescription = editDesc,
+                                    modifier = Modifier.size(24.dp).clickable { /* Edit */ },
+                                    tint = Color(0xFF334D6F)
+                                )
+                            }
                         }
                         
                         Spacer(modifier = Modifier.height(12.dp))
@@ -201,15 +212,15 @@ fun FifthScreen(
                             modifier = Modifier.padding(start = 40.dp)
                         ) {
                             Text(
-                                text = "Works on Sun, Mon, Wed and Fri.",
-                                fontSize = 10.sp,
-                                color = Color(0xFFAAAAAA)
+                                text = workDaysSample,
+                                fontSize = 14.sp,
+                                color = Color(0xFF334D6F).copy(alpha = 0.6f)
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Don' t call after 16:00.",
-                                fontSize = 13.sp,
-                                color = Color(0xFFAAAAAA)
+                                text = callTimeLimitSample,
+                                fontSize = 14.sp,
+                                color = Color(0xFF334D6F).copy(alpha = 0.6f)
                             )
                         }
                         
@@ -263,15 +274,12 @@ fun FifthScreen(
 
             // Tabs section
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp)
-                    .padding(horizontal = 40.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                FifthTabItem("ALL", selectedTab == "ALL") { selectedTab = "ALL" }
-                FifthTabItem("ORDERS", selectedTab == "ORDERS") { selectedTab = "ORDERS" }
+                FifthTabItem(allTab, selectedTab == "ALL") { selectedTab = "ALL" }
+                FifthTabItem(ordersTab, selectedTab == "ORDERS") { selectedTab = "ORDERS" }
+                FifthTabItem(activityTab, selectedTab == "ACTIVITY") { selectedTab = "ACTIVITY" }
             }
 
             // White content block with orders - extends to bottom
@@ -302,8 +310,8 @@ fun FifthScreen(
                         ) {
                             items(allTabItems) { item ->
                                 when (item) {
-                                    is FifthTimelineItem.SimpleCall -> FifthSimpleCallItem(item)
-                                    is FifthTimelineItem.DetailedCall -> FifthDetailedCallItem(item)
+                                    is FifthTimelineItem.SimpleCall -> FifthCallItem(item, callLabel)
+                                    is FifthTimelineItem.DetailedCall -> FifthDetailedCallItem(item, callLabel)
                                     is FifthTimelineItem.DetailedOrder -> FifthDetailedOrderItem(item)
                                 }
                             }
@@ -345,7 +353,7 @@ fun FifthScreen(
                 shape = CircleShape,
                 elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 8.dp, pressedElevation = 12.dp)
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add", tint = Color.White, modifier = Modifier.size(24.dp))
+                Icon(Icons.Default.Add, contentDescription = addDesc, tint = Color.White, modifier = Modifier.size(24.dp))
             }
         }
     }
@@ -565,7 +573,7 @@ private class FifthScreenBottomBarShape(private val cutoutRadiusDp: androidx.com
 }
 
 @Composable
-private fun FifthSimpleCallItem(item: FifthTimelineItem.SimpleCall) {
+private fun FifthCallItem(item: FifthTimelineItem.SimpleCall, callLabel: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -584,7 +592,7 @@ private fun FifthSimpleCallItem(item: FifthTimelineItem.SimpleCall) {
             )
             Spacer(modifier = Modifier.width(12.dp))
             Text(
-                "ЗВОНОК",
+                callLabel,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF334D6F)
@@ -606,7 +614,7 @@ private fun FifthSimpleCallItem(item: FifthTimelineItem.SimpleCall) {
 }
 
 @Composable
-private fun FifthDetailedCallItem(item: FifthTimelineItem.DetailedCall) {
+private fun FifthDetailedCallItem(item: FifthTimelineItem.DetailedCall, callLabel: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -633,7 +641,7 @@ private fun FifthDetailedCallItem(item: FifthTimelineItem.DetailedCall) {
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        "ЗВОНОК",
+                        callLabel,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF334D6F)

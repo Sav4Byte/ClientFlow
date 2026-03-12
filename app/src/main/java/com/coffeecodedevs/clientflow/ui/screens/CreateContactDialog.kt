@@ -16,6 +16,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,6 +34,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.res.stringResource
 import com.coffeecodedevs.clientflow.R
 import com.coffeecodedevs.clientflow.data.Contact
 import java.util.*
@@ -51,29 +54,66 @@ fun CreateContactDialog(
     }
     
     // Contact fields
-    var firstName by remember { mutableStateOf(editingContact?.firstName ?: "") }
-    var lastName by remember { mutableStateOf(editingContact?.lastName ?: "") }
-    var company by remember { mutableStateOf(editingContact?.company ?: "") }
-    var phones by remember { mutableStateOf(editingContact?.phones ?: listOf("+380")) }
+    var firstName by remember { mutableStateOf<String>(editingContact?.firstName ?: "") }
+    var lastName by remember { mutableStateOf<String>(editingContact?.lastName ?: "") }
+    var company by remember { mutableStateOf<String>(editingContact?.company ?: "") }
+    var phones by remember { mutableStateOf<List<String>>(editingContact?.phones ?: listOf("+380")) }
     
     // Order fields
-    var orderTitle by remember { mutableStateOf(editingContact?.orderName ?: "") }
-    var orderCustomer by remember { mutableStateOf(editingContact?.customerName ?: "") }
-    var orderAddress by remember { mutableStateOf(editingContact?.orderAddress ?: "") }
+    var orderTitle by remember { mutableStateOf<String>(editingContact?.orderName ?: "") }
+    var orderCustomer by remember { mutableStateOf<String>(editingContact?.customerName ?: "") }
+    var orderAddress by remember { mutableStateOf<String>(editingContact?.orderAddress ?: "") }
     
-    var description by remember { mutableStateOf(editingContact?.contact ?: "") }
+    var description by remember { mutableStateOf<String>(editingContact?.contact ?: "") }
     
     // Note fields
-    var noteTitle by remember { mutableStateOf(editingContact?.noteTitle ?: "") }
+    var noteTitle by remember { mutableStateOf<String>(editingContact?.noteTitle ?: "") }
     
     // Reminder fields
-    var reminderText by remember { mutableStateOf(editingContact?.reminderText ?: "") }
-    var reminderDate by remember { mutableStateOf(editingContact?.reminderDate ?: "07.10.2026") }
-    var reminderTime by remember { mutableStateOf(editingContact?.reminderTime ?: "00:00") }
+    var reminderText by remember { mutableStateOf<String>(editingContact?.reminderText ?: "") }
+    var reminderDate by remember { mutableStateOf<String>(editingContact?.reminderDate ?: "07.10.2026") }
+    var reminderTime by remember { mutableStateOf<String>(editingContact?.reminderTime ?: "00:00") }
     var repeatEnabled by remember { mutableStateOf(false) }
     var selectedDays by remember { mutableStateOf(emptySet<String>()) }
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
+    var isEmployee by remember { mutableStateOf(editingContact?.isEmployee ?: false) }
+    
+    // Resource strings at the top
+    val defaultContactName = stringResource(R.string.new_contact_default)
+    val mo = stringResource(R.string.day_mo)
+    val tu = stringResource(R.string.day_tu)
+    val we = stringResource(R.string.day_we)
+    val th = stringResource(R.string.day_th)
+    val fr = stringResource(R.string.day_fr)
+    val sa = stringResource(R.string.day_sa)
+    val su = stringResource(R.string.day_su)
+    val localizedDays = remember(mo, tu, we, th, fr, sa, su) {
+        listOf(mo, tu, we, th, fr, sa, su)
+    }
+
+    val createHeader = stringResource(R.string.create_header)
+    val contactTab = stringResource(R.string.contact_tab)
+    val orderTabResource = stringResource(R.string.order_tab)
+    val reminderTab = stringResource(R.string.reminder_tab)
+    val noteTab = stringResource(R.string.note_tab)
+    val namePlaceholder = stringResource(R.string.name_placeholder)
+    val surnamePlaceholder = stringResource(R.string.surname_placeholder)
+    val companyPlaceholder = stringResource(R.string.company_placeholder)
+    val descriptionPlaceholder = stringResource(R.string.description_placeholder)
+    val textPlaceholderResource = stringResource(R.string.text_placeholder)
+    val dateLabel = stringResource(R.string.date_label)
+    val timeLabel = stringResource(R.string.time_label)
+    val okButton = stringResource(R.string.ok_button)
+    val cancelButton = stringResource(R.string.cancel_button)
+    val repeatLabel = stringResource(R.string.repeat_label)
+    val titlePlaceholder = stringResource(R.string.title_placeholder)
+    val customerPlaceholder = stringResource(R.string.customer_placeholder)
+    val addressPlaceholder = stringResource(R.string.address_placeholder)
+    val cancelBtnCaps = stringResource(R.string.cancel_button_caps)
+    val saveBtn = stringResource(R.string.save_button)
+    val removeDesc = stringResource(R.string.remove_desc)
+    val addDesc = stringResource(R.string.add_desc)
     
     val datePickerState = rememberDatePickerState()
     val timePickerState = rememberTimePickerState(initialHour = 9, initialMinute = 0)
@@ -106,10 +146,10 @@ fun CreateContactDialog(
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Text(
-                            text = "Create",
-                            fontSize = 16.sp,
+                            text = createHeader,
+                            fontSize = 28.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF334D6F)
+                            color = Color(0xFF333333)
                         )
                     }
 
@@ -130,10 +170,10 @@ fun CreateContactDialog(
                                 .padding(horizontal = 0.dp),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            TabPill("CONTACT", Color(0xFFAEDEF4), Color(0xFF334D6F), selectedTab == "CONTACT") { selectedTab = "CONTACT" }
-                            TabPill("ORDER", Color(0xFFE5CCFF), Color(0xFF6C5A9B), selectedTab == "ORDER") { selectedTab = "ORDER" }
-                            TabPill("REMINDER", Color(0xFFFDECDA), Color(0xFFD5A665), selectedTab == "REMINDER") { selectedTab = "REMINDER" }
-                            TabPill("NOTE", Color(0xFF9BE5D6), Color(0xFF1ABBA8), selectedTab == "NOTE") { selectedTab = "NOTE" }
+                            TabPill(contactTab, Color(0xFFAEDEF4), Color(0xFF334D6F), selectedTab == "CONTACT") { selectedTab = "CONTACT" }
+                            TabPill(orderTabResource, Color(0xFFE5CCFF), Color(0xFF6C5A9B), selectedTab == "ORDER") { selectedTab = "ORDER" }
+                            TabPill(reminderTab, Color(0xFFFDECDA), Color(0xFFD5A665), selectedTab == "REMINDER") { selectedTab = "REMINDER" }
+                            TabPill(noteTab, Color(0xFF9BE5D6), Color(0xFF1ABBA8), selectedTab == "NOTE") { selectedTab = "NOTE" }
                         }
                         
                         Spacer(modifier = Modifier.height(20.dp))
@@ -144,29 +184,23 @@ fun CreateContactDialog(
                                  verticalArrangement = Arrangement.spacedBy(20.dp)
                             ) {
                                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                    GrayFrameTextField(value = firstName, onValueChange = { firstName = it }, placeholder = "Name")
-                                    GrayFrameTextField(value = lastName, onValueChange = { lastName = it }, placeholder = "Surname")
+                                    GrayFrameTextField(value = firstName, onValueChange = { firstName = it }, placeholder = namePlaceholder)
+                                    GrayFrameTextField(value = lastName, onValueChange = { lastName = it }, placeholder = surnamePlaceholder)
                                 }
 
-                                GrayFrameTextField(value = company, onValueChange = { company = it }, placeholder = "Company")
+                                GrayFrameTextField(value = company, onValueChange = { company = it }, placeholder = companyPlaceholder)
 
                                 // Phone field
                                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                     phones.forEachIndexed { index, phone ->
                                         PhoneFieldWithPlus(
                                             value = phone,
-                                            onValueChange = { newValue ->
-                                                val newList = phones.toMutableList()
-                                                newList[index] = newValue
-                                                phones = newList
-                                            },
-                                            onRemove = {
-                                                if (phones.size > 1) {
-                                                    phones = phones.toMutableList().apply { removeAt(index) }
-                                                }
-                                            },
+                                            onValueChange = { phones = phones.toMutableList().apply { set(index, it) } },
+                                            onRemove = { if (phones.size > 1) phones = phones.toMutableList().apply { removeAt(index) } },
                                             onAdd = { phones = phones + "+380" },
-                                            showPlus = index == phones.size - 1
+                                            showPlus = (index == phones.lastIndex),
+                                            removeDesc = removeDesc,
+                                            addDesc = addDesc
                                         )
                                     }
                                 }
@@ -174,7 +208,7 @@ fun CreateContactDialog(
                                 GrayFrameTextField(
                                     value = description,
                                     onValueChange = { description = it },
-                                    placeholder = "Description",
+                                    placeholder = descriptionPlaceholder,
                                     modifier = Modifier.height(80.dp),
                                     singleLine = false,
                                     fontWeight = FontWeight.Normal
@@ -185,19 +219,19 @@ fun CreateContactDialog(
                                 modifier = Modifier.padding(horizontal = 8.dp),
                                 verticalArrangement = Arrangement.spacedBy(20.dp)
                             ) {
-                                SimpleUnderlineTextField(value = reminderText, onValueChange = { reminderText = it }, placeholder = "Text")
+                                SimpleUnderlineTextField(value = reminderText, onValueChange = { reminderText = it }, placeholder = textPlaceholderResource)
 
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                                 ) {
                                     OutlinedLabelField(
-                                        label = "Date", 
+                                        label = dateLabel, 
                                         value = reminderDate, 
                                         modifier = Modifier.weight(0.9f).clickable { showDatePicker = true }
                                     )
                                     OutlinedLabelField(
-                                        label = "Time", 
+                                        label = timeLabel, 
                                         value = reminderTime, 
                                         modifier = Modifier.weight(0.6f).clickable { showTimePicker = true }
                                     )
@@ -215,10 +249,10 @@ fun CreateContactDialog(
                                                     reminderDate = sdf.format(Date(millis))
                                                 }
                                                 showDatePicker = false
-                                            }) { Text("OK") }
+                                            }) { Text(okButton) }
                                         },
                                         dismissButton = {
-                                            TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+                                            TextButton(onClick = { showDatePicker = false }) { Text(cancelButton) }
                                         }
                                     ) {
                                         DatePicker(state = datePickerState)
@@ -233,10 +267,10 @@ fun CreateContactDialog(
                                             TextButton(onClick = {
                                                 reminderTime = String.format("%02d:%02d", timePickerState.hour, timePickerState.minute)
                                                 showTimePicker = false
-                                            }) { Text("OK") }
+                                            }) { Text(okButton) }
                                         },
                                         dismissButton = {
-                                            TextButton(onClick = { showTimePicker = false }) { Text("Cancel") }
+                                            TextButton(onClick = { showTimePicker = false }) { Text(cancelButton) }
                                         },
                                         text = {
                                             TimePicker(state = timePickerState)
@@ -260,7 +294,7 @@ fun CreateContactDialog(
                                         }
                                     }
                                     Spacer(modifier = Modifier.width(12.dp))
-                                    Text("Repeat", fontSize = 18.sp, color = Color(0xFF313131))
+                                    Text(repeatLabel, fontSize = 18.sp, color = Color(0xFF313131))
                                 }
 
                                 Row(
@@ -268,7 +302,7 @@ fun CreateContactDialog(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    listOf("Mo", "Tu", "We", "Th", "Fr", "Sa", "Su").forEach { day ->
+                                    localizedDays.forEach { day ->
                                         DayCircle(
                                             text = day,
                                             isSelected = selectedDays.contains(day),
@@ -297,32 +331,32 @@ fun CreateContactDialog(
                                 modifier = Modifier.padding(horizontal = 8.dp),
                                 verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                SimpleUnderlineTextField(value = orderTitle, onValueChange = { orderTitle = it }, placeholder = "Title")
+                                SimpleUnderlineTextField(value = orderTitle, onValueChange = { orderTitle = it }, placeholder = titlePlaceholder)
                                 
                                 SimpleUnderlineTextField(
                                     value = description,
                                     onValueChange = { description = it },
-                                    placeholder = "Description",
+                                    placeholder = descriptionPlaceholder,
                                     modifier = Modifier.height(60.dp),
                                     singleLine = false,
                                     showUnderline = false,
                                     fontWeight = FontWeight.Normal
                                 )
                                 
-                                SimpleUnderlineTextField(value = orderCustomer, onValueChange = { orderCustomer = it }, placeholder = "Customer", fontWeight = FontWeight.Normal)
-                                SimpleUnderlineTextField(value = orderAddress, onValueChange = { orderAddress = it }, placeholder = "Address", fontWeight = FontWeight.Normal)
+                                SimpleUnderlineTextField(value = orderCustomer, onValueChange = { orderCustomer = it }, placeholder = customerPlaceholder, fontWeight = FontWeight.Normal)
+                                SimpleUnderlineTextField(value = orderAddress, onValueChange = { orderAddress = it }, placeholder = addressPlaceholder, fontWeight = FontWeight.Normal)
                             }
                         } else if (selectedTab == "NOTE") {
                             Column(
                                 modifier = Modifier.padding(horizontal = 8.dp),
                                 verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                SimpleUnderlineTextField(value = noteTitle, onValueChange = { noteTitle = it }, placeholder = "Title")
+                                SimpleUnderlineTextField(value = noteTitle, onValueChange = { noteTitle = it }, placeholder = titlePlaceholder)
                                 
                                 SimpleUnderlineTextField(
                                     value = description,
                                     onValueChange = { description = it },
-                                    placeholder = "Description",
+                                    placeholder = descriptionPlaceholder,
                                     modifier = Modifier.height(60.dp),
                                     singleLine = false,
                                     showUnderline = false,
@@ -343,10 +377,10 @@ fun CreateContactDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "CANCEL",
+                            text = cancelBtnCaps,
                             color = Color(0xFF333333),
                             fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.Normal,
                             modifier = Modifier
                                     .clickable { onDismiss() }
                                     .padding(horizontal = 12.dp, vertical = 6.dp)
@@ -366,13 +400,13 @@ fun CreateContactDialog(
                                                 selectedTab == "ORDER" -> orderTitle
                                                 selectedTab == "NOTE" -> noteTitle
                                                 selectedTab == "REMINDER" -> reminderText
-                                                else -> "New"
+                                                 else -> defaultContactName
                                             },
                                             lastName = lastName,
                                             company = company,
                                             phones = phones,
                                             isClient = selectedTab != "REMINDER" && selectedTab != "NOTE" && selectedTab != "ORDER",
-                                            isEmployee = selectedTab == "EMPLOYEE",
+                                            isEmployee = isEmployee,
                                             contact = if (description.isNotBlank()) description else null,
                                             orderName = orderTitle,
                                             customerName = orderCustomer,
@@ -393,7 +427,7 @@ fun CreateContactDialog(
                             contentPadding = PaddingValues(horizontal = 20.dp, vertical = 0.dp),
                             modifier = Modifier.height(36.dp)
                         ) {
-                            Text("SAVE", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            Text(saveBtn, fontSize = 14.sp, fontWeight = FontWeight.Normal, color = Color.White)
                         }
                     }
                 }
@@ -401,7 +435,6 @@ fun CreateContactDialog(
         }
     )
 }
-
 
 @Composable
 private fun TabPill(text: String, bgColor: Color, textColor: Color, selected: Boolean, onClick: () -> Unit) {
@@ -430,7 +463,9 @@ private fun PhoneFieldWithPlus(
     onValueChange: (String) -> Unit,
     onRemove: () -> Unit,
     onAdd: () -> Unit,
-    showPlus: Boolean
+    showPlus: Boolean,
+    removeDesc: String,
+    addDesc: String
 ) {
     Box(
         modifier = Modifier
@@ -469,7 +504,7 @@ private fun PhoneFieldWithPlus(
                 )
                 Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = "Remove",
+                    contentDescription = removeDesc,
                     tint = Color(0xFF333333),
                     modifier = Modifier
                         .size(20.dp)
@@ -490,7 +525,7 @@ private fun PhoneFieldWithPlus(
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = "Add",
+                    contentDescription = addDesc,
                     tint = Color.White,
                     modifier = Modifier.size(24.dp)
                 )

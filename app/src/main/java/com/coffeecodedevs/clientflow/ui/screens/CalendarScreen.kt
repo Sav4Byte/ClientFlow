@@ -12,6 +12,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.coffeecodedevs.clientflow.R
 
+import androidx.compose.ui.res.stringResource
 import android.os.Build
 import androidx.annotation.RequiresApi
 import java.time.LocalDate
@@ -40,6 +43,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 data class Reminder(val id: Int, val text: String, val time: String)
 data class Order(val id: Int, val title: String, val description: String, val clientName: String, val time: String)
@@ -59,7 +63,17 @@ fun CalendarScreen(
     onOrderClick: (Order) -> Unit = {},
     onNavigate: (Int) -> Unit
 ) {
-    var selectedTab by remember { mutableStateOf(initialTab) }
+    var selectedTab by remember { mutableStateOf<String>(initialTab) }
+    
+    val allDayText = stringResource(R.string.all_day_label)
+    val allTab = stringResource(R.string.all_tab)
+    val reminderTab = stringResource(R.string.reminder_tab)
+    val ordersTab = stringResource(R.string.orders_tab)
+    val callLabel = stringResource(R.string.call_label)
+    val addDesc = stringResource(R.string.add_desc)
+    val editDesc = stringResource(R.string.edit_desc)
+    val deleteDesc = stringResource(R.string.delete_desc)
+    val contactsTitle = stringResource(R.string.contacts_title)
     
     // Notify parent of initial tab
     LaunchedEffect(Unit) {
@@ -103,9 +117,9 @@ fun CalendarScreen(
 
     val dateString = selectedDate.format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy"))
 
-    val reminders = remember(contacts, dateString) {
+    val reminders = remember(contacts, dateString, allDayText) {
         contacts.filter { it.reminderText.isNotBlank() && it.reminderDate == dateString }
-            .map { Reminder(it.id, it.reminderText, if (it.reminderTime.isNotBlank()) it.reminderTime else "All Day") }
+            .map { Reminder(it.id, it.reminderText, if (it.reminderTime.isNotBlank()) it.reminderTime else allDayText) }
     }
 
     // Orders show all regardless of date
@@ -129,7 +143,7 @@ fun CalendarScreen(
         
         
         // For calls, it's a bit harder to filter by year, but let's try to match "MMM. d,"
-        val callDatePrefix = selectedDate.format(java.time.format.DateTimeFormatter.ofPattern("MMM. d,", java.util.Locale.ENGLISH))
+        val callDatePrefix = selectedDate.format(java.time.format.DateTimeFormatter.ofPattern("MMM. d,", Locale.getDefault()))
         
         contacts.forEach { contact ->
             contact.callLog.forEach { timeStr ->
@@ -159,7 +173,7 @@ fun CalendarScreen(
         Column(modifier = Modifier.fillMaxSize()) {
             Spacer(modifier = Modifier.height(24.dp))
 
-            val monthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", java.util.Locale.ENGLISH)
+            val monthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
             val headerText = selectedDate.format(monthFormatter).uppercase()
 
             // Calendar header: MONTH on white background, dates on gradient
@@ -184,7 +198,7 @@ fun CalendarScreen(
 
                 // Dates with smooth scrolling
                 val dayFormatter = DateTimeFormatter.ofPattern("dd")
-                val dayOfWeekFormatter = DateTimeFormatter.ofPattern("E", java.util.Locale.ENGLISH)
+                val dayOfWeekFormatter = DateTimeFormatter.ofPattern("E", Locale.getDefault())
 
                 LazyRow(
                     state = listState,
@@ -228,13 +242,13 @@ fun CalendarScreen(
                 when (selectedTab) {
                     "REMINDER" -> {
                         LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 120.dp)) {
-                            items(reminders) { reminder -> ReminderItem(reminder) }
+                            items(reminders) { reminder -> CalendarReminderItem(reminder, editDesc, deleteDesc) }
                         }
                     }
                     "ORDERS" -> {
                         LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 120.dp)) {
                             items(orders) { order -> 
-                                OrderItem(
+                                CalendarOrderItem(
                                     order = order,
                                     onClick = { onOrderClick(order) }
                                 ) 
@@ -245,14 +259,9 @@ fun CalendarScreen(
                         LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 120.dp)) {
                             items(allTabItems) { item ->
                                 when (item) {
-                                    is TimelineItem.ReminderItem -> ReminderItem(item.reminder)
-                                    is TimelineItem.CallItem -> SimpleCallItem(item)
-                                    is TimelineItem.OrderItem -> OrderItem(
-                                        order = item.order,
-                                        backgroundColor = item.backgroundColor,
-                                        iconRes = item.iconRes,
-                                        onClick = { onOrderClick(item.order) }
-                                    )
+                                    is TimelineItem.ReminderItem -> CalendarReminderItem(item.reminder, editDesc, deleteDesc)
+                                    is TimelineItem.CallItem -> CalendarCallItem(item, callLabel)
+                                    is TimelineItem.OrderItem -> CalendarOrderItem(item.order)
                                 }
                             }
                         }
@@ -271,19 +280,19 @@ fun CalendarScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                TabItem("ALL", selectedTab == "ALL") { 
+                TabItem(allTab, selectedTab == "ALL") { 
                     selectedTab = "ALL"
                     onTabChange("ALL")
                 }
             }
             Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                TabItem("ORDERS", selectedTab == "ORDERS") { 
+                TabItem(ordersTab, selectedTab == "ORDERS") { 
                     selectedTab = "ORDERS"
                     onTabChange("ORDERS")
                 }
             }
             Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                TabItem("REMINDER", selectedTab == "REMINDER") { 
+                TabItem(reminderTab, selectedTab == "REMINDER") { 
                     selectedTab = "REMINDER"
                     onTabChange("REMINDER")
                 }
@@ -483,35 +492,88 @@ private fun TabItem(text: String, selected: Boolean, modifier: Modifier = Modifi
 }
 
 @Composable
-private fun ReminderItem(reminder: Reminder) {
+private fun CalendarReminderItem(reminder: Reminder, editDesc: String, deleteDesc: String) {
     Row(
-        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color(0xFFFFDDB5)).padding(horizontal = 16.dp, vertical = 14.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 18.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(painterResource(R.drawable.reminder), contentDescription = null, tint = Color(0xFF333333), modifier = Modifier.size(24.dp))
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(reminder.text, fontSize = 14.sp, color = Color(0xFF333333), modifier = Modifier.weight(1f))
-        Text(reminder.time, fontSize = 14.sp, color = Color(0xFF666666))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF313131)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.notess),
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                Text(
+                    text = reminder.text,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF334D6F)
+                )
+                Text(
+                    text = reminder.time,
+                    fontSize = 14.sp,
+                    color = Color(0xFF334D6F).copy(alpha = 0.6f)
+                )
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Icon(
+                painterResource(R.drawable.pensil),
+                contentDescription = editDesc,
+                tint = Color(0xFF334D6F),
+                modifier = Modifier.size(22.dp).clickable { /* Edit */ }
+            )
+            Icon(
+                painterResource(R.drawable.thrash),
+                contentDescription = deleteDesc,
+                tint = Color(0xFF334D6F),
+                modifier = Modifier.size(22.dp).clickable { /* Delete */ }
+            )
+        }
     }
 }
 
 @Composable
-private fun SimpleCallItem(item: TimelineItem.CallItem) {
+private fun CalendarCallItem(item: TimelineItem.CallItem, callLabel: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFFAEDEF4))
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(bottom = 18.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            painterResource(R.drawable.phone),
-            contentDescription = null,
-            tint = Color(0xFF334D6F),
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                painterResource(R.drawable.phone),
+                contentDescription = null,
+                tint = Color(0xFF334D6F),
+                modifier = Modifier.size(36.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = callLabel,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF334D6F)
+            )
+        }
         Text(
             text = item.name,
             fontSize = 14.sp,
@@ -535,7 +597,7 @@ private fun SimpleCallItem(item: TimelineItem.CallItem) {
 }
 
 @Composable
-private fun OrderItem(
+private fun CalendarOrderItem(
     order: Order, 
     backgroundColor: Color = Color(0xFFE5CCFF), 
     iconRes: Int = R.drawable.notess,
