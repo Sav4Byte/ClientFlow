@@ -7,6 +7,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -358,7 +360,7 @@ fun ContactsScreen(
             )
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.statusBarsPadding())
 
             // Header section
             Box(
@@ -433,7 +435,13 @@ fun ContactsScreen(
                                     if (outline is Outline.Generic) drawPath(outline.path, Color.White)
                                 }
                             }
-                            .clickable { selectedTab = "CLIENT"; onTabChange("CLIENT") },
+                            .clickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() }
+                            ) { 
+                                selectedTab = "CLIENT"
+                                onTabChange("CLIENT") 
+                            },
                         contentAlignment = Alignment.Center
                     ) {
                         Text(clientsTab, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF334D6F))
@@ -447,7 +455,13 @@ fun ContactsScreen(
                                     if (outline is Outline.Generic) drawPath(outline.path, Color.White)
                                 }
                             }
-                            .clickable { selectedTab = "EMPLOYEE"; onTabChange("EMPLOYEE") },
+                            .clickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() }
+                            ) { 
+                                selectedTab = "EMPLOYEE"
+                                onTabChange("EMPLOYEE") 
+                            },
                         contentAlignment = Alignment.Center
                     ) {
                         Text(employeesTab, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF334D6F))

@@ -63,4 +63,8 @@
     <string name="sample_order_desc_2">The client asked for a lookbook for the July capsule collection and requested notification about the new beachwear line.</string>
     <string name="share_desc">Share</string>
     <string name="activity_tab">ACTIVITY</string>
+    <string name="no_notes">No notes</string>
+    <string name="no_reminders">No reminders</string>
+    <string name="no_orders">No orders</string>
+    <string name="no_events">No events</string>
 </resources>

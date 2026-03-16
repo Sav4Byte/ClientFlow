@@ -57,6 +57,8 @@ fun NotesScreen(
     val notesTitle = stringResource(R.string.notes_title)
     val searchPlaceholder = stringResource(R.string.search_placeholder)
     
+    val noNotes = stringResource(R.string.no_notes)
+    
     val filteredNotes = remember(notes, searchQuery) {
         notes.filter {
             it.title.contains(searchQuery, ignoreCase = true) ||
@@ -83,7 +85,7 @@ fun NotesScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.statusBarsPadding())
 
             // Header with "NOTES" и поиск как на ContactsScreen
             Box(
@@ -170,18 +172,38 @@ fun NotesScreen(
                     .background(Color.White)
                     .padding(20.dp)
             ) {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(bottom = 140.dp)
-                ) {
-                    items(filteredNotes) { note ->
-                        NotesCard(
-                            note = note,
-                            onClick = {
-                                onGoalsClick(note)
-                            }
-                        )
+                if (filteredNotes.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                painter = painterResource(R.drawable.notess),
+                                contentDescription = null,
+                                tint = Color(0xFF8B9BA8).copy(alpha = 0.5f),
+                                modifier = Modifier.size(64.dp)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = noNotes,
+                                fontSize = 18.sp,
+                                color = Color(0xFF8B9BA8),
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        contentPadding = PaddingValues(bottom = 140.dp)
+                    ) {
+                        items(filteredNotes) { note ->
+                            NotesCard(
+                                note = note,
+                                onClick = {
+                                    onGoalsClick(note)
+                                }
+                            )
+                        }
                     }
                 }
             }

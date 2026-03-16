@@ -2,6 +2,7 @@ package com.coffeecodedevs.clientflow.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -113,7 +114,7 @@ fun ContactDetailScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 24.dp)
+                .statusBarsPadding()
         ) {
             // White header block with contact info
             Box(
@@ -326,10 +327,10 @@ fun ContactDetailScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                            TabItem(stringResource(R.string.all_tab), selectedTab == "ALL") { selectedTab = "ALL" }
+                            TabItem(stringResource(R.string.all_tab), selectedTab == "ALL")
                         }
                         Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                            TabItem(stringResource(R.string.orders_tab), selectedTab == "ORDERS") { selectedTab = "ORDERS" }
+                            TabItem(stringResource(R.string.orders_tab), selectedTab == "ORDERS")
                         }
                     }
                 }
@@ -356,30 +357,40 @@ fun ContactDetailScreen(
                     .padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                TabItem(allTab, selectedTab == "ALL") { selectedTab = "ALL" }
+                Box(
+                    Modifier.weight(0.7f).fillMaxHeight()
+                        .clickable(
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) { selectedTab = "ALL" }, 
+                    contentAlignment = Alignment.Center
+                ) {
+                    TabItem(allTab, selectedTab == "ALL")
                 }
-                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    TabItem(ordersTab, selectedTab == "ORDERS") { selectedTab = "ORDERS" }
+                Box(
+                    Modifier.weight(1.0f).fillMaxHeight()
+                        .clickable(
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) { selectedTab = "ORDERS" }, 
+                    contentAlignment = Alignment.Center
+                ) {
+                    TabItem(ordersTab, selectedTab == "ORDERS")
                 }
-                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    TabItem(activityTab, selectedTab == "ACTIVITY") { selectedTab = "ACTIVITY" }
+                Box(
+                    Modifier.weight(1.3f).fillMaxHeight()
+                        .clickable(
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) { selectedTab = "ACTIVITY" }, 
+                    contentAlignment = Alignment.Center
+                ) {
+                    TabItem(activityTab, selectedTab == "ACTIVITY")
                 }
             }
         }
     }
 
-
-@Composable
-private fun TabItem(text: String, selected: Boolean, onClick: () -> Unit) {
-    Text(
-        text = text,
-        fontSize = 16.sp,
-        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-        color = Color(0xFF334D6F),
-        modifier = Modifier.clickable(onClick = onClick)
-    )
-}
 
 @Composable
 private fun ContactActionButton(
@@ -723,12 +734,26 @@ private class ContactDetailContentShape(val selectedTab: String) : Shape {
                 val smoothFactor = 28f * density.density
                 val bodyTop = tabHeight
 
-                val sectionWidth = size.width / 2f
-                val tabWidth = sectionWidth
+                val weightAll = 0.7f
+                val weightOrders = 1.0f
+                val weightActivity = 1.3f
+                val totalWeight = weightAll + weightOrders + weightActivity
+
+                val widthAll = size.width * (weightAll / totalWeight)
+                val widthOrders = size.width * (weightOrders / totalWeight)
+                val widthActivity = size.width * (weightActivity / totalWeight)
+
+                val tabWidth = when (selectedTab) {
+                    "ALL" -> widthAll
+                    "ORDERS" -> widthOrders
+                    "ACTIVITY" -> widthActivity
+                    else -> widthAll
+                }
 
                 val tabStartX = when (selectedTab) {
                     "ALL" -> 0f
-                    "ORDERS" -> sectionWidth
+                    "ORDERS" -> widthAll
+                    "ACTIVITY" -> widthAll + widthOrders
                     else -> 0f
                 }
                 val tabEndX = tabStartX + tabWidth
@@ -736,7 +761,7 @@ private class ContactDetailContentShape(val selectedTab: String) : Shape {
                 moveTo(0f, size.height)
                 lineTo(size.width, size.height)
 
-                if (selectedTab == "ORDERS") {
+                if (selectedTab == "ACTIVITY") {
                     lineTo(size.width, cornerRadius)
                     quadraticTo(size.width, 0f, size.width - cornerRadius, 0f)
                     lineTo(tabStartX + smoothFactor, 0f)
@@ -747,7 +772,7 @@ private class ContactDetailContentShape(val selectedTab: String) : Shape {
                     )
                     lineTo(bodyCornerRadius, bodyTop)
                     quadraticTo(0f, bodyTop, 0f, bodyTop + bodyCornerRadius)
-                } else {
+                } else if (selectedTab == "ALL") {
                     lineTo(size.width, bodyTop + bodyCornerRadius)
                     quadraticTo(size.width, bodyTop, size.width - bodyCornerRadius, bodyTop)
                     lineTo(tabEndX + smoothFactor, bodyTop)
@@ -758,6 +783,23 @@ private class ContactDetailContentShape(val selectedTab: String) : Shape {
                     )
                     lineTo(cornerRadius, 0f)
                     quadraticTo(0f, 0f, 0f, cornerRadius)
+                } else { // ORDERS
+                    lineTo(size.width, bodyTop + bodyCornerRadius)
+                    quadraticTo(size.width, bodyTop, size.width - bodyCornerRadius, bodyTop)
+                    lineTo(tabEndX + smoothFactor, bodyTop)
+                    cubicTo(
+                        tabEndX, bodyTop,
+                        tabEndX, 0f,
+                        tabEndX - smoothFactor * 0.8f, 0f
+                    )
+                    lineTo(tabStartX + smoothFactor * 0.8f, 0f)
+                    cubicTo(
+                        tabStartX, 0f,
+                        tabStartX, bodyTop,
+                        tabStartX - smoothFactor, bodyTop
+                    )
+                    lineTo(bodyCornerRadius, bodyTop)
+                    quadraticTo(0f, bodyTop, 0f, bodyTop + bodyCornerRadius)
                 }
 
                 close()

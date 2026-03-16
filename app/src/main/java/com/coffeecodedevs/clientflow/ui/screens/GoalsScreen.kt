@@ -99,7 +99,7 @@ fun GoalsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 24.dp)
+                .statusBarsPadding()
                 .verticalScroll(rememberScrollState())
         ) {
             // Top white block with header and cutout for buttons

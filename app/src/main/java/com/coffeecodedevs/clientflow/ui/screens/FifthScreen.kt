@@ -137,7 +137,7 @@ fun FifthScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.statusBarsPadding())
 
             // Header with back button, name, and action buttons
             Box(

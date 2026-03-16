@@ -2,6 +2,7 @@ package com.coffeecodedevs.clientflow.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -42,6 +43,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -75,6 +77,10 @@ fun CalendarScreen(
     val deleteDesc = stringResource(R.string.delete_desc)
     val contactsTitle = stringResource(R.string.contacts_title)
     
+    val noReminders = stringResource(R.string.no_reminders)
+    val noOrders = stringResource(R.string.no_orders)
+    val noEvents = stringResource(R.string.no_events)
+    
     // Notify parent of initial tab
     LaunchedEffect(Unit) {
         onTabChange(selectedTab)
@@ -90,27 +96,44 @@ fun CalendarScreen(
         (0 until totalDays).map { today.minusDays((totalDays / 2).toLong()).plusDays(it.toLong()) }
     }
     
-    val initialIndex = totalDays / 2
-    val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex - 3)
-    val coroutineScope = rememberCoroutineScope()
-    
-    // Calculate which item is currently near the center/visible to animate the cutout smoothly
-    val selectedGlobalIndex = days.indexOf(selectedDate)
+    // Calculate screen width and density
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
     val density = androidx.compose.ui.platform.LocalDensity.current
+    val screenWidthPx = with(density) { configuration.screenWidthDp.dp.toPx() }
+    val itemWidthPx = screenWidthPx / 7f
     
-    var lastKnownTarget by remember { mutableStateOf(0f) }
-    val cutoutCenterX by remember(selectedGlobalIndex) {
-        derivedStateOf<Float> {
+    // Position of the "bump" center: exactly in the middle of the screen
+    val cutoutCenterX = screenWidthPx / 2f
+
+    val initialIndex = totalDays / 2
+    // We don't need initialScrollOffset because contentPadding will center the initialIndex
+    val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
+    val coroutineScope = rememberCoroutineScope()
+
+    // We need to auto-select the date under the bump while scrolling
+    LaunchedEffect(listState) {
+        snapshotFlow { 
             val layoutInfo = listState.layoutInfo
+            val viewportCenter = (layoutInfo.viewportEndOffset + layoutInfo.viewportStartOffset) / 2f
             val visibleItems = layoutInfo.visibleItemsInfo
-            val selectedItem = visibleItems.find { it.index == selectedGlobalIndex }
-            if (selectedItem != null) {
-                // Increased offset to 20dp to push the bubble more to the right and keep it centered
-                val center = selectedItem.offset.toFloat() + selectedItem.size / 2f + (20f * density.density)
-                lastKnownTarget = center
-                center
+            if (visibleItems.isNotEmpty() && viewportCenter > 0) {
+                val closestItem = visibleItems.minByOrNull { item ->
+                    val itemCenter = item.offset + item.size / 2f
+                    kotlin.math.abs(itemCenter - viewportCenter)
+                }
+                closestItem?.index
             } else {
-                lastKnownTarget
+                null
+            }
+        }
+        .collect { closestIndex ->
+            closestIndex?.let { index ->
+                if (index in days.indices) {
+                    val newDate = days[index]
+                    if (selectedDate != newDate) {
+                        selectedDate = newDate
+                    }
+                }
             }
         }
     }
@@ -166,12 +189,12 @@ fun CalendarScreen(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(Color(0xFF87CEEB), Color(0xFFF5F5DC))
+                    colors = listOf(Color(0xFFAEE0FF), Color(0xFFDDC6A3))
                 )
             )
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.statusBarsPadding())
 
             val monthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
             val headerText = selectedDate.format(monthFormatter).uppercase()
@@ -200,26 +223,58 @@ fun CalendarScreen(
                 val dayFormatter = DateTimeFormatter.ofPattern("dd")
                 val dayOfWeekFormatter = DateTimeFormatter.ofPattern("E", Locale.getDefault())
 
+                val snapBehavior = androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior(lazyListState = listState)
+                
+                // Content padding to allow the first and last items to be centered under the bump
+                val horizontalPadding = (cutoutCenterX / density.density).dp - (itemWidthPx / 2f / density.density).dp
+
                 LazyRow(
                     state = listState,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 10.dp, bottom = 16.dp),
-                    contentPadding = PaddingValues(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.spacedBy(0.dp)
+                    contentPadding = PaddingValues(horizontal = horizontalPadding),
+                    horizontalArrangement = Arrangement.spacedBy(0.dp),
+                    flingBehavior = snapBehavior
                 ) {
                     itemsIndexed(days) { index, date ->
                         val isSelected = date == selectedDate
+                        
+                        // Calculate scale based on item position relative to cutoutCenterX
+                        val scale by remember(index) {
+                            derivedStateOf {
+                                val layoutInfo = listState.layoutInfo
+                                val viewportCenter = (layoutInfo.viewportEndOffset + layoutInfo.viewportStartOffset) / 2f
+                                val itemInfo = layoutInfo.visibleItemsInfo.find { it.index == index }
+                                
+                                if (itemInfo != null && itemInfo.size > 0 && viewportCenter > 0) {
+                                    val itemCenter = itemInfo.offset + itemInfo.size / 2f
+                                    val distanceFromCenter = kotlin.math.abs(itemCenter - viewportCenter)
+                                    // Scale decreases over a distance of 1.5 items
+                                    val maxDistance = itemInfo.size.toFloat() * 1.5f
+                                    val rawScale = 1f - (distanceFromCenter / maxDistance)
+                                    rawScale.coerceIn(0f, 1f)
+                                } else {
+                                    0f
+                                }
+                            }
+                        }
+
                         Box(
-                            modifier = Modifier.fillParentMaxWidth(fraction = 1f / 7f),
+                            modifier = Modifier.width((itemWidthPx / density.density).dp),
                             contentAlignment = Alignment.Center
                         ) {
                             CalendarDay(
                                 day = date.format(dayFormatter),
                                 dayName = date.format(dayOfWeekFormatter),
                                 isSelected = isSelected,
+                                scale = scale,
                                 onClick = {
-                                    selectedDate = date
+                                    coroutineScope.launch {
+                                        // Scroll so this item's center aligns with cutoutCenterX
+                                        val offset = (cutoutCenterX - itemWidthPx / 2f).toInt()
+                                        listState.animateScrollToItem(index, -offset)
+                                    }
                                 }
                             )
                         }
@@ -236,32 +291,92 @@ fun CalendarScreen(
                 .padding(top = 175.dp)
                 .padding(horizontal = 16.dp)
                 .clip(ContentWithTabShape(selectedTab))
-                .background(Color.White)
+                .background(Color.White.copy(alpha = 0.75f))
         ) {
             Box(modifier = Modifier.padding(top = 40.dp).padding(horizontal = 16.dp, vertical = 20.dp)) {
                 when (selectedTab) {
                     "REMINDER" -> {
-                        LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 120.dp)) {
-                            items(reminders) { reminder -> CalendarReminderItem(reminder, editDesc, deleteDesc) }
+                        if (reminders.isEmpty()) {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.calendar),
+                                        contentDescription = null,
+                                        tint = Color(0xFF8B9BA8).copy(alpha = 0.5f),
+                                        modifier = Modifier.size(64.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Text(
+                                        text = noReminders,
+                                        fontSize = 18.sp,
+                                        color = Color(0xFF8B9BA8),
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        } else {
+                            LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 120.dp)) {
+                                items(reminders) { reminder -> CalendarReminderItem(reminder, editDesc, deleteDesc) }
+                            }
                         }
                     }
                     "ORDERS" -> {
-                        LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 120.dp)) {
-                            items(orders) { order -> 
-                                CalendarOrderItem(
-                                    order = order,
-                                    onClick = { onOrderClick(order) }
-                                ) 
+                        if (orders.isEmpty()) {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.calendar),
+                                        contentDescription = null,
+                                        tint = Color(0xFF8B9BA8).copy(alpha = 0.5f),
+                                        modifier = Modifier.size(64.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Text(
+                                        text = noOrders,
+                                        fontSize = 18.sp,
+                                        color = Color(0xFF8B9BA8),
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        } else {
+                            LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 120.dp)) {
+                                items(orders) { order -> 
+                                    CalendarOrderItem(
+                                        order = order,
+                                        onClick = { onOrderClick(order) }
+                                    ) 
+                                }
                             }
                         }
                     }
                     "ALL" -> {
-                        LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 120.dp)) {
-                            items(allTabItems) { item ->
-                                when (item) {
-                                    is TimelineItem.ReminderItem -> CalendarReminderItem(item.reminder, editDesc, deleteDesc)
-                                    is TimelineItem.CallItem -> CalendarCallItem(item, callLabel)
-                                    is TimelineItem.OrderItem -> CalendarOrderItem(item.order)
+                        if (allTabItems.isEmpty()) {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.calendar),
+                                        contentDescription = null,
+                                        tint = Color(0xFF8B9BA8).copy(alpha = 0.5f),
+                                        modifier = Modifier.size(64.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Text(
+                                        text = noEvents,
+                                        fontSize = 18.sp,
+                                        color = Color(0xFF8B9BA8),
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        } else {
+                            LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 120.dp)) {
+                                items(allTabItems) { item ->
+                                    when (item) {
+                                        is TimelineItem.ReminderItem -> CalendarReminderItem(item.reminder, editDesc, deleteDesc)
+                                        is TimelineItem.CallItem -> CalendarCallItem(item, callLabel)
+                                        is TimelineItem.OrderItem -> CalendarOrderItem(item.order)
+                                    }
                                 }
                             }
                         }
@@ -279,23 +394,44 @@ fun CalendarScreen(
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                TabItem(allTab, selectedTab == "ALL") { 
-                    selectedTab = "ALL"
-                    onTabChange("ALL")
-                }
+            Box(
+                Modifier.weight(0.7f).fillMaxHeight()
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) { 
+                        selectedTab = "ALL"
+                        onTabChange("ALL")
+                    }, 
+                contentAlignment = Alignment.Center
+            ) {
+                TabItem(allTab, selectedTab == "ALL")
             }
-            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                TabItem(ordersTab, selectedTab == "ORDERS") { 
-                    selectedTab = "ORDERS"
-                    onTabChange("ORDERS")
-                }
+            Box(
+                Modifier.weight(1.0f).fillMaxHeight()
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) { 
+                        selectedTab = "ORDERS"
+                        onTabChange("ORDERS")
+                    }, 
+                contentAlignment = Alignment.Center
+            ) {
+                TabItem(ordersTab, selectedTab == "ORDERS")
             }
-            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                TabItem(reminderTab, selectedTab == "REMINDER") { 
-                    selectedTab = "REMINDER"
-                    onTabChange("REMINDER")
-                }
+            Box(
+                Modifier.weight(1.3f).fillMaxHeight()
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) { 
+                        selectedTab = "REMINDER"
+                        onTabChange("REMINDER")
+                    }, 
+                contentAlignment = Alignment.Center
+            ) {
+                TabItem(reminderTab, selectedTab == "REMINDER")
             }
         }
     }
@@ -303,13 +439,24 @@ fun CalendarScreen(
 
 
 @Composable
-private fun CalendarDay(day: String, dayName: String, isSelected: Boolean, onClick: () -> Unit) {
+private fun CalendarDay(
+    day: String,
+    dayName: String,
+    isSelected: Boolean,
+    scale: Float = 1f,
+    onClick: () -> Unit
+) {
+    val numberSize = (20 + (44 - 20) * scale).sp
+    val dayNameSize = (14 + (32 - 14) * scale).sp
+    val colorAlpha = 0.6f + (1f - 0.6f) * scale
+    val fontWeight = if (scale > 0.5f) FontWeight.Bold else FontWeight.Normal
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = Modifier
-            .fillMaxWidth() // Uses the 1/7 fraction from parent
-            .height(115.dp) // Slightly taller to accommodate large text
+            .fillMaxWidth()
+            .height(115.dp)
             .offset(y = (-25.dp))
             .clickable(
                 interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
@@ -317,34 +464,20 @@ private fun CalendarDay(day: String, dayName: String, isSelected: Boolean, onCli
                 onClick = onClick
             )
     ) {
-        if (isSelected) {
-            // Reverted to original large fonts
-            Text(
-                day,
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF334D6F)
-            )
-            Text(
-                dayName,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Normal,
-                color = Color(0xFF334D6F)
-            )
-        } else {
-            // Unselected state
-            Text(
-                day,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Normal,
-                color = Color(0x99334D6F)
-            )
-            Text(
-                dayName,
-                fontSize = 12.sp, // Reverted to 12
-                color = Color(0x99334D6F)
-            )
-        }
+        Text(
+            day,
+            fontSize = numberSize,
+            fontWeight = fontWeight,
+            color = Color(0xFF334D6F).copy(alpha = colorAlpha),
+            lineHeight = 24.sp
+        )
+        Text(
+            dayName,
+            fontSize = dayNameSize,
+            fontWeight = fontWeight,
+            color = Color(0xFF334D6F).copy(alpha = colorAlpha),
+            lineHeight = 24.sp
+        )
     }
 }
 
@@ -358,13 +491,26 @@ private class ContentWithTabShape(val selectedTab: String) : Shape {
                 val smoothFactor = 28f * density.density
                 val bodyTop = tabHeight
 
-                val sectionWidth = size.width / 3f
-                val tabWidth = sectionWidth
+                val weightAll = 0.7f
+                val weightOrders = 1.0f
+                val weightReminder = 1.3f
+                val totalWeight = weightAll + weightOrders + weightReminder
+
+                val widthAll = size.width * (weightAll / totalWeight)
+                val widthOrders = size.width * (weightOrders / totalWeight)
+                val widthReminder = size.width * (weightReminder / totalWeight)
+
+                val tabWidth = when (selectedTab) {
+                    "ALL" -> widthAll
+                    "ORDERS" -> widthOrders
+                    "REMINDER" -> widthReminder
+                    else -> widthAll
+                }
 
                 val tabStartX = when (selectedTab) {
                     "ALL" -> 0f
-                    "ORDERS" -> sectionWidth
-                    "REMINDER" -> sectionWidth * 2f
+                    "ORDERS" -> widthAll
+                    "REMINDER" -> widthAll + widthOrders
                     else -> 0f
                 }
                 val tabEndX = tabStartX + tabWidth
@@ -481,13 +627,14 @@ private class OctoberHeaderWithCutoutShape(private val cutoutCenterX: Float) : S
 
 
 @Composable
-private fun TabItem(text: String, selected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun TabItem(text: String, selected: Boolean) {
     Text(
         text = text,
-        fontSize = 16.sp,
+        fontSize = 15.sp,
         fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
         color = Color(0xFF334D6F),
-        modifier = modifier.clickable(onClick = onClick)
+        maxLines = 1,
+        softWrap = false
     )
 }
 

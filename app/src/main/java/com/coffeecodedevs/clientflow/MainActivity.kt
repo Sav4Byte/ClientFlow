@@ -278,8 +278,8 @@ fun AppNavigation() {
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .padding(start = 64.dp, end = 64.dp, bottom = 65.dp)
+                    .width(280.dp)
+                    .padding(bottom = 65.dp)
             ) {
                 Surface(
                     modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -288,7 +288,7 @@ fun AppNavigation() {
                     shadowElevation = 12.dp
                 ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -308,7 +308,7 @@ fun AppNavigation() {
                                 screenStack.add(Screen.Notes)
                             }
                         )
-                        Spacer(modifier = Modifier.width(70.dp))
+                        Spacer(modifier = Modifier.width(56.dp))
                         BottomNavIcon(
                             painter = painterResource(R.drawable.dial),
                             selected = selectedBottomTab == 2,
@@ -329,12 +329,12 @@ fun AppNavigation() {
                 }
                 FloatingActionButton(
                     onClick = { showCreateDialog = true },
-                    modifier = Modifier.align(Alignment.TopCenter).offset(y = (-25).dp).size(56.dp),
+                    modifier = Modifier.align(Alignment.TopCenter).offset(y = (-28).dp).size(56.dp),
                     containerColor = Color(0xFF313131),
                     shape = CircleShape,
                     elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 8.dp, pressedElevation = 12.dp)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add", tint = Color.White, modifier = Modifier.size(24.dp))
+                    Icon(Icons.Default.Add, contentDescription = "Add", tint = Color.White, modifier = Modifier.size(32.dp))
                 }
             }
         }
@@ -429,7 +429,7 @@ private fun BottomNavIcon(
         modifier = Modifier
             .size(40.dp)
             .clip(CircleShape)
-            .background(if (selected) Color(0x8087CEEB) else Color.Transparent)
+            .background(if (selected) Color(0x80AEE0FF) else Color.Transparent)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
