@@ -4,6 +4,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -71,6 +72,7 @@ fun CallResultDialog(
 
     val datePickerState = rememberDatePickerState()
     val timePickerState = rememberTimePickerState(initialHour = 9, initialMinute = 0)
+    val interactionSource = remember { MutableInteractionSource() }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -146,7 +148,10 @@ fun CallResultDialog(
                         // New Client Checkbox
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(vertical = 4.dp).clickable { isNewClient = !isNewClient }
+                            modifier = Modifier.padding(vertical = 4.dp).clickable(
+                                interactionSource = interactionSource,
+                                indication = null
+                            ) { isNewClient = !isNewClient }
                         ) {
                             RoundedSquareCheckbox(
                                 checked = isNewClient,
@@ -164,7 +169,10 @@ fun CallResultDialog(
                         // Made an order Checkbox
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(vertical = 4.dp).clickable { isMadeOrder = !isMadeOrder }
+                            modifier = Modifier.padding(vertical = 4.dp).clickable(
+                                interactionSource = interactionSource,
+                                indication = null
+                            ) { isMadeOrder = !isMadeOrder }
                         ) {
                             RoundedSquareCheckbox(
                                 checked = isMadeOrder,
@@ -211,7 +219,10 @@ fun CallResultDialog(
                         // Remind Checkbox
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(vertical = 4.dp).clickable { isRemind = !isRemind }
+                            modifier = Modifier.padding(vertical = 4.dp).clickable(
+                                interactionSource = interactionSource,
+                                indication = null
+                            ) { isRemind = !isRemind }
                         ) {
                             RoundedSquareCheckbox(
                                 checked = isRemind,
@@ -259,12 +270,18 @@ fun CallResultDialog(
                             CallResultOutlinedLabelField(
                                 label = dateLabel, 
                                 value = reminderDate, 
-                                modifier = Modifier.width(130.dp).clickable { showDatePicker = true }
+                                modifier = Modifier.width(130.dp).clickable(
+                                    interactionSource = interactionSource,
+                                    indication = null
+                                ) { showDatePicker = true }
                             )
                             CallResultOutlinedLabelField(
                                 label = timeLabel, 
                                 value = reminderTime, 
-                                modifier = Modifier.width(100.dp).clickable { showTimePicker = true }
+                                modifier = Modifier.width(100.dp).clickable(
+                                    interactionSource = interactionSource,
+                                    indication = null
+                                ) { showTimePicker = true }
                             )
                         }
 
@@ -325,7 +342,10 @@ fun CallResultDialog(
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Normal,
                             modifier = Modifier
-                                    .clickable { onDismiss() }
+                                    .clickable(
+                                        interactionSource = interactionSource,
+                                        indication = null
+                                    ) { onDismiss() }
                                     .padding(horizontal = 12.dp, vertical = 6.dp)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
@@ -359,13 +379,17 @@ private fun RoundedSquareCheckbox(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier = Modifier
             .size(24.dp)
             .clip(RoundedCornerShape(4.dp))
             .background(if (checked) Color(0xFF313131) else Color.Transparent)
             .border(2.dp, Color(0xFF313131), RoundedCornerShape(4.dp))
-            .clickable { onCheckedChange(!checked) },
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) { onCheckedChange(!checked) },
         contentAlignment = Alignment.Center
     ) {
         if (checked) {
