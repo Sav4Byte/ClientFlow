@@ -595,7 +595,11 @@ fun ContactItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(38.dp)
-                .clickable(onClick = onToggleExpand),
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onToggleExpand
+                ),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
