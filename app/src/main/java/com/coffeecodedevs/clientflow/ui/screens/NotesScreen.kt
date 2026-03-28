@@ -101,7 +101,7 @@ fun NotesScreen(
                             color = Color.White,
                             shape = HeaderWithSearchCutoutShape()
                         )
-                        .padding(start = 30.dp, top = 20.dp, bottom = 5.dp)
+                        .padding(start = 20.dp, top = 20.dp, bottom = 5.dp)
                 ) {
                     Text(
                         text = notesTitle,

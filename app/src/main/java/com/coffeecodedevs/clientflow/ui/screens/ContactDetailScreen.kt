@@ -77,11 +77,9 @@ fun ContactDetailScreen(
     
     val backDesc = stringResource(R.string.back_desc)
     val deleteBtn = stringResource(R.string.delete_desc)
-    val shareDesc = stringResource(R.string.share_desc)
     val editDesc = stringResource(R.string.edit_desc)
     val allTab = stringResource(R.string.all_tab)
     val ordersTab = stringResource(R.string.orders_tab)
-    val activityTab = stringResource(R.string.activity_tab)
     val callLabel = stringResource(R.string.call_label)
 
     val orders = emptyList<ContactOrder>()
@@ -172,12 +170,6 @@ fun ContactDetailScreen(
                                     painter = painterResource(R.drawable.thrash),
                                     contentDescription = deleteBtn,
                                     modifier = Modifier.size(24.dp).clickable { onDeleteClick() },
-                                    tint = Color.Red.copy(alpha = 0.6f)
-                                )
-                                Icon(
-                                    painter = painterResource(R.drawable.share),
-                                    contentDescription = shareDesc,
-                                    modifier = Modifier.size(24.dp).clickable { /* Share */ },
                                     tint = Color(0xFF334D6F)
                                 )
                                 Icon(
@@ -322,7 +314,7 @@ fun ContactDetailScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .offset(y = (-1).dp * (Modifier.fillMaxHeight().hashCode()))
+                            .offset(y = (-40).dp)
                             .height(40.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -358,7 +350,7 @@ fun ContactDetailScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
-                    Modifier.weight(0.7f).fillMaxHeight()
+                    Modifier.weight(1.0f).fillMaxHeight()
                         .clickable(
                             indication = null,
                             interactionSource = remember { MutableInteractionSource() }
@@ -376,16 +368,6 @@ fun ContactDetailScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     TabItem(ordersTab, selectedTab == "ORDERS")
-                }
-                Box(
-                    Modifier.weight(1.3f).fillMaxHeight()
-                        .clickable(
-                            indication = null,
-                            interactionSource = remember { MutableInteractionSource() }
-                        ) { selectedTab = "ACTIVITY" }, 
-                    contentAlignment = Alignment.Center
-                ) {
-                    TabItem(activityTab, selectedTab == "ACTIVITY")
                 }
             }
         }
@@ -734,26 +716,22 @@ private class ContactDetailContentShape(val selectedTab: String) : Shape {
                 val smoothFactor = 28f * density.density
                 val bodyTop = tabHeight
 
-                val weightAll = 0.7f
+                val weightAll = 1.0f
                 val weightOrders = 1.0f
-                val weightActivity = 1.3f
-                val totalWeight = weightAll + weightOrders + weightActivity
+                val totalWeight = weightAll + weightOrders
 
                 val widthAll = size.width * (weightAll / totalWeight)
                 val widthOrders = size.width * (weightOrders / totalWeight)
-                val widthActivity = size.width * (weightActivity / totalWeight)
 
                 val tabWidth = when (selectedTab) {
                     "ALL" -> widthAll
                     "ORDERS" -> widthOrders
-                    "ACTIVITY" -> widthActivity
                     else -> widthAll
                 }
 
                 val tabStartX = when (selectedTab) {
                     "ALL" -> 0f
                     "ORDERS" -> widthAll
-                    "ACTIVITY" -> widthAll + widthOrders
                     else -> 0f
                 }
                 val tabEndX = tabStartX + tabWidth
@@ -761,18 +739,7 @@ private class ContactDetailContentShape(val selectedTab: String) : Shape {
                 moveTo(0f, size.height)
                 lineTo(size.width, size.height)
 
-                if (selectedTab == "ACTIVITY") {
-                    lineTo(size.width, cornerRadius)
-                    quadraticTo(size.width, 0f, size.width - cornerRadius, 0f)
-                    lineTo(tabStartX + smoothFactor, 0f)
-                    cubicTo(
-                        tabStartX, 0f,
-                        tabStartX, bodyTop,
-                        tabStartX - smoothFactor, bodyTop
-                    )
-                    lineTo(bodyCornerRadius, bodyTop)
-                    quadraticTo(0f, bodyTop, 0f, bodyTop + bodyCornerRadius)
-                } else if (selectedTab == "ALL") {
+                if (selectedTab == "ALL") {
                     lineTo(size.width, bodyTop + bodyCornerRadius)
                     quadraticTo(size.width, bodyTop, size.width - bodyCornerRadius, bodyTop)
                     lineTo(tabEndX + smoothFactor, bodyTop)
@@ -784,15 +751,9 @@ private class ContactDetailContentShape(val selectedTab: String) : Shape {
                     lineTo(cornerRadius, 0f)
                     quadraticTo(0f, 0f, 0f, cornerRadius)
                 } else { // ORDERS
-                    lineTo(size.width, bodyTop + bodyCornerRadius)
-                    quadraticTo(size.width, bodyTop, size.width - bodyCornerRadius, bodyTop)
-                    lineTo(tabEndX + smoothFactor, bodyTop)
-                    cubicTo(
-                        tabEndX, bodyTop,
-                        tabEndX, 0f,
-                        tabEndX - smoothFactor * 0.8f, 0f
-                    )
-                    lineTo(tabStartX + smoothFactor * 0.8f, 0f)
+                    lineTo(size.width, cornerRadius)
+                    quadraticTo(size.width, 0f, size.width - cornerRadius, 0f)
+                    lineTo(tabStartX + smoothFactor, 0f)
                     cubicTo(
                         tabStartX, 0f,
                         tabStartX, bodyTop,

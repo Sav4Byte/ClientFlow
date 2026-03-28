@@ -192,18 +192,20 @@ fun AppNavigation() {
                     },
                     onUpdateClick = { newTitle, newFullDescription ->
                         val contactToUpdate = allContactsFromDb.find { it.id == displayNote.id }
+                            ?: allNotesFromDb.find { it.id == displayNote.id }
                         if (contactToUpdate != null) {
-                            if (contactToUpdate.orderName.isNotBlank() && !contactToUpdate.isStandaloneNote) {
-                                viewModel.updateContact(contactToUpdate.copy(
+                            val updatedContact = if (contactToUpdate.orderName.isNotBlank() && !contactToUpdate.isStandaloneNote) {
+                                contactToUpdate.copy(
                                     orderName = newTitle,
                                     contact = newFullDescription
-                                ))
+                                )
                             } else {
-                                viewModel.updateContact(contactToUpdate.copy(
+                                contactToUpdate.copy(
                                     noteTitle = newTitle,
                                     contact = newFullDescription
-                                ))
+                                )
                             }
+                            viewModel.updateContact(updatedContact)
                         }
                     }
                 )
@@ -366,10 +368,21 @@ fun AppNavigation() {
                             isEmployee = contactToEdit!!.isEmployee
                         ))
                     } else {
-                        viewModel.addContact(contact.copy(
-                            isStandaloneNote = isNote,
-                            firstName = if (contact.firstName.isBlank()) "Note" else contact.firstName
-                        ))
+                        // При создании нового контакта учитываем активную вкладку
+                        val updatedContact = if (!isNote && currentScreen is Screen.Contacts) {
+                            contact.copy(
+                                isClient = activeContactTab == "CLIENT",
+                                isEmployee = activeContactTab == "EMPLOYEE",
+                                isStandaloneNote = false,
+                                firstName = if (contact.firstName.isBlank()) "New Contact" else contact.firstName
+                            )
+                        } else {
+                            contact.copy(
+                                isStandaloneNote = isNote,
+                                firstName = if (contact.firstName.isBlank()) "Note" else contact.firstName
+                            )
+                        }
+                        viewModel.addContact(updatedContact)
                     }
                     
                     showCreateDialog = false

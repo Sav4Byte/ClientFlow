@@ -372,7 +372,7 @@ fun ContactsScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(color = Color.White, shape = HeaderWithSearchCutoutShape())
-                        .padding(start = 16.dp, top = 20.dp, bottom = 5.dp)
+                        .padding(start = 10.dp, top = 20.dp, bottom = 5.dp)
                 ) {
                     Text(
                         text = contactsTitle,

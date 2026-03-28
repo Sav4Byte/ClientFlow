@@ -43,6 +43,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -106,8 +107,12 @@ fun CalendarScreen(
     val cutoutCenterX = screenWidthPx / 2f
 
     val initialIndex = totalDays / 2
-    // We don't need initialScrollOffset because contentPadding will center the initialIndex
-    val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
+    // Calculate the initial scroll offset so that initialIndex is centered under cutoutCenterX
+    val initialScrollOffset = -(cutoutCenterX - itemWidthPx / 2f).toInt()
+    val listState = rememberLazyListState(
+        initialFirstVisibleItemIndex = initialIndex,
+        initialFirstVisibleItemScrollOffset = initialScrollOffset
+    )
     val coroutineScope = rememberCoroutineScope()
 
     // We need to auto-select the date under the bump while scrolling
@@ -270,10 +275,16 @@ fun CalendarScreen(
                                 isSelected = isSelected,
                                 scale = scale,
                                 onClick = {
+                                    selectedDate = date
                                     coroutineScope.launch {
-                                        // Scroll so this item's center aligns with cutoutCenterX
-                                        val offset = (cutoutCenterX - itemWidthPx / 2f).toInt()
-                                        listState.animateScrollToItem(index, -offset)
+                                        val layoutInfo = listState.layoutInfo
+                                        val viewportWidth = layoutInfo.viewportEndOffset - layoutInfo.viewportStartOffset
+                                        if (viewportWidth > 0) {
+                                            val center = viewportWidth / 2f
+                                            val itemSize = itemWidthPx
+                                            val targetOffset = (center - itemSize / 2f).toInt()
+                                            listState.animateScrollToItem(index, -targetOffset)
+                                        }
                                     }
                                 }
                             )
@@ -451,13 +462,15 @@ private fun CalendarDay(
     val colorAlpha = 0.6f + (1f - 0.6f) * scale
     val fontWeight = if (scale > 0.5f) FontWeight.Bold else FontWeight.Normal
 
+    val verticalOffset = (-25 - (13 * scale)).dp // Moves from -25dp up to -38dp as scale increases
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = Modifier
             .fillMaxWidth()
             .height(115.dp)
-            .offset(y = (-25.dp))
+            .offset(y = verticalOffset)
             .clickable(
                 interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
                 indication = null,
