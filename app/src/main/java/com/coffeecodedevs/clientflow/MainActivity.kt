@@ -5,6 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import android.content.Intent
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -40,6 +42,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 
 class MainActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -62,6 +65,7 @@ sealed class Screen {
 
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavigation() {
     val context = LocalContext.current
@@ -403,10 +407,32 @@ fun AppNavigation() {
                     val contactToUpdate = allContactsFromDb.find { it.id == callInProgressContact!!.id } ?: callInProgressContact!!
                     var updatedContact = contactToUpdate
 
-                    if (note.isNotBlank()) {
-                        val newNoteWithSpace = if (updatedContact.contact.isNullOrBlank()) note else "${updatedContact.contact}\n\n$note"
-                        updatedContact = updatedContact.copy(contact = newNoteWithSpace)
+                    // Format note & order into callLog instead of description
+                    val mutableCallLog = updatedContact.callLog.toMutableList()
+                    val lastLog = mutableCallLog.lastOrNull()
+                    
+                    val now = java.util.Date()
+                    val dateFormatter = java.text.SimpleDateFormat("MMM. d,", java.util.Locale.ENGLISH)
+                    val timeFormatter = java.text.SimpleDateFormat("HH:mm", java.util.Locale.ENGLISH)
+                    val currentTimestamp = "${dateFormatter.format(now)} ${timeFormatter.format(now)}"
+
+                    if (lastLog != null && !lastLog.startsWith("CALL|") && !lastLog.startsWith("ORDER|") && !lastLog.contains("|")) {
+                        // Replace the bare timestamp logged when call started
+                        if (orderValue != null) {
+                            mutableCallLog[mutableCallLog.lastIndex] = "ORDER|$lastLog|$orderValue|$note"
+                        } else if (note.isNotBlank()) {
+                            mutableCallLog[mutableCallLog.lastIndex] = "CALL|$lastLog|$note"
+                        }
+                    } else {
+                        // Shouldn't usually happen, but if no recent bare timestamp
+                        if (orderValue != null) {
+                            mutableCallLog.add("ORDER|$currentTimestamp|$orderValue|$note")
+                        } else if (note.isNotBlank()) {
+                            mutableCallLog.add("CALL|$currentTimestamp|$note")
+                        }
                     }
+                    updatedContact = updatedContact.copy(callLog = mutableCallLog.toList())
+
                     if (isNewClient) {
                         updatedContact = updatedContact.copy(isClient = true, isEmployee = false)
                     }

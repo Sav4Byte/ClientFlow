@@ -82,13 +82,39 @@ fun ContactDetailScreen(
     val ordersTab = stringResource(R.string.orders_tab)
     val callLabel = stringResource(R.string.call_label)
 
-    val orders = emptyList<ContactOrder>()
-
-    // Build timeline from callLog (show latest first)
+    // Parse callLog into timeline items and orders
     val allTabItems: List<ContactTimelineItem> = remember(callLog) {
-        callLog.reversed().map { timestamp ->
-            ContactTimelineItem.SimpleCall(time = timestamp)
+        val orderColors = listOf(Color(0xFFE0C6F5), Color(0xFFAEDEF4), Color(0xFFF5E6D3), Color(0xFFB8E8E8))
+        var orderIndex = 0
+
+        callLog.reversed().map { logString ->
+            when {
+                logString.startsWith("ORDER|") -> {
+                    val parts = logString.split("|", limit = 4)
+                    val time = parts.getOrNull(1) ?: ""
+                    val title = parts.getOrNull(2) ?: ""
+                    val desc = parts.getOrNull(3) ?: ""
+                    val color = orderColors[orderIndex % orderColors.size]
+                    orderIndex++
+                    ContactTimelineItem.OrderItem(
+                        ContactOrder(id = orderIndex, title = title, description = desc, date = time, time = time, color = color)
+                    )
+                }
+                logString.startsWith("CALL|") -> {
+                    val parts = logString.split("|", limit = 3)
+                    val time = parts.getOrNull(1) ?: ""
+                    val desc = parts.getOrNull(2) ?: ""
+                    ContactTimelineItem.DetailedCall(time = time, description = desc)
+                }
+                else -> {
+                    ContactTimelineItem.SimpleCall(time = logString)
+                }
+            }
         }
+    }
+
+    val orders = remember(allTabItems) {
+        allTabItems.filterIsInstance<ContactTimelineItem.OrderItem>().map { it.order }
     }
 
     val gradientColors = listOf(
