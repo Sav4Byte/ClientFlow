@@ -77,8 +77,8 @@ fun GoalsScreen(
         )
     } else {
         listOf(
-            Color(0xFF9FD9D9), // Turquoise/mint at top
-            Color(0xFFB8F2F2), 
+            Color(0xFF459DDE), // Turquoise/mint at top
+            Color(0xFF6FB3E5),
             Color(0xFFB8F2F2),
             Color(0xFFF5EFE6), 
             Color(0xFFF5E6D3)  

@@ -67,8 +67,11 @@ fun NotesScreen(
     }
 
     val gradientColors = listOf(
-        Color(0xFF87CEEB),
-        Color(0xFFF5F5DC)
+        Color(0xFF6CB3E5),
+        Color(0xFF87BBE0),
+        Color(0xFFB8F2F2),
+        Color(0xFFF5EFE6),
+        Color(0xFFF5E6D3)
     )
 
     Box(
