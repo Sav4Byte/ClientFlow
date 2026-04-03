@@ -282,122 +282,91 @@ fun ContactDetailScreen(
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            // Tabs and content (ALL / ORDERS) — всегда показываем, при showActivity = false списки пустые
-            Column(
+            // Tabs and content (ALL / ORDERS)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(horizontal = 16.dp)
+            ) {
+                // White content block with tab shape
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .padding(horizontal = 16.dp)
+                        .fillMaxSize()
+                        .clip(ContactDetailContentShape(selectedTab))
+                        .background(Color.White)
                 ) {
-                    // White content block with tab shape
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight()
-                            .clip(ContactDetailContentShape(selectedTab))
-                            .background(Color.White)
+                            .fillMaxSize()
+                            .padding(
+                                top = 50.dp,
+                                start = 16.dp,
+                                end = 16.dp,
+                                bottom = 16.dp
+                            )
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(
-                                    top = 50.dp,
-                                    start = 16.dp,
-                                    end = 16.dp,
-                                    bottom = 16.dp
-                                )
-                        ) {
-                            when (selectedTab) {
-                                "ORDERS" -> {
-                                    LazyColumn(
-                                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                                        contentPadding = PaddingValues(bottom = 180.dp)
-                                    ) {
-                                        items(orders) { order ->
-                                            ContactOrderItem(order)
-                                        }
+                        when (selectedTab) {
+                            "ORDERS" -> {
+                                LazyColumn(
+                                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                                    contentPadding = PaddingValues(bottom = 180.dp)
+                                ) {
+                                    items(orders) { order ->
+                                        ContactOrderItem(order)
                                     }
                                 }
-                                "ALL" -> {
-                                    LazyColumn(
-                                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                                        contentPadding = PaddingValues(bottom = 180.dp)
-                                    ) {
-                                        items(allTabItems) { item ->
-                                            when (item) {
-                                                is ContactTimelineItem.SimpleCall -> ContactSimpleCallItem(item, callLabel)
-                                                is ContactTimelineItem.DetailedCall -> ContactDetailedCallItem(item, callLabel)
-                                                is ContactTimelineItem.OrderItem -> ContactTimelineOrderItem(item.order)
-                                            }
+                            }
+                            "ALL" -> {
+                                LazyColumn(
+                                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                                    contentPadding = PaddingValues(bottom = 180.dp)
+                                ) {
+                                    items(allTabItems) { item ->
+                                        when (item) {
+                                            is ContactTimelineItem.SimpleCall -> ContactSimpleCallItem(item, callLabel)
+                                            is ContactTimelineItem.DetailedCall -> ContactDetailedCallItem(item, callLabel)
+                                            is ContactTimelineItem.OrderItem -> ContactTimelineOrderItem(item.order)
                                         }
                                     }
                                 }
                             }
                         }
                     }
-
-                    // Tab row positioned at top of white block
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .offset(y = (-40).dp)
-                            .height(40.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                            TabItem(stringResource(R.string.all_tab), selectedTab == "ALL")
-                        }
-                        Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                            TabItem(stringResource(R.string.orders_tab), selectedTab == "ORDERS")
-                        }
-                    }
                 }
 
-                // Tabs positioned at top of content
+                // Tab row positioned at top of white block
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(40.dp)
-                        .offset(y = (-1).dp * 200) // Position above content
-                        .padding(horizontal = 16.dp),
+                        .height(40.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Tabs are embedded in shape
-                }
-            }
-
-            // Fixed tabs on top of content block (ALL / ORDERS)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 234.dp)
-                    .height(40.dp)
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    Modifier.weight(1.0f).fillMaxHeight()
-                        .clickable(
-                            indication = null,
-                            interactionSource = remember { MutableInteractionSource() }
-                        ) { selectedTab = "ALL" }, 
-                    contentAlignment = Alignment.Center
-                ) {
-                    TabItem(allTab, selectedTab == "ALL")
-                }
-                Box(
-                    Modifier.weight(1.0f).fillMaxHeight()
-                        .clickable(
-                            indication = null,
-                            interactionSource = remember { MutableInteractionSource() }
-                        ) { selectedTab = "ORDERS" }, 
-                    contentAlignment = Alignment.Center
-                ) {
-                    TabItem(ordersTab, selectedTab == "ORDERS")
+                    Box(
+                        Modifier.weight(1f).fillMaxHeight()
+                            .clickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() }
+                            ) { selectedTab = "ALL" },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        TabItem(allTab, selectedTab == "ALL")
+                    }
+                    Box(
+                        Modifier.weight(1f).fillMaxHeight()
+                            .clickable(
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() }
+                            ) { selectedTab = "ORDERS" },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        TabItem(ordersTab, selectedTab == "ORDERS")
+                    }
                 }
             }
         }
     }
+}
 
 
 @Composable
@@ -569,7 +538,10 @@ private fun ContactSimpleCallItem(item: ContactTimelineItem.SimpleCall, callLabe
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 18.dp),
+            .padding(bottom = 18.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xFFAEDEF4))
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -581,12 +553,12 @@ private fun ContactSimpleCallItem(item: ContactTimelineItem.SimpleCall, callLabe
                 painter = painterResource(R.drawable.phone),
                 contentDescription = null,
                 tint = Color(0xFF334D6F),
-                modifier = Modifier.size(36.dp)
+                modifier = Modifier.size(24.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = callLabel,
-                fontSize = 16.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF334D6F)
             )
@@ -596,13 +568,13 @@ private fun ContactSimpleCallItem(item: ContactTimelineItem.SimpleCall, callLabe
                 contentDescription = null,
                 tint = Color(0xFF334D6F),
                 modifier = Modifier
-                    .size(20.dp)
+                    .size(16.dp)
                     .let { if (item.isIncoming) it else it }
             )
         }
         Text(
             text = item.time,
-            fontSize = 14.sp,
+            fontSize = 12.sp,
             color = Color(0xFF334D6F).copy(alpha = 0.6f)
         )
     }
