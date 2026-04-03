@@ -246,11 +246,12 @@ fun ContactDetailScreen(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
                             .offset(y = 15.dp)
-                            .padding(end = 36.dp),
-                        horizontalArrangement = Arrangement.spacedBy(20.dp)
+                            .padding(end = 46.dp),
+                        horizontalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
                         ContactActionButton(
                             painter = painterResource(R.drawable.phone),
+                            iconSize = 22.dp,
                             onClick = { 
                                 phoneNumbers.firstOrNull()?.let { 
                                     onCallClick()
@@ -260,6 +261,7 @@ fun ContactDetailScreen(
                         )
                         ContactActionButton(
                             painter = painterResource(R.drawable.sms),
+                            iconSize = 22.dp,
                             onClick = { 
                                 phoneNumbers.firstOrNull()?.let { 
                                     com.coffeecodedevs.clientflow.utils.ContactActions.sendSms(context, it)
@@ -268,6 +270,7 @@ fun ContactDetailScreen(
                         )
                         ContactActionButton(
                             painter = painterResource(R.drawable.share),
+                            iconSize = 18.dp,
                             onClick = { 
                                 com.coffeecodedevs.clientflow.utils.ContactActions.shareContact(
                                     context, 
@@ -374,11 +377,12 @@ fun ContactDetailScreen(
 @Composable
 private fun ContactActionButton(
     painter: androidx.compose.ui.graphics.painter.Painter,
+    iconSize: androidx.compose.ui.unit.Dp = 20.dp,
     onClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
-            .size(40.dp)
+            .size(36.dp)
             .clip(CircleShape)
             .background(Color(0xFF313131))
             .clickable(onClick = onClick),
@@ -388,7 +392,7 @@ private fun ContactActionButton(
             painter = painter,
             contentDescription = null,
             tint = Color.White,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size(iconSize)
         )
     }
 }
