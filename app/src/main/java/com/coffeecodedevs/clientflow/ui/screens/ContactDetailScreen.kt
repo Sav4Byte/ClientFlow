@@ -216,6 +216,8 @@ fun ContactDetailScreen(
                                 fontSize = 12.sp,
                                 color = Color(0xFFAAAAAA),
                                 lineHeight = 18.sp,
+                                maxLines = 2,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                                 modifier = Modifier.padding(start = 40.dp)
                             )
                         }
