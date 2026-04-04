@@ -357,36 +357,17 @@ fun AppNavigation() {
                     currentScreen is Screen.Calendar -> "REMINDER"
                     else -> "CONTACT"
                 },
+                activeContactListTab = activeContactTab,
                 editingContact = contactToEdit,
                 onDismiss = { 
                     showCreateDialog = false
                     contactToEdit = null
                 },
                 onSave = { contact ->
-                    val isNote = (currentScreen is Screen.Notes) || contact.isStandaloneNote
-                    
                     if (contactToEdit != null) {
-                        // При редактировании сохраняем исходные флаги isClient/isEmployee
-                        viewModel.updateContact(contact.copy(
-                            isClient = contactToEdit!!.isClient,
-                            isEmployee = contactToEdit!!.isEmployee
-                        ))
+                        viewModel.updateContact(contact)
                     } else {
-                        // При создании нового контакта учитываем активную вкладку
-                        val updatedContact = if (!isNote && currentScreen is Screen.Contacts) {
-                            contact.copy(
-                                isClient = activeContactTab == "CLIENT",
-                                isEmployee = activeContactTab == "EMPLOYEE",
-                                isStandaloneNote = false,
-                                firstName = if (contact.firstName.isBlank()) "New Contact" else contact.firstName
-                            )
-                        } else {
-                            contact.copy(
-                                isStandaloneNote = isNote,
-                                firstName = if (contact.firstName.isBlank()) "Note" else contact.firstName
-                            )
-                        }
-                        viewModel.addContact(updatedContact)
+                        viewModel.addContact(contact)
                     }
                     
                     showCreateDialog = false

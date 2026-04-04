@@ -67,4 +67,6 @@
     <string name="no_reminders">No reminders</string>
     <string name="no_orders">No orders</string>
     <string name="no_events">No events</string>
+    <string name="client_label">Client</string>
+    <string name="employee_label">Employee</string>
 </resources>

@@ -45,6 +45,7 @@ import java.text.SimpleDateFormat
 @Composable
 fun CreateContactDialog(
     initialTab: String = "CONTACT",
+    activeContactListTab: String = "CLIENT",
     editingContact: Contact? = null,
     onDismiss: () -> Unit,
     onSave: (Contact) -> Unit
@@ -77,7 +78,8 @@ fun CreateContactDialog(
     var selectedDays by remember { mutableStateOf(emptySet<String>()) }
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
-    var isEmployee by remember { mutableStateOf(editingContact?.isEmployee ?: false) }
+    var isClient by remember { mutableStateOf(editingContact?.isClient ?: (activeContactListTab != "EMPLOYEE")) }
+    var isEmployee by remember { mutableStateOf(editingContact?.isEmployee ?: (activeContactListTab == "EMPLOYEE")) }
     
     // Resource strings at the top
     val defaultContactName = stringResource(R.string.new_contact_default)
@@ -114,6 +116,8 @@ fun CreateContactDialog(
     val saveBtn = stringResource(R.string.save_button)
     val removeDesc = stringResource(R.string.remove_desc)
     val addDesc = stringResource(R.string.add_desc)
+    val clientLabel = stringResource(R.string.client_label)
+    val employeeLabel = stringResource(R.string.employee_label)
     
     val datePickerState = rememberDatePickerState()
     val timePickerState = rememberTimePickerState(initialHour = 9, initialMinute = 0)
@@ -183,6 +187,34 @@ fun CreateContactDialog(
                                 modifier = Modifier.padding(horizontal = 8.dp),
                                  verticalArrangement = Arrangement.spacedBy(20.dp)
                             ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.clickable { isClient = !isClient }
+                                    ) {
+                                        Checkbox(
+                                            checked = isClient,
+                                            onCheckedChange = { isClient = it },
+                                            colors = CheckboxDefaults.colors(checkedColor = Color(0xFF313131))
+                                        )
+                                        Text(clientLabel, fontSize = 16.sp, color = Color(0xFF313131))
+                                    }
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.clickable { isEmployee = !isEmployee }
+                                    ) {
+                                        Checkbox(
+                                            checked = isEmployee,
+                                            onCheckedChange = { isEmployee = it },
+                                            colors = CheckboxDefaults.colors(checkedColor = Color(0xFF313131))
+                                        )
+                                        Text(employeeLabel, fontSize = 16.sp, color = Color(0xFF313131))
+                                    }
+                                }
+
                                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                     GrayFrameTextField(value = firstName, onValueChange = { firstName = it }, placeholder = namePlaceholder)
                                     GrayFrameTextField(value = lastName, onValueChange = { lastName = it }, placeholder = surnamePlaceholder)
@@ -369,6 +401,10 @@ fun CreateContactDialog(
                     }
 
                     // Actions (Always visible)
+                    val hasData = firstName.isNotBlank() || lastName.isNotBlank() || 
+                        orderTitle.isNotBlank() || noteTitle.isNotBlank() || reminderText.isNotBlank() || company.isNotBlank()
+                    val canSave = hasData && (selectedTab != "CONTACT" || isClient || isEmployee)
+
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -388,9 +424,7 @@ fun CreateContactDialog(
                         Spacer(modifier = Modifier.width(12.dp))
                         Button(
                             onClick = {
-                                if (firstName.isNotBlank() || lastName.isNotBlank() || 
-                                    orderTitle.isNotBlank() || noteTitle.isNotBlank() || reminderText.isNotBlank()) {
-                                    
+                                if (canSave) {
                                     onSave(
                                         Contact(
                                             id = editingContact?.id ?: 0,
@@ -405,7 +439,7 @@ fun CreateContactDialog(
                                             lastName = lastName,
                                             company = company,
                                             phones = phones,
-                                            isClient = selectedTab != "REMINDER" && selectedTab != "NOTE" && selectedTab != "ORDER",
+                                            isClient = isClient,
                                             isEmployee = isEmployee,
                                             contact = if (description.isNotBlank()) description else null,
                                             orderName = orderTitle,
@@ -415,14 +449,16 @@ fun CreateContactDialog(
                                             reminderText = reminderText,
                                             reminderDate = reminderDate,
                                             reminderTime = reminderTime,
-                                            isStandaloneNote = editingContact?.isStandaloneNote ?: (initialTab == "NOTE")
+                                            isStandaloneNote = selectedTab == "NOTE"
                                         )
                                     )
-                                } else {
+                                } else if (!hasData) {
                                     onDismiss()
                                 }
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF313131)),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (canSave) Color(0xFF313131) else Color(0xFF313131).copy(alpha = 0.5f)
+                            ),
                             shape = CircleShape,
                             contentPadding = PaddingValues(horizontal = 20.dp, vertical = 0.dp),
                             modifier = Modifier.height(36.dp)

@@ -67,4 +67,6 @@
     <string name="no_reminders">Нет напоминаний</string>
     <string name="no_orders">Нет заказов</string>
     <string name="no_events">Нет событий</string>
+    <string name="client_label">Клиент</string>
+    <string name="employee_label">Сотрудник</string>
 </resources>
