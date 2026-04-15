@@ -51,7 +51,14 @@ fun CreateContactDialog(
     onSave: (Contact) -> Unit
 ) {
     var selectedTab by remember { 
-        mutableStateOf(if (editingContact?.isStandaloneNote == true) "NOTE" else initialTab) 
+        mutableStateOf(
+            when {
+                editingContact?.isStandaloneNote == true -> "NOTE"
+                editingContact?.reminderText?.isNotBlank() == true -> "REMINDER"
+                editingContact?.orderName?.isNotBlank() == true -> "ORDER"
+                else -> initialTab
+            }
+        ) 
     }
     
     // Contact fields

@@ -229,6 +229,12 @@ fun AppNavigation() {
                 onTabChange = { tab ->
                     activeContactTab = tab
                 },
+                onEditReminder = { contact ->
+                    contactToEdit = contact
+                },
+                onDeleteReminder = { contact ->
+                    viewModel.deleteContact(contact)
+                },
                 onOrderClick = { order ->
                     screenStack.add(Screen.GoalsDetail(
                         NoteItem(

@@ -46,6 +46,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.distinctUntilChanged
+import androidx.compose.runtime.snapshotFlow
 import java.util.Locale
 
 data class Reminder(val id: Int, val text: String, val time: String)
@@ -64,6 +66,8 @@ fun CalendarScreen(
     contacts: List<com.coffeecodedevs.clientflow.data.Contact> = emptyList(),
     onTabChange: (String) -> Unit = {},
     onOrderClick: (Order) -> Unit = {},
+    onEditReminder: (com.coffeecodedevs.clientflow.data.Contact) -> Unit = {},
+    onDeleteReminder: (com.coffeecodedevs.clientflow.data.Contact) -> Unit = {},
     onNavigate: (Int) -> Unit
 ) {
     var selectedTab by remember { mutableStateOf<String>(initialTab) }
@@ -103,15 +107,15 @@ fun CalendarScreen(
     val screenWidthPx = with(density) { configuration.screenWidthDp.dp.toPx() }
     val itemWidthPx = screenWidthPx / 7f
     
-    // Position of the "bump" center: exactly in the middle of the screen
-    val cutoutCenterX = screenWidthPx / 2f
+    // Position of the "bump" center: moved to 70% width
+    val cutoutCenterX = screenWidthPx * 0.70f
+    val centeredOffset = (cutoutCenterX - itemWidthPx / 2f).toInt()
 
     val initialIndex = totalDays / 2
     // Calculate the initial scroll offset so that initialIndex is centered under cutoutCenterX
-    val initialScrollOffset = -(cutoutCenterX - itemWidthPx / 2f).toInt()
     val listState = rememberLazyListState(
         initialFirstVisibleItemIndex = initialIndex,
-        initialFirstVisibleItemScrollOffset = initialScrollOffset
+        initialFirstVisibleItemScrollOffset = -centeredOffset
     )
     val coroutineScope = rememberCoroutineScope()
 
@@ -119,18 +123,18 @@ fun CalendarScreen(
     LaunchedEffect(listState) {
         snapshotFlow { 
             val layoutInfo = listState.layoutInfo
-            val viewportCenter = (layoutInfo.viewportEndOffset + layoutInfo.viewportStartOffset) / 2f
-            val visibleItems = layoutInfo.visibleItemsInfo
-            if (visibleItems.isNotEmpty() && viewportCenter > 0) {
-                val closestItem = visibleItems.minByOrNull { item ->
+            val currentVisibleItems = layoutInfo.visibleItemsInfo
+            if (currentVisibleItems.isNotEmpty()) {
+                val closestItem = currentVisibleItems.minByOrNull { item ->
                     val itemCenter = item.offset + item.size / 2f
-                    kotlin.math.abs(itemCenter - viewportCenter)
+                    kotlin.math.abs(itemCenter - cutoutCenterX)
                 }
                 closestItem?.index
             } else {
                 null
             }
         }
+        .distinctUntilChanged()
         .collect { closestIndex ->
             closestIndex?.let { index ->
                 if (index in days.indices) {
@@ -230,15 +234,16 @@ fun CalendarScreen(
 
                 val snapBehavior = androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior(lazyListState = listState)
                 
-                // Content padding to allow the first and last items to be centered under the bump
-                val horizontalPadding = (cutoutCenterX / density.density).dp - (itemWidthPx / 2f / density.density).dp
+                // Content padding to allow items to be centered under the right-shifted bump
+                val horizontalPaddingStart = (cutoutCenterX / density.density).dp - (itemWidthPx / 2f / density.density).dp
+                val horizontalPaddingEnd = ((screenWidthPx - cutoutCenterX) / density.density).dp - (itemWidthPx / 2f / density.density).dp
 
                 LazyRow(
                     state = listState,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 10.dp, bottom = 16.dp),
-                    contentPadding = PaddingValues(horizontal = horizontalPadding),
+                    contentPadding = PaddingValues(start = horizontalPaddingStart, end = horizontalPaddingEnd),
                     horizontalArrangement = Arrangement.spacedBy(0.dp),
                     flingBehavior = snapBehavior
                 ) {
@@ -249,12 +254,10 @@ fun CalendarScreen(
                         val scale by remember(index) {
                             derivedStateOf {
                                 val layoutInfo = listState.layoutInfo
-                                val viewportCenter = (layoutInfo.viewportEndOffset + layoutInfo.viewportStartOffset) / 2f
                                 val itemInfo = layoutInfo.visibleItemsInfo.find { it.index == index }
-                                
-                                if (itemInfo != null && itemInfo.size > 0 && viewportCenter > 0) {
+                                if (itemInfo != null && itemInfo.size > 0) {
                                     val itemCenter = itemInfo.offset + itemInfo.size / 2f
-                                    val distanceFromCenter = kotlin.math.abs(itemCenter - viewportCenter)
+                                    val distanceFromCenter = kotlin.math.abs(itemCenter - cutoutCenterX)
                                     // Scale decreases over a distance of 1.5 items
                                     val maxDistance = itemInfo.size.toFloat() * 1.5f
                                     val rawScale = 1f - (distanceFromCenter / maxDistance)
@@ -327,7 +330,16 @@ fun CalendarScreen(
                             }
                         } else {
                             LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 120.dp)) {
-                                items(reminders) { reminder -> CalendarReminderItem(reminder, editDesc, deleteDesc) }
+                                items(reminders) { reminder -> 
+                                    val contact = contacts.find { it.id == reminder.id }
+                                    CalendarReminderItem(
+                                        reminder = reminder, 
+                                        editDesc = editDesc, 
+                                        deleteDesc = deleteDesc,
+                                        onEdit = { contact?.let { onEditReminder(it) } },
+                                        onDelete = { contact?.let { onDeleteReminder(it) } }
+                                    ) 
+                                }
                             }
                         }
                     }
@@ -384,7 +396,16 @@ fun CalendarScreen(
                             LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 120.dp)) {
                                 items(allTabItems) { item ->
                                     when (item) {
-                                        is TimelineItem.ReminderItem -> CalendarReminderItem(item.reminder, editDesc, deleteDesc)
+                                        is TimelineItem.ReminderItem -> {
+                                            val contact = contacts.find { it.id == item.reminder.id }
+                                            CalendarReminderItem(
+                                                reminder = item.reminder, 
+                                                editDesc = editDesc, 
+                                                deleteDesc = deleteDesc,
+                                                onEdit = { contact?.let { onEditReminder(it) } },
+                                                onDelete = { contact?.let { onDeleteReminder(it) } }
+                                            )
+                                        }
                                         is TimelineItem.CallItem -> CalendarCallItem(item, callLabel)
                                         is TimelineItem.OrderItem -> CalendarOrderItem(item.order)
                                     }
@@ -652,60 +673,75 @@ fun TabItem(text: String, selected: Boolean) {
 }
 
 @Composable
-private fun CalendarReminderItem(reminder: Reminder, editDesc: String, deleteDesc: String) {
-    Row(
+private fun CalendarReminderItem(
+    reminder: Reminder, 
+    editDesc: String, 
+    deleteDesc: String,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 18.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+            .padding(bottom = 12.dp)
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color(0xFFFDECDA))
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFF313131)),
-                contentAlignment = Alignment.Center
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.notess),
+                    painter = painterResource(R.drawable.bell),
                     contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(20.dp)
+                    tint = Color(0xFF334B69),
+                    modifier = Modifier.size(24.dp)
                 )
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-            Column {
+                Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = reminder.text,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF334D6F)
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF334B69),
+                    modifier = Modifier.weight(1f)
                 )
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = reminder.time,
-                    fontSize = 14.sp,
-                    color = Color(0xFF334D6F).copy(alpha = 0.6f)
+                    fontSize = 13.sp,
+                    color = Color(0xFF334B69).copy(alpha = 0.6f)
                 )
             }
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Icon(
-                painterResource(R.drawable.pensil),
-                contentDescription = editDesc,
-                tint = Color(0xFF334D6F),
-                modifier = Modifier.size(22.dp).clickable { /* Edit */ }
-            )
-            Icon(
-                painterResource(R.drawable.thrash),
-                contentDescription = deleteDesc,
-                tint = Color(0xFF334D6F),
-                modifier = Modifier.size(22.dp).clickable { /* Delete */ }
-            )
+            
+            Row(
+                modifier = Modifier.padding(start = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.pensil),
+                    contentDescription = editDesc,
+                    tint = Color(0xFF334B69),
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clickable { onEdit() }
+                )
+                Icon(
+                    painter = painterResource(R.drawable.trash),
+                    contentDescription = deleteDesc,
+                    tint = Color(0xFF334B69),
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clickable { onDelete() }
+                )
+            }
         }
     }
 }
