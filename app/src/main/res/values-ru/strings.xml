@@ -41,7 +41,7 @@
     <string name="talk_placeholder">Введите текст...</string>
     <string name="new_client_checkbox">Новый клиент</string>
     <string name="made_order_checkbox">Сделал заказ</string>
-    <string name="sample_order_item">Льняное платье А-силуэта</string>
+    <string name="sample_order_item">Опишите заказ...</string>
     <string name="remind_checkbox">Напомнить</string>
     <string name="call_soon_placeholder">Текст напоминания</string>
     <string name="notes_title">ЗАМЕТКИ</string>

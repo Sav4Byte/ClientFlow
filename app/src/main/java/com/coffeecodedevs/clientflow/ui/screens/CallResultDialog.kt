@@ -29,6 +29,8 @@ import androidx.compose.ui.window.DialogProperties
 import com.coffeecodedevs.clientflow.data.Contact
 import java.text.SimpleDateFormat
 import java.util.*
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import androidx.compose.ui.res.stringResource
 import com.coffeecodedevs.clientflow.R
 
@@ -46,10 +48,18 @@ fun CallResultDialog(
     var isMadeOrder by remember { mutableStateOf<Boolean>(false) }
     var orderValue by remember { mutableStateOf<String>("") }
 
-    var isRemind by remember { mutableStateOf<Boolean>(true) }
-    var reminderText by remember { mutableStateOf<String>("") }
-    var reminderDate by remember { mutableStateOf<String>("07.10.2026") }
-    var reminderTime by remember { mutableStateOf<String>("09:00") }
+    val now = remember { java.time.LocalDateTime.now() }
+    val defaultDate = remember(now) { 
+        now.format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy")) 
+    }
+    val defaultTime = remember(now) { 
+        now.plusHours(1).format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")) 
+    }
+
+    var isRemind by remember(contact.id) { mutableStateOf<Boolean>(false) }
+    var reminderText by remember(contact.id) { mutableStateOf<String>("") }
+    var reminderDate by remember(contact.id, defaultDate) { mutableStateOf<String>(defaultDate) }
+    var reminderTime by remember(contact.id, defaultTime) { mutableStateOf<String>(defaultTime) }
 
     var showDatePicker by remember { mutableStateOf<Boolean>(false) }
     var showTimePicker by remember { mutableStateOf<Boolean>(false) }
@@ -70,8 +80,13 @@ fun CallResultDialog(
     val cancelBtnCaps = stringResource(R.string.cancel_button_caps)
     val saveBtn = stringResource(R.string.save_button)
 
-    val datePickerState = rememberDatePickerState()
-    val timePickerState = rememberTimePickerState(initialHour = 9, initialMinute = 0)
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = now.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+    )
+    val timePickerState = rememberTimePickerState(
+        initialHour = now.plusHours(1).hour,
+        initialMinute = now.minute
+    )
     val interactionSource = remember { MutableInteractionSource() }
 
     AlertDialog(

@@ -39,6 +39,8 @@ import com.coffeecodedevs.clientflow.R
 import com.coffeecodedevs.clientflow.data.Contact
 import java.util.*
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -77,10 +79,22 @@ fun CreateContactDialog(
     // Note fields
     var noteTitle by remember { mutableStateOf<String>(editingContact?.noteTitle ?: "") }
     
+    val now = remember { LocalDateTime.now() }
+    val defaultDateString = remember(now) { 
+        now.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) 
+    }
+    val defaultTimeString = remember(now) { 
+        now.plusHours(1).format(DateTimeFormatter.ofPattern("HH:mm")) 
+    }
+
     // Reminder fields
-    var reminderText by remember { mutableStateOf<String>(editingContact?.reminderText ?: "") }
-    var reminderDate by remember { mutableStateOf<String>(editingContact?.reminderDate ?: "07.10.2026") }
-    var reminderTime by remember { mutableStateOf<String>(editingContact?.reminderTime ?: "00:00") }
+    var reminderText by remember(editingContact?.id) { mutableStateOf(editingContact?.reminderText ?: "") }
+    var reminderDate by remember(editingContact?.id, defaultDateString) { 
+        mutableStateOf(editingContact?.reminderDate ?: defaultDateString) 
+    }
+    var reminderTime by remember(editingContact?.id, defaultTimeString) { 
+        mutableStateOf(editingContact?.reminderTime ?: defaultTimeString) 
+    }
     var repeatEnabled by remember { mutableStateOf(false) }
     var selectedDays by remember { mutableStateOf(emptySet<String>()) }
     var showDatePicker by remember { mutableStateOf(false) }
@@ -126,8 +140,23 @@ fun CreateContactDialog(
     val clientLabel = stringResource(R.string.client_label)
     val employeeLabel = stringResource(R.string.employee_label)
     
-    val datePickerState = rememberDatePickerState()
-    val timePickerState = rememberTimePickerState(initialHour = 9, initialMinute = 0)
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = now.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+    )
+    
+    // Key ensures it re-calculates every time the dialog opens for a new entry
+    val timePickerState = rememberTimePickerState(
+        initialHour = if (editingContact == null) {
+            now.plusHours(1).hour
+        } else {
+            editingContact.reminderTime.split(":").getOrNull(0)?.toIntOrNull() ?: 9
+        },
+        initialMinute = if (editingContact == null) {
+            now.minute
+        } else {
+            editingContact.reminderTime.split(":").getOrNull(1)?.toIntOrNull() ?: 0
+        }
+    )
 
     AlertDialog(
         onDismissRequest = onDismiss,

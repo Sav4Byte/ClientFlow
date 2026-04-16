@@ -39,6 +39,7 @@ import com.coffeecodedevs.clientflow.ui.screens.*
 import com.coffeecodedevs.clientflow.ui.theme.ClientFlowTheme
 import com.coffeecodedevs.clientflow.data.ContactViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import java.util.UUID
 
 
 class MainActivity : ComponentActivity() {
@@ -353,43 +354,47 @@ fun AppNavigation() {
         
         // Create Dialog
         if (showCreateDialog || contactToEdit != null) {
-            CreateContactDialog(
-                initialTab = when {
-                    contactToEdit?.isStandaloneNote == true -> "NOTE"
-                    contactToEdit != null -> "CONTACT"
-                    currentScreen is Screen.Notes -> "NOTE"
-                    currentScreen is Screen.Calendar && activeContactTab == "ORDERS" -> "ORDER"
-                    currentScreen is Screen.Calendar && activeContactTab == "REMINDER" -> "REMINDER"
-                    currentScreen is Screen.Calendar -> "REMINDER"
-                    else -> "CONTACT"
-                },
-                activeContactListTab = activeContactTab,
-                editingContact = contactToEdit,
-                onDismiss = { 
-                    showCreateDialog = false
-                    contactToEdit = null
-                },
-                onSave = { contact ->
-                    if (contactToEdit != null) {
-                        viewModel.updateContact(contact)
-                    } else {
-                        viewModel.addContact(contact)
+            val dialogKey = remember(showCreateDialog, contactToEdit) { UUID.randomUUID().toString() }
+            key(dialogKey) {
+                CreateContactDialog(
+                    initialTab = when {
+                        contactToEdit?.isStandaloneNote == true -> "NOTE"
+                        contactToEdit != null -> "CONTACT"
+                        currentScreen is Screen.Notes -> "NOTE"
+                        currentScreen is Screen.Calendar && activeContactTab == "ORDERS" -> "ORDER"
+                        currentScreen is Screen.Calendar && activeContactTab == "REMINDER" -> "REMINDER"
+                        currentScreen is Screen.Calendar -> "REMINDER"
+                        else -> "CONTACT"
+                    },
+                    activeContactListTab = activeContactTab,
+                    editingContact = contactToEdit,
+                    onDismiss = { 
+                        showCreateDialog = false
+                        contactToEdit = null
+                    },
+                    onSave = { contact ->
+                        if (contactToEdit != null) {
+                            viewModel.updateContact(contact)
+                        } else {
+                            viewModel.addContact(contact)
+                        }
+                        
+                        showCreateDialog = false
+                        contactToEdit = null
                     }
-                    
-                    showCreateDialog = false
-                    contactToEdit = null
-                }
-            )
+                )
+            }
         }
 
         // Call Result Dialog
         if (showCallResultDialog && callInProgressContact != null) {
-            CallResultDialog(
-                contact = callInProgressContact!!,
-                onDismiss = {
-                    showCallResultDialog = false
-                    callInProgressContact = null
-                },
+            key(callInProgressContact?.id, showCallResultDialog) {
+                CallResultDialog(
+                    contact = callInProgressContact!!,
+                    onDismiss = {
+                        showCallResultDialog = false
+                        callInProgressContact = null
+                    },
                 onSave = { note, isNewClient, orderValue, reminderText, reminderDate, reminderTime ->
                     val contactToUpdate = allContactsFromDb.find { it.id == callInProgressContact!!.id } ?: callInProgressContact!!
                     var updatedContact = contactToUpdate
@@ -442,6 +447,7 @@ fun AppNavigation() {
             )
         }
     }
+}
 }
 
 
