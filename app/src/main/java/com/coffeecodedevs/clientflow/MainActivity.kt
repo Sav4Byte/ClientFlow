@@ -279,6 +279,15 @@ fun AppNavigation() {
                     onDeleteClick = {
                         viewModel.deleteContact(displayContact)
                         screenStack.removeAt(screenStack.size - 1)
+                    },
+                    onNoteItemClick = {
+                        screenStack.add(Screen.GoalsDetail(
+                            NoteItem(
+                                id = displayContact.id,
+                                title = displayContact.noteTitle.ifEmpty { displayContact.orderName }.ifEmpty { "${displayContact.firstName} ${displayContact.lastName}" },
+                                description = displayContact.contact ?: ""
+                            )
+                        ))
                     }
                 )
             }
@@ -408,19 +417,24 @@ fun AppNavigation() {
                     val timeFormatter = java.text.SimpleDateFormat("HH:mm", java.util.Locale.ENGLISH)
                     val currentTimestamp = "${dateFormatter.format(now)} ${timeFormatter.format(now)}"
 
+                    val orderLabel = context.getString(R.string.order_tab)
+                    val callLabel = context.getString(R.string.call_label)
+
                     if (lastLog != null && !lastLog.startsWith("CALL|") && !lastLog.startsWith("ORDER|") && !lastLog.contains("|")) {
                         // Replace the bare timestamp logged when call started
                         if (orderValue != null) {
-                            mutableCallLog[mutableCallLog.lastIndex] = "ORDER|$lastLog|$orderValue|$note"
+                            val combinedDesc = if (note.isNotBlank()) "$orderValue\n$note" else orderValue
+                            mutableCallLog[mutableCallLog.lastIndex] = "ORDER|$lastLog|$orderLabel|$combinedDesc"
                         } else if (note.isNotBlank()) {
-                            mutableCallLog[mutableCallLog.lastIndex] = "CALL|$lastLog|$note"
+                            mutableCallLog[mutableCallLog.lastIndex] = "CALL|$lastLog|$callLabel|$note"
                         }
                     } else {
                         // Shouldn't usually happen, but if no recent bare timestamp
                         if (orderValue != null) {
-                            mutableCallLog.add("ORDER|$currentTimestamp|$orderValue|$note")
+                            val combinedDesc = if (note.isNotBlank()) "$orderValue\n$note" else orderValue
+                            mutableCallLog.add("ORDER|$currentTimestamp|$orderLabel|$combinedDesc")
                         } else if (note.isNotBlank()) {
-                            mutableCallLog.add("CALL|$currentTimestamp|$note")
+                            mutableCallLog.add("CALL|$currentTimestamp|$callLabel|$note")
                         }
                     }
                     updatedContact = updatedContact.copy(callLog = mutableCallLog.toList())

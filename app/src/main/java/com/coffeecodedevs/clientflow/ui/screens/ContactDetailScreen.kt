@@ -69,7 +69,8 @@ fun ContactDetailScreen(
     onBackClick: () -> Unit = {},
     onCallClick: () -> Unit = {},
     onEditClick: () -> Unit = {},
-    onDeleteClick: () -> Unit = {}
+    onDeleteClick: () -> Unit = {},
+    onNoteItemClick: () -> Unit = {}
 ) {
 
     var selectedTab by remember { mutableStateOf("ALL") }
@@ -318,7 +319,7 @@ fun ContactDetailScreen(
                                     contentPadding = PaddingValues(bottom = 180.dp)
                                 ) {
                                     items(orders) { order ->
-                                        ContactOrderItem(order)
+                                        ContactOrderItem(order, onNoteItemClick)
                                     }
                                 }
                             }
@@ -329,9 +330,9 @@ fun ContactDetailScreen(
                                 ) {
                                     items(allTabItems) { item ->
                                         when (item) {
-                                            is ContactTimelineItem.SimpleCall -> ContactSimpleCallItem(item, callLabel)
-                                            is ContactTimelineItem.DetailedCall -> ContactDetailedCallItem(item, callLabel)
-                                            is ContactTimelineItem.OrderItem -> ContactTimelineOrderItem(item.order)
+                                            is ContactTimelineItem.SimpleCall -> ContactSimpleCallItem(item, callLabel, onNoteItemClick)
+                                            is ContactTimelineItem.DetailedCall -> ContactDetailedCallItem(item, callLabel, onNoteItemClick)
+                                            is ContactTimelineItem.OrderItem -> ContactTimelineOrderItem(item.order, onNoteItemClick)
                                         }
                                     }
                                 }
@@ -398,7 +399,7 @@ private fun ContactActionButton(
 }
 
 @Composable
-private fun ContactOrderItem(order: ContactOrder) {
+private fun ContactOrderItem(order: ContactOrder, onArrowClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -449,13 +450,19 @@ private fun ContactOrderItem(order: ContactOrder) {
         }
 
         // Кнопка со стрелкой (в центре тройной выемки)
+        val interactionSource = remember { MutableInteractionSource() }
         Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .offset(x = 0.dp, y = 15.dp) // Выравнивание правого края (x=0)
                 .size(42.dp)
                 .clip(CircleShape)
-                .background(Color(0xFF313131)),
+                .background(Color(0xFF313131))
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = onArrowClick
+                ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -469,7 +476,7 @@ private fun ContactOrderItem(order: ContactOrder) {
 }
 
 @Composable
-private fun ContactTimelineOrderItem(order: ContactOrder) {
+private fun ContactTimelineOrderItem(order: ContactOrder, onArrowClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -520,13 +527,19 @@ private fun ContactTimelineOrderItem(order: ContactOrder) {
         }
 
         // Кнопка со стрелкой (в центре тройной выемки)
+        val interactionSource = remember { MutableInteractionSource() }
         Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .offset(x = 0.dp, y = 15.dp) // Выравнивание правого края (x=0)
                 .size(42.dp)
                 .clip(CircleShape)
-                .background(Color(0xFF313131)),
+                .background(Color(0xFF313131))
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = onArrowClick
+                ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -540,13 +553,19 @@ private fun ContactTimelineOrderItem(order: ContactOrder) {
 }
 
 @Composable
-private fun ContactSimpleCallItem(item: ContactTimelineItem.SimpleCall, callLabel: String) {
+private fun ContactSimpleCallItem(item: ContactTimelineItem.SimpleCall, callLabel: String, onArrowClick: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 18.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(Color(0xFFAEDEF4))
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onArrowClick
+            )
             .padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -587,7 +606,7 @@ private fun ContactSimpleCallItem(item: ContactTimelineItem.SimpleCall, callLabe
 }
 
 @Composable
-private fun ContactDetailedCallItem(item: ContactTimelineItem.DetailedCall, callLabel: String) {
+private fun ContactDetailedCallItem(item: ContactTimelineItem.DetailedCall, callLabel: String, onArrowClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -644,13 +663,19 @@ private fun ContactDetailedCallItem(item: ContactTimelineItem.DetailedCall, call
             )
         }
 
+        val interactionSource = remember { MutableInteractionSource() }
         Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .offset(y = 15.dp)
                 .size(42.dp)
                 .clip(CircleShape)
-                .background(Color(0xFF313131)),
+                .background(Color(0xFF313131))
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = onArrowClick
+                ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
