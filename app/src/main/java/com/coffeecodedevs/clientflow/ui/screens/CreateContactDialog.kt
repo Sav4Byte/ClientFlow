@@ -11,9 +11,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
@@ -229,24 +231,30 @@ fun CreateContactDialog(
                                 ) {
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.clickable { isClient = !isClient }
+                                        modifier = Modifier.clickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = null
+                                        ) { isClient = !isClient }
                                     ) {
-                                        Checkbox(
+                                        CustomCheckbox(
                                             checked = isClient,
-                                            onCheckedChange = { isClient = it },
-                                            colors = CheckboxDefaults.colors(checkedColor = Color(0xFF313131))
+                                            onCheckedChange = { isClient = it }
                                         )
+                                        Spacer(modifier = Modifier.width(8.dp))
                                         Text(clientLabel, fontSize = 16.sp, color = Color(0xFF313131))
                                     }
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.clickable { isEmployee = !isEmployee }
+                                        modifier = Modifier.clickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = null
+                                        ) { isEmployee = !isEmployee }
                                     ) {
-                                        Checkbox(
+                                        CustomCheckbox(
                                             checked = isEmployee,
-                                            onCheckedChange = { isEmployee = it },
-                                            colors = CheckboxDefaults.colors(checkedColor = Color(0xFF313131))
+                                            onCheckedChange = { isEmployee = it }
                                         )
+                                        Spacer(modifier = Modifier.width(8.dp))
                                         Text(employeeLabel, fontSize = 16.sp, color = Color(0xFF313131))
                                     }
                                 }
@@ -506,6 +514,34 @@ fun CreateContactDialog(
             }
         }
     )
+}
+
+@Composable
+private fun CustomCheckbox(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(22.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .background(Color.White)
+            .border(1.5.dp, Color(0xFF313131), RoundedCornerShape(4.dp))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) { onCheckedChange(!checked) },
+        contentAlignment = Alignment.Center
+    ) {
+        if (checked) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = null,
+                tint = Color(0xFF313131),
+                modifier = Modifier.size(18.dp)
+            )
+        }
+    }
 }
 
 @Composable

@@ -397,10 +397,10 @@ private fun RoundedSquareCheckbox(
     val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier = Modifier
-            .size(24.dp)
+            .size(22.dp)
             .clip(RoundedCornerShape(4.dp))
-            .background(if (checked) Color(0xFF313131) else Color.Transparent)
-            .border(2.dp, Color(0xFF313131), RoundedCornerShape(4.dp))
+            .background(Color.White)
+            .border(1.5.dp, Color(0xFF313131), RoundedCornerShape(4.dp))
             .clickable(
                 interactionSource = interactionSource,
                 indication = null
@@ -411,7 +411,7 @@ private fun RoundedSquareCheckbox(
             Icon(
                 imageVector = androidx.compose.material.icons.Icons.Default.Check,
                 contentDescription = null,
-                tint = Color.White,
+                tint = Color(0xFF313131),
                 modifier = Modifier.size(18.dp)
             )
         }
