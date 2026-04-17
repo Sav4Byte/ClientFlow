@@ -10,6 +10,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
@@ -145,6 +147,7 @@ fun CallResultDialog(
                                 .fillMaxWidth()
                                 .heightIn(min = 60.dp),
                             cursorBrush = SolidColor(Color(0xFF313131)),
+                            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                             decorationBox = { innerTextField ->
                                 if (callNote.isEmpty()) {
                                     Text(
@@ -216,6 +219,7 @@ fun CallResultDialog(
                                     .fillMaxWidth()
                                     .padding(start = 52.dp, bottom = 12.dp),
                                 cursorBrush = SolidColor(Color(0xFF313131)),
+                                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                                 decorationBox = { innerTextField ->
                                     if (orderValue.isEmpty()) {
                                         Text(
@@ -264,6 +268,7 @@ fun CallResultDialog(
                                 .fillMaxWidth()
                                 .padding(start = 52.dp, top = 2.dp, bottom = 12.dp),
                             cursorBrush = SolidColor(Color(0xFF313131)),
+                            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                             decorationBox = { innerTextField ->
                                 if (reminderText.isEmpty()) {
                                     Text(

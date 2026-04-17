@@ -10,6 +10,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material.icons.Icons
@@ -234,11 +236,17 @@ fun CreateContactDialog(
                                         modifier = Modifier.clickable(
                                             interactionSource = remember { MutableInteractionSource() },
                                             indication = null
-                                        ) { isClient = !isClient }
+                                        ) { 
+                                            isClient = !isClient
+                                            if (isClient) isEmployee = false
+                                        }
                                     ) {
                                         CustomCheckbox(
                                             checked = isClient,
-                                            onCheckedChange = { isClient = it }
+                                            onCheckedChange = { 
+                                                isClient = it
+                                                if (isClient) isEmployee = false
+                                            }
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(clientLabel, fontSize = 16.sp, color = Color(0xFF313131))
@@ -248,11 +256,17 @@ fun CreateContactDialog(
                                         modifier = Modifier.clickable(
                                             interactionSource = remember { MutableInteractionSource() },
                                             indication = null
-                                        ) { isEmployee = !isEmployee }
+                                        ) { 
+                                            isEmployee = !isEmployee
+                                            if (isEmployee) isClient = false
+                                        }
                                     ) {
                                         CustomCheckbox(
                                             checked = isEmployee,
-                                            onCheckedChange = { isEmployee = it }
+                                            onCheckedChange = { 
+                                                isEmployee = it
+                                                if (isEmployee) isClient = false
+                                            }
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(employeeLabel, fontSize = 16.sp, color = Color(0xFF313131))
@@ -260,11 +274,26 @@ fun CreateContactDialog(
                                 }
 
                                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                    GrayFrameTextField(value = firstName, onValueChange = { firstName = it }, placeholder = namePlaceholder)
-                                    GrayFrameTextField(value = lastName, onValueChange = { lastName = it }, placeholder = surnamePlaceholder)
+                                    GrayFrameTextField(
+                                        value = firstName, 
+                                        onValueChange = { firstName = it }, 
+                                        placeholder = namePlaceholder,
+                                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+                                    )
+                                    GrayFrameTextField(
+                                        value = lastName, 
+                                        onValueChange = { lastName = it }, 
+                                        placeholder = surnamePlaceholder,
+                                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+                                    )
                                 }
 
-                                GrayFrameTextField(value = company, onValueChange = { company = it }, placeholder = companyPlaceholder)
+                                GrayFrameTextField(
+                                    value = company, 
+                                    onValueChange = { company = it }, 
+                                    placeholder = companyPlaceholder,
+                                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+                                )
 
                                 // Phone field
                                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -287,7 +316,8 @@ fun CreateContactDialog(
                                     placeholder = descriptionPlaceholder,
                                     modifier = Modifier.height(80.dp),
                                     singleLine = false,
-                                    fontWeight = FontWeight.Normal
+                                    fontWeight = FontWeight.Normal,
+                                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
                                 )
                             }
                         } else if (selectedTab == "REMINDER") {
@@ -295,7 +325,12 @@ fun CreateContactDialog(
                                 modifier = Modifier.padding(horizontal = 8.dp),
                                 verticalArrangement = Arrangement.spacedBy(20.dp)
                             ) {
-                                SimpleUnderlineTextField(value = reminderText, onValueChange = { reminderText = it }, placeholder = textPlaceholderResource)
+                                SimpleUnderlineTextField(
+                                    value = reminderText, 
+                                    onValueChange = { reminderText = it }, 
+                                    placeholder = textPlaceholderResource,
+                                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+                                )
 
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
@@ -356,19 +391,15 @@ fun CreateContactDialog(
 
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.clickable { repeatEnabled = !repeatEnabled }
+                                    modifier = Modifier.clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = null
+                                    ) { repeatEnabled = !repeatEnabled }
                                 ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(24.dp)
-                                            .border(2.dp, if (repeatEnabled) Color(0xFF313131) else Color(0xFF999999), RoundedCornerShape(4.dp))
-                                            .background(if (repeatEnabled) Color(0xFF313131) else Color.Transparent, RoundedCornerShape(4.dp)),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        if (repeatEnabled) {
-                                            Icon(Icons.Default.Close, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
-                                        }
-                                    }
+                                    CustomCheckbox(
+                                        checked = repeatEnabled,
+                                        onCheckedChange = { repeatEnabled = it }
+                                    )
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Text(repeatLabel, fontSize = 18.sp, color = Color(0xFF313131))
                                 }
@@ -407,7 +438,12 @@ fun CreateContactDialog(
                                 modifier = Modifier.padding(horizontal = 8.dp),
                                 verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                SimpleUnderlineTextField(value = orderTitle, onValueChange = { orderTitle = it }, placeholder = titlePlaceholder)
+                                SimpleUnderlineTextField(
+                                    value = orderTitle, 
+                                    onValueChange = { orderTitle = it }, 
+                                    placeholder = titlePlaceholder,
+                                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+                                )
                                 
                                 SimpleUnderlineTextField(
                                     value = description,
@@ -416,18 +452,36 @@ fun CreateContactDialog(
                                     modifier = Modifier.height(60.dp),
                                     singleLine = false,
                                     showUnderline = false,
-                                    fontWeight = FontWeight.Normal
+                                    fontWeight = FontWeight.Normal,
+                                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
                                 )
                                 
-                                SimpleUnderlineTextField(value = orderCustomer, onValueChange = { orderCustomer = it }, placeholder = customerPlaceholder, fontWeight = FontWeight.Normal)
-                                SimpleUnderlineTextField(value = orderAddress, onValueChange = { orderAddress = it }, placeholder = addressPlaceholder, fontWeight = FontWeight.Normal)
+                                SimpleUnderlineTextField(
+                                    value = orderCustomer, 
+                                    onValueChange = { orderCustomer = it }, 
+                                    placeholder = customerPlaceholder, 
+                                    fontWeight = FontWeight.Normal,
+                                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+                                )
+                                SimpleUnderlineTextField(
+                                    value = orderAddress, 
+                                    onValueChange = { orderAddress = it }, 
+                                    placeholder = addressPlaceholder, 
+                                    fontWeight = FontWeight.Normal,
+                                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+                                )
                             }
                         } else if (selectedTab == "NOTE") {
                             Column(
                                 modifier = Modifier.padding(horizontal = 8.dp),
                                 verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                SimpleUnderlineTextField(value = noteTitle, onValueChange = { noteTitle = it }, placeholder = titlePlaceholder)
+                                SimpleUnderlineTextField(
+                                    value = noteTitle, 
+                                    onValueChange = { noteTitle = it }, 
+                                    placeholder = titlePlaceholder,
+                                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
+                                )
                                 
                                 SimpleUnderlineTextField(
                                     value = description,
@@ -436,7 +490,8 @@ fun CreateContactDialog(
                                     modifier = Modifier.height(60.dp),
                                     singleLine = false,
                                     showUnderline = false,
-                                    fontWeight = FontWeight.Normal
+                                    fontWeight = FontWeight.Normal,
+                                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
                                 )
                             }
                         }
@@ -650,7 +705,8 @@ private fun SimpleUnderlineTextField(
     modifier: Modifier = Modifier,
     singleLine: Boolean = true,
     showUnderline: Boolean = true,
-    fontWeight: FontWeight = FontWeight.Bold
+    fontWeight: FontWeight = FontWeight.Bold,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         Box(
@@ -677,7 +733,8 @@ private fun SimpleUnderlineTextField(
                 ),
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = singleLine,
-                cursorBrush = SolidColor(Color(0xFF313131))
+                cursorBrush = SolidColor(Color(0xFF313131)),
+                keyboardOptions = keyboardOptions
             )
         }
         if (showUnderline) {
@@ -698,7 +755,8 @@ private fun GrayFrameTextField(
     placeholder: String,
     modifier: Modifier = Modifier,
     singleLine: Boolean = true,
-    fontWeight: FontWeight = FontWeight.Normal
+    fontWeight: FontWeight = FontWeight.Normal,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
 ) {
     Box(
         modifier = modifier
@@ -733,7 +791,8 @@ private fun GrayFrameTextField(
                     ),
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = singleLine,
-                    cursorBrush = SolidColor(Color(0xFF313131))
+                    cursorBrush = SolidColor(Color(0xFF313131)),
+                    keyboardOptions = keyboardOptions
                 )
             }
         }
