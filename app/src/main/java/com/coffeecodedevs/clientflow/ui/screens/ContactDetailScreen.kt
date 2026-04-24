@@ -24,12 +24,14 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.coffeecodedevs.clientflow.R
 import androidx.compose.ui.res.stringResource
+import com.coffeecodedevs.clientflow.data.Contact
 
 data class ContactOrder(
     val id: Int,
@@ -74,6 +76,7 @@ fun ContactDetailScreen(
 ) {
 
     var selectedTab by remember { mutableStateOf("ALL") }
+    var showPhoneSelection by remember { mutableStateOf(false) }
     val context = androidx.compose.ui.platform.LocalContext.current
     
     val backDesc = stringResource(R.string.back_desc)
@@ -228,13 +231,43 @@ fun ContactDetailScreen(
 
                         // Phone numbers
                         Column(modifier = Modifier.padding(start = 40.dp)) {
-                            phoneNumbers.forEach { phone ->
-                                Text(
-                                    text = phone,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color(0xFF334D6F)
-                                )
+                            val visiblePhones = phoneNumbers.take(2)
+                            val remainingCount = if (phoneNumbers.size > 2) phoneNumbers.size - 2 else 0
+
+                            visiblePhones.forEachIndexed { index, phone ->
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = phone,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color(0xFF334D6F),
+                                        modifier = Modifier.clickable {
+                                            if (phoneNumbers.size > 1) {
+                                                showPhoneSelection = true
+                                            } else {
+                                                onCallClick()
+                                                com.coffeecodedevs.clientflow.utils.ContactActions.callContact(context, phone)
+                                            }
+                                        }
+                                    )
+                                    
+                                    if (index == 1 && remainingCount > 0) {
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "еще $remainingCount...",
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = Color(0xFF007AFF),
+                                            textDecoration = TextDecoration.Underline,
+                                            modifier = Modifier.clickable {
+                                                showPhoneSelection = true
+                                            }
+                                        )
+                                    }
+                                }
                                 Spacer(modifier = Modifier.height(4.dp))
                             }
                         }
@@ -254,9 +287,13 @@ fun ContactDetailScreen(
                             painter = painterResource(R.drawable.phone),
                             iconSize = 22.dp,
                             onClick = { 
-                                phoneNumbers.firstOrNull()?.let { 
-                                    onCallClick()
-                                    com.coffeecodedevs.clientflow.utils.ContactActions.callContact(context, it)
+                                if (phoneNumbers.size > 1) {
+                                    showPhoneSelection = true
+                                } else {
+                                    phoneNumbers.firstOrNull()?.let { 
+                                        onCallClick()
+                                        com.coffeecodedevs.clientflow.utils.ContactActions.callContact(context, it)
+                                    }
                                 }
                             }
                         )
@@ -264,8 +301,12 @@ fun ContactDetailScreen(
                             painter = painterResource(R.drawable.sms),
                             iconSize = 22.dp,
                             onClick = { 
-                                phoneNumbers.firstOrNull()?.let { 
-                                    com.coffeecodedevs.clientflow.utils.ContactActions.sendSms(context, it)
+                                if (phoneNumbers.size > 1) {
+                                    showPhoneSelection = true
+                                } else {
+                                    phoneNumbers.firstOrNull()?.let { 
+                                        com.coffeecodedevs.clientflow.utils.ContactActions.sendSms(context, it)
+                                    }
                                 }
                             }
                         )
@@ -273,12 +314,16 @@ fun ContactDetailScreen(
                             painter = painterResource(R.drawable.share),
                             iconSize = 18.dp,
                             onClick = { 
-                                com.coffeecodedevs.clientflow.utils.ContactActions.shareContact(
-                                    context, 
-                                    contactName, 
-                                    phoneNumbers, 
-                                    contactNote
-                                )
+                                if (phoneNumbers.size > 1) {
+                                    showPhoneSelection = true
+                                } else {
+                                    com.coffeecodedevs.clientflow.utils.ContactActions.shareContact(
+                                        context, 
+                                        contactName, 
+                                        phoneNumbers, 
+                                        contactNote
+                                    )
+                                }
                             }
                         )
                     }
@@ -371,6 +416,21 @@ fun ContactDetailScreen(
                 }
             }
         }
+    }
+
+    if (showPhoneSelection) {
+        PhoneSelectionDialog(
+            contact = Contact(
+                firstName = contactName.split(" ").getOrNull(0) ?: contactName,
+                lastName = contactName.split(" ").getOrNull(1) ?: "",
+                phones = phoneNumbers,
+                isClient = true,
+                isEmployee = false,
+                contact = contactNote
+            ),
+            onDismiss = { showPhoneSelection = false },
+            onCallInitiated = { onCallClick() }
+        )
     }
 }
 

@@ -57,6 +57,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -332,7 +333,16 @@ fun ContactsScreen(
     var selectedTab by remember { mutableStateOf("CLIENT") }
     var searchQuery by remember { mutableStateOf("") }
     var expandedContactId by remember { mutableStateOf<Int?>(null) }
-    val context = androidx.compose.ui.platform.LocalContext.current
+    var phoneSelectionContact by remember { mutableStateOf<com.coffeecodedevs.clientflow.data.Contact?>(null) }
+
+    phoneSelectionContact?.let { contact ->
+        PhoneSelectionDialog(
+            contact = contact,
+            onDismiss = { phoneSelectionContact = null },
+            onCallInitiated = { onCallInitiated(it) }
+        )
+    }
+    val context = LocalContext.current
 
     val allContacts by viewModel.allContacts.collectAsState(initial = emptyList())
 
@@ -520,15 +530,35 @@ fun ContactsScreen(
                                             expandedContactId = if (expandedContactId == contact.id) null else contact.id
                                         },
                                         onCallClick = { 
-                                            contact.phones.firstOrNull()?.let { phone ->
-                                                viewModel.logCall(contact)
-                                                onCallInitiated(contact)
-                                                com.coffeecodedevs.clientflow.utils.ContactActions.callContact(context, phone)
+                                            if (contact.phones.size > 1) {
+                                                phoneSelectionContact = contact
+                                            } else {
+                                                contact.phones.firstOrNull()?.let { phone ->
+                                                    viewModel.logCall(contact)
+                                                    onCallInitiated(contact)
+                                                    com.coffeecodedevs.clientflow.utils.ContactActions.callContact(context, phone)
+                                                }
                                             }
                                         },
                                         onSmsClick = {
-                                            contact.phones.firstOrNull()?.let { 
-                                                com.coffeecodedevs.clientflow.utils.ContactActions.sendSms(context, it)
+                                            if (contact.phones.size > 1) {
+                                                phoneSelectionContact = contact
+                                            } else {
+                                                contact.phones.firstOrNull()?.let { 
+                                                    com.coffeecodedevs.clientflow.utils.ContactActions.sendSms(context, it)
+                                                }
+                                            }
+                                        },
+                                        onShareClick = {
+                                            if (contact.phones.size > 1) {
+                                                phoneSelectionContact = contact
+                                            } else {
+                                                com.coffeecodedevs.clientflow.utils.ContactActions.shareContact(
+                                                    context,
+                                                    "${contact.firstName} ${contact.lastName}",
+                                                    contact.phones,
+                                                    contact.contact
+                                                )
                                             }
                                         },
                                         onViewClick = { 
@@ -581,8 +611,10 @@ fun ContactItem(
     onToggleExpand: () -> Unit,
     onCallClick: () -> Unit = {},
     onSmsClick: () -> Unit = {},
+    onShareClick: () -> Unit = {},
     onViewClick: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     val rotationAngle by animateFloatAsState(
         targetValue = if (isExpanded) 180f else 0f,
         label = "chevron rotation"
@@ -632,21 +664,40 @@ fun ContactItem(
                 Box(
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    if (!contact.contact.isNullOrEmpty()) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 13.dp)
-                                .clip(CommentBoxWithCutoutShape())
-                                .background(Color(0xFFAEE0FF))
-                                .padding(start = 12.dp, top = 12.dp, end = 15.dp, bottom = 35.dp)
-                        ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 13.dp)
+                            .clip(CommentBoxWithCutoutShape())
+                            .background(Color(0xFFAEE0FF))
+                            .padding(start = 12.dp, top = 12.dp, end = 15.dp, bottom = 35.dp)
+                    ) {
+                        if (!contact.contact.isNullOrEmpty()) {
                             Text(
                                 text = contact.contact!!,
                                 fontSize = 13.sp,
                                 color = Color(0xFF2C4A5E),
                                 lineHeight = 18.sp
                             )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                        
+                        // Display phone numbers if available
+                        contact.phones.forEach { phone ->
+                            Text(
+                                text = phone,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xFF334D6F),
+                                modifier = Modifier.clickable {
+                                    if (contact.phones.size > 1) {
+                                        onCallClick() // This will trigger the dialog in the parent
+                                    } else {
+                                        com.coffeecodedevs.clientflow.utils.ContactActions.callContact(context, phone)
+                                    }
+                                }
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
                         }
                     }
 
@@ -664,6 +715,10 @@ fun ContactItem(
                         ActionButton(
                             painter = painterResource(R.drawable.sms),
                             onClick = onSmsClick,
+                        )
+                        ActionButton(
+                            painter = painterResource(R.drawable.share),
+                            onClick = onShareClick,
                         )
                         ActionButton(
                             painter = painterResource(R.drawable.eye),
