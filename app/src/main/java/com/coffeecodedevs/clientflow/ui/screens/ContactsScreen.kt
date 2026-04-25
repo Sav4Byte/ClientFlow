@@ -31,7 +31,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -367,8 +366,8 @@ fun ContactsScreen(
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFFAEDEF4),
-                        Color(0xFFFFDAB9)
+                        Color(0xFFAEE0FF),
+                        Color(0xFFDDC6A3)
                     )
                 )
             )
@@ -385,7 +384,7 @@ fun ContactsScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(color = Color.White, shape = HeaderWithSearchCutoutShape())
+                        .background(color = Color.White.copy(alpha = 0.75f), shape = HeaderWithSearchCutoutShape())
                         .padding(start = 10.dp, top = 20.dp, bottom = 5.dp)
                 ) {
                     Text(
@@ -426,7 +425,12 @@ fun ContactsScreen(
                                 }
                             }
                         )
-                        Icon(imageVector = Icons.Outlined.Search, contentDescription = searchPlaceholder, tint = Color(0xFF8B9BA8), modifier = Modifier.size(20.dp))
+                        Icon(
+                            painter = painterResource(R.drawable.lupaa),
+                            contentDescription = searchPlaceholder,
+                            tint = Color(0xFF8B9BA8),
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
                 }
             }
@@ -435,7 +439,7 @@ fun ContactsScreen(
 
             // Tabs and Content
             Column(
-                modifier = Modifier.fillMaxWidth().weight(1f).padding(horizontal = 20.dp)
+                modifier = Modifier.fillMaxWidth().weight(1f).padding(horizontal = 16.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth().height(37.dp),
@@ -732,7 +736,7 @@ fun ContactItem(
                             .align(Alignment.BottomEnd)
                             .padding(end = 8.dp, bottom = 0.dp)
                             .offset(y = 12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(20.dp)
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         ActionButton(
                             painter = painterResource(R.drawable.phone),
@@ -743,12 +747,6 @@ fun ContactItem(
                             painter = painterResource(R.drawable.sms),
                             onClick = onSmsClick,
                             iconSize = DpSize(35.dp, 35.dp)
-                        )
-                        ActionButton(
-                            painter = painterResource(R.drawable.share),
-                            onClick = onShareClick,
-                            iconSize = DpSize(25.dp, 25.dp),
-                            iconOffset = Offset(-1f, 0f)
                         )
                         ActionButton(
                             painter = painterResource(R.drawable.eye),

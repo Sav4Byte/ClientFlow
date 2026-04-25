@@ -123,10 +123,8 @@ fun ContactDetailScreen(
     }
 
     val gradientColors = listOf(
-        Color(0xFFAEDEF4),
-        Color(0xFFB8E8E8),
-        Color(0xFFF5EFE6),
-        Color(0xFFF5E6D3)
+        Color(0xFFAEE0FF),
+        Color(0xFFDDC6A3)
     )
 
     Box(

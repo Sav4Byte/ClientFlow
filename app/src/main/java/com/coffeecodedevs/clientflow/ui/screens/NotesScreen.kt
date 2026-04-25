@@ -35,8 +35,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.coffeecodedevs.clientflow.R
 import androidx.compose.ui.res.stringResource
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Search
 
 data class NoteItem(
     val id: Int,
@@ -67,11 +65,8 @@ fun NotesScreen(
     }
 
     val gradientColors = listOf(
-        Color(0xFF6CB3E5),
-        Color(0xFF87BBE0),
-        Color(0xFFB8F2F2),
-        Color(0xFFF5EFE6),
-        Color(0xFFF5E6D3)
+        Color(0xFFAEE0FF),
+        Color(0xFFDDC6A3)
     )
 
     Box(
@@ -101,7 +96,7 @@ fun NotesScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(
-                            color = Color.White,
+                            color = Color.White.copy(alpha = 0.75f),
                             shape = HeaderWithSearchCutoutShape()
                         )
                         .padding(start = 20.dp, top = 20.dp, bottom = 5.dp)
@@ -124,29 +119,25 @@ fun NotesScreen(
                         .height(40.dp)
                         .clip(RoundedCornerShape(20.dp))
                         .background(Color.White)
-                        .padding(horizontal = 16.dp),
-                    contentAlignment = Alignment.CenterStart
                 ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         BasicTextField(
                             value = searchQuery,
                             onValueChange = { searchQuery = it },
-                            modifier = Modifier.weight(1f),
-                            textStyle = TextStyle(
-                                color = Color(0xFF334D6F),
-                                fontSize = 15.sp
-                            ),
+                            modifier = Modifier.weight(1f).fillMaxHeight().padding(end = 8.dp),
+                            textStyle = TextStyle(color = Color(0xFF334D6F), fontSize = 14.sp),
                             singleLine = true,
                             decorationBox = { innerTextField ->
-                                Box(contentAlignment = Alignment.CenterStart) {
+                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.CenterStart) {
                                     if (searchQuery.isEmpty()) {
                                         Text(
                                             text = searchPlaceholder,
                                             color = Color(0xFF8B9BA8),
-                                            fontSize = 15.sp
+                                            fontSize = 14.sp
                                         )
                                     }
                                     innerTextField()
@@ -154,16 +145,16 @@ fun NotesScreen(
                             }
                         )
                         Icon(
-                            imageVector = Icons.Outlined.Search,
+                            painter = painterResource(R.drawable.lupaa),
                             contentDescription = searchPlaceholder,
                             tint = Color(0xFF8B9BA8),
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(77.dp))
 
             // White container with notes list
             Box(
@@ -172,7 +163,7 @@ fun NotesScreen(
                     .weight(1f)
                     .padding(horizontal = 16.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color.White)
+                    .background(Color.White.copy(alpha = 0.75f))
                     .padding(20.dp)
             ) {
                 if (filteredNotes.isEmpty()) {

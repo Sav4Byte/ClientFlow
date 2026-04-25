@@ -180,7 +180,7 @@ fun CalendarScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(OctoberHeaderWithCutoutShape(cutoutCenterX))
-                        .background(Color.White)
+                        .background(Color.White.copy(alpha = 0.75f))
                         .padding(horizontal = 20.dp, vertical = 20.dp)
                 ) {
                     Text(
@@ -255,7 +255,7 @@ fun CalendarScreen(
                 .padding(top = 175.dp)
                 .padding(horizontal = 16.dp)
                 .clip(ContentWithTabShape(selectedTab))
-                .background(Color.White)
+                .background(Color.White.copy(alpha = 0.75f))
         ) {
             Box(modifier = Modifier.padding(top = 40.dp).padding(horizontal = 16.dp, vertical = 20.dp)) {
                 when (selectedTab) {

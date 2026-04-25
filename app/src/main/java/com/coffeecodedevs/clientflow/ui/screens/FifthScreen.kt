@@ -128,9 +128,7 @@ fun FifthScreen(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(Color(0xFF9BE5D6), Color(0xFFF7F2E9)),
-                    startY = 0f,
-                    endY = 1200f
+                    colors = listOf(Color(0xFFAEE0FF), Color(0xFFDDC6A3))
                 )
             )
     ) {
@@ -150,7 +148,7 @@ fun FifthScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(FifthHeaderCutoutShape())
-                        .background(Color.White)
+                        .background(Color.White.copy(alpha = 0.75f))
                 ) {
                     Column(
                         modifier = Modifier
@@ -289,7 +287,7 @@ fun FifthScreen(
                     .weight(1f)
                     .padding(horizontal = 16.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color.White)
+                    .background(Color.White.copy(alpha = 0.75f))
                     .padding(20.dp)
             ) {
                 when (selectedTab) {

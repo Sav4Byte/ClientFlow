@@ -68,22 +68,10 @@ fun GoalsScreen(
     val shareDesc = stringResource(R.string.share_desc)
     val editDesc = stringResource(R.string.edit_desc)
 
-    val gradientColors = if (isOrder) {
-        listOf(
-            Color(0xFFD3B8E8), // Lilac at top
-            Color(0xFFE5CCFF), 
-            Color(0xFFF5EFE6), // Light beige/cream
-            Color(0xFFF5E6D3)  
-        )
-    } else {
-        listOf(
-            Color(0xFF459DDE), // Turquoise/mint at top
-            Color(0xFF6FB3E5),
-            Color(0xFFB8F2F2),
-            Color(0xFFF5EFE6), 
-            Color(0xFFF5E6D3)  
-        )
-    }
+    val gradientColors = listOf(
+        Color(0xFFAEE0FF),
+        Color(0xFFDDC6A3)
+    )
 
     Box(
         modifier = Modifier
@@ -113,7 +101,7 @@ fun GoalsScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(GoalsHeaderWithCutoutShape())
-                        .background(Color.White)
+                        .background(Color.White.copy(alpha = 0.75f))
                 ) {
                     // Header with back button and title inside white block
                     Row(
@@ -213,7 +201,7 @@ fun GoalsScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color.White.copy(alpha = 0.7f))
+                    .background(Color.White.copy(alpha = 0.75f))
                     .padding(20.dp)
             ) {
                 if (isEditing) {
