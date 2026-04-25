@@ -78,8 +78,10 @@ fun CreateContactDialog(
     var orderCustomer by remember { mutableStateOf<String>(editingContact?.customerName ?: "") }
     var orderAddress by remember { mutableStateOf<String>(editingContact?.orderAddress ?: "") }
     
-    var description by remember { mutableStateOf<String>(editingContact?.contact ?: "") }
-    
+    var contactDescription by remember { mutableStateOf<String>(if (editingContact?.isStandaloneNote == false && editingContact?.orderName.isNullOrBlank()) editingContact?.contact ?: "" else "") }
+    var orderDescription by remember { mutableStateOf<String>(if (editingContact?.orderName?.isNotBlank() == true) editingContact?.contact ?: "" else "") }
+    var noteDescription by remember { mutableStateOf<String>(if (editingContact?.isStandaloneNote == true) editingContact?.contact ?: "" else "") }
+
     // Note fields
     var noteTitle by remember { mutableStateOf<String>(editingContact?.noteTitle ?: "") }
     
@@ -323,8 +325,8 @@ fun CreateContactDialog(
                                 }
 
                                 GrayFrameTextField(
-                                    value = description,
-                                    onValueChange = { description = it },
+                                    value = contactDescription,
+                                    onValueChange = { contactDescription = it },
                                     placeholder = descriptionPlaceholder,
                                     modifier = Modifier.height(80.dp),
                                     singleLine = false,
@@ -461,8 +463,8 @@ fun CreateContactDialog(
                                 )
                                 
                                 SimpleUnderlineTextField(
-                                    value = description,
-                                    onValueChange = { description = it },
+                                    value = orderDescription,
+                                    onValueChange = { orderDescription = it },
                                     placeholder = descriptionPlaceholder,
                                     modifier = Modifier.height(60.dp),
                                     singleLine = false,
@@ -503,8 +505,8 @@ fun CreateContactDialog(
                                 )
                                 
                                 SimpleUnderlineTextField(
-                                    value = description,
-                                    onValueChange = { description = it },
+                                    value = noteDescription,
+                                    onValueChange = { noteDescription = it },
                                     placeholder = descriptionPlaceholder,
                                     modifier = Modifier.height(60.dp),
                                     singleLine = false,
@@ -560,7 +562,12 @@ fun CreateContactDialog(
                                             phones = phones,
                                             isClient = isClient,
                                             isEmployee = isEmployee,
-                                            contact = if (description.isNotBlank()) description else null,
+                                            contact = when (selectedTab) {
+                                                "CONTACT" -> if (contactDescription.isNotBlank()) contactDescription else null
+                                                "ORDER" -> if (orderDescription.isNotBlank()) orderDescription else null
+                                                "NOTE" -> if (noteDescription.isNotBlank()) noteDescription else null
+                                                else -> null
+                                            },
                                             orderName = orderTitle,
                                             customerName = orderCustomer,
                                             orderAddress = orderAddress,
