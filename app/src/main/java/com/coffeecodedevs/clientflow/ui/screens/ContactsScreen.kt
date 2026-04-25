@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
@@ -42,6 +43,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.rotate
@@ -67,6 +70,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextDecoration
 import com.coffeecodedevs.clientflow.R
 
 
@@ -682,21 +686,43 @@ fun ContactItem(
                             Spacer(modifier = Modifier.height(8.dp))
                         }
                         
-                        // Display phone numbers if available
-                        contact.phones.forEach { phone ->
-                            Text(
-                                text = phone,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = Color(0xFF334D6F),
-                                modifier = Modifier.clickable {
-                                    if (contact.phones.size > 1) {
-                                        onCallClick() // This will trigger the dialog in the parent
-                                    } else {
-                                        com.coffeecodedevs.clientflow.utils.ContactActions.callContact(context, phone)
+                        // Display phone numbers if available (max 1 with "more" link)
+                        val visiblePhones = contact.phones.take(1)
+                        val remainingCount = if (contact.phones.size > 1) contact.phones.size - 1 else 0
+
+                        visiblePhones.forEachIndexed { index, phone ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = phone,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color(0xFF334D6F),
+                                    modifier = Modifier.clickable {
+                                        if (contact.phones.size > 1) {
+                                            onCallClick() // This will trigger the dialog in the parent
+                                        } else {
+                                            com.coffeecodedevs.clientflow.utils.ContactActions.callContact(context, phone)
+                                        }
                                     }
+                                )
+                                
+                                if (index == 0 && remainingCount > 0) {
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "еще $remainingCount...",
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color(0xFF007AFF),
+                                        textDecoration = TextDecoration.Underline,
+                                        modifier = Modifier.clickable {
+                                            onCallClick() // Show dialog
+                                        }
+                                    )
                                 }
-                            )
+                            }
                             Spacer(modifier = Modifier.height(4.dp))
                         }
                     }
@@ -706,23 +732,28 @@ fun ContactItem(
                             .align(Alignment.BottomEnd)
                             .padding(end = 8.dp, bottom = 0.dp)
                             .offset(y = 12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
                         ActionButton(
                             painter = painterResource(R.drawable.phone),
                             onClick = onCallClick,
+                            iconSize = DpSize(35.dp, 35.dp)
                         )
                         ActionButton(
                             painter = painterResource(R.drawable.sms),
                             onClick = onSmsClick,
+                            iconSize = DpSize(35.dp, 35.dp)
                         )
                         ActionButton(
                             painter = painterResource(R.drawable.share),
                             onClick = onShareClick,
+                            iconSize = DpSize(25.dp, 25.dp),
+                            iconOffset = Offset(-1f, 0f)
                         )
                         ActionButton(
                             painter = painterResource(R.drawable.eye),
                             onClick = onViewClick,
+                            iconSize = DpSize(35.dp, 35.dp)
                         )
                     }
                 }
@@ -733,8 +764,10 @@ fun ContactItem(
 
 @Composable
 fun ActionButton(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    onClick: () -> Unit
+    imageVector: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit,
+    iconSize: androidx.compose.ui.unit.DpSize = androidx.compose.ui.unit.DpSize(24.dp, 24.dp),
+    iconOffset: androidx.compose.ui.geometry.Offset = androidx.compose.ui.geometry.Offset.Zero
 ) {
     Box(
         modifier = Modifier
@@ -745,10 +778,12 @@ fun ActionButton(
         contentAlignment = Alignment.Center
     ) {
         Icon(
-            imageVector = icon,
+            imageVector = imageVector,
             contentDescription = null,
             tint = Color.White,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier
+                .requiredSize(iconSize)
+                .offset(iconOffset.x.dp, iconOffset.y.dp)
         )
     }
 }
@@ -756,7 +791,9 @@ fun ActionButton(
 @Composable
 fun ActionButton(
     painter: androidx.compose.ui.graphics.painter.Painter,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    iconSize: androidx.compose.ui.unit.DpSize = androidx.compose.ui.unit.DpSize(24.dp, 24.dp),
+    iconOffset: androidx.compose.ui.geometry.Offset = androidx.compose.ui.geometry.Offset.Zero
 ) {
     Box(
         modifier = Modifier
@@ -770,7 +807,9 @@ fun ActionButton(
             painter = painter,
             contentDescription = null,
             tint = Color.White,
-            modifier = Modifier.size(35.dp)
+            modifier = Modifier
+                .requiredSize(iconSize)
+                .offset(iconOffset.x.dp, iconOffset.y.dp)
         )
     }
 }

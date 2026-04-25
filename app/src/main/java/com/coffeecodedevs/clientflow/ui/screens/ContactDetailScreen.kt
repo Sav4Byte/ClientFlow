@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.DpSize
 import com.coffeecodedevs.clientflow.R
 import androidx.compose.ui.res.stringResource
 import com.coffeecodedevs.clientflow.data.Contact
@@ -227,12 +228,12 @@ fun ContactDetailScreen(
                         }
 
 
-                        Spacer(modifier = Modifier.height(18.dp))
+                        Spacer(modifier = Modifier.height(65.dp))
 
                         // Phone numbers
-                        Column(modifier = Modifier.padding(start = 40.dp)) {
-                            val visiblePhones = phoneNumbers.take(2)
-                            val remainingCount = if (phoneNumbers.size > 2) phoneNumbers.size - 2 else 0
+                        Column(modifier = Modifier.padding(start = 16.dp)) {
+                            val visiblePhones = phoneNumbers.take(1)
+                            val remainingCount = if (phoneNumbers.size > 1) phoneNumbers.size - 1 else 0
 
                             visiblePhones.forEachIndexed { index, phone ->
                                 Row(
@@ -254,7 +255,7 @@ fun ContactDetailScreen(
                                         }
                                     )
                                     
-                                    if (index == 1 && remainingCount > 0) {
+                                    if (index == 0 && remainingCount > 0) {
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
                                             text = "еще $remainingCount...",
@@ -281,11 +282,11 @@ fun ContactDetailScreen(
                             .align(Alignment.BottomEnd)
                             .offset(y = 15.dp)
                             .padding(end = 46.dp),
-                        horizontalArrangement = Arrangement.spacedBy(14.dp)
+                        horizontalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
                         ContactActionButton(
                             painter = painterResource(R.drawable.phone),
-                            iconSize = 22.dp,
+                            iconSize = DpSize(35.dp, 35.dp),
                             onClick = { 
                                 if (phoneNumbers.size > 1) {
                                     showPhoneSelection = true
@@ -299,7 +300,7 @@ fun ContactDetailScreen(
                         )
                         ContactActionButton(
                             painter = painterResource(R.drawable.sms),
-                            iconSize = 22.dp,
+                            iconSize = DpSize(35.dp, 35.dp),
                             onClick = { 
                                 if (phoneNumbers.size > 1) {
                                     showPhoneSelection = true
@@ -312,7 +313,8 @@ fun ContactDetailScreen(
                         )
                         ContactActionButton(
                             painter = painterResource(R.drawable.share),
-                            iconSize = 18.dp,
+                            iconSize = DpSize(28.dp, 28.dp),
+                            iconOffset = Offset(-1f, 0f),
                             onClick = { 
                                 if (phoneNumbers.size > 1) {
                                     showPhoneSelection = true
@@ -438,7 +440,8 @@ fun ContactDetailScreen(
 @Composable
 private fun ContactActionButton(
     painter: androidx.compose.ui.graphics.painter.Painter,
-    iconSize: androidx.compose.ui.unit.Dp = 20.dp,
+    iconSize: androidx.compose.ui.unit.DpSize = androidx.compose.ui.unit.DpSize(24.dp, 24.dp),
+    iconOffset: androidx.compose.ui.geometry.Offset = androidx.compose.ui.geometry.Offset.Zero,
     onClick: () -> Unit
 ) {
     Box(
@@ -453,7 +456,9 @@ private fun ContactActionButton(
             painter = painter,
             contentDescription = null,
             tint = Color.White,
-            modifier = Modifier.size(iconSize)
+            modifier = Modifier
+                .requiredSize(iconSize)
+                .offset(iconOffset.x.dp, iconOffset.y.dp)
         )
     }
 }

@@ -11,6 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -42,7 +44,7 @@ fun PhoneSelectionDialog(
                         )
                     )
                 )
-                .padding(24.dp)
+                .padding(vertical = 24.dp, horizontal = 16.dp)
         ) {
             Column {
                 Text(
@@ -70,9 +72,9 @@ fun PhoneSelectionDialog(
                     ) {
                         Text(
                             text = phone,
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF2C4A5E),
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF334D6F),
                             modifier = Modifier
                                 .weight(1f)
                                 .clickable {
@@ -82,10 +84,10 @@ fun PhoneSelectionDialog(
                                 }
                         )
 
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             DialogActionButton(
                                 painter = painterResource(R.drawable.phone),
-                                iconSize = 22.dp,
+                                iconSize = DpSize(35.dp, 35.dp),
                                 onClick = {
                                     ContactActions.callContact(context, phone)
                                     onCallInitiated(contact)
@@ -94,7 +96,7 @@ fun PhoneSelectionDialog(
                             )
                             DialogActionButton(
                                 painter = painterResource(R.drawable.sms),
-                                iconSize = 22.dp,
+                                iconSize = DpSize(35.dp, 35.dp),
                                 onClick = {
                                     ContactActions.sendSms(context, phone)
                                     onDismiss()
@@ -102,7 +104,8 @@ fun PhoneSelectionDialog(
                             )
                             DialogActionButton(
                                 painter = painterResource(R.drawable.share),
-                                iconSize = 18.dp,
+                                iconSize = DpSize(28.dp, 28.dp),
+                                iconOffset = Offset(-1f, 0f),
                                 onClick = {
                                     ContactActions.shareContact(context, "${contact.firstName} ${contact.lastName}", listOf(phone), contact.contact)
                                     onDismiss()
@@ -143,11 +146,12 @@ fun PhoneSelectionDialog(
 fun DialogActionButton(
     painter: androidx.compose.ui.graphics.painter.Painter,
     onClick: () -> Unit,
-    iconSize: androidx.compose.ui.unit.Dp = 22.dp
+    iconSize: androidx.compose.ui.unit.DpSize = androidx.compose.ui.unit.DpSize(24.dp, 24.dp),
+    iconOffset: androidx.compose.ui.geometry.Offset = androidx.compose.ui.geometry.Offset.Zero
 ) {
     Box(
         modifier = Modifier
-            .size(38.dp)
+            .size(36.dp)
             .clip(CircleShape)
             .background(Color(0xFF313131))
             .clickable(onClick = onClick),
@@ -157,7 +161,9 @@ fun DialogActionButton(
             painter = painter,
             contentDescription = null,
             tint = Color.White,
-            modifier = Modifier.size(iconSize)
+            modifier = Modifier
+                .requiredSize(iconSize)
+                .offset(iconOffset.x.dp, iconOffset.y.dp)
         )
     }
 }
