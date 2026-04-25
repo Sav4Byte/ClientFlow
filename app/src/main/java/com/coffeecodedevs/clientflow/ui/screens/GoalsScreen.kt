@@ -138,7 +138,9 @@ fun GoalsScreen(
                                     text = editedTitle,
                                     fontSize = 24.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF333333)
+                                    color = Color(0xFF333333),
+                                    maxLines = 2,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                 )
                             }
                             
