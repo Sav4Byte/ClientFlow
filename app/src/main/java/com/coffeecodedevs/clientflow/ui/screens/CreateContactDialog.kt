@@ -300,10 +300,18 @@ fun CreateContactDialog(
                                     phones.forEachIndexed { index, phone ->
                                         PhoneFieldWithPlus(
                                             value = phone,
-                                            onValueChange = { phones = phones.toMutableList().apply { set(index, it) } },
+                                            onValueChange = { newValue ->
+                                                // Allow digits and '+' only, and ensure '+' is at the start
+                                                val filtered = newValue.filterIndexed { i, c -> 
+                                                    c.isDigit() || (i == 0 && c == '+') 
+                                                }
+                                                // Ensure it starts with +
+                                                val finalValue = if (filtered.isEmpty() || filtered[0] != '+') "+$filtered" else filtered
+                                                phones = phones.toMutableList().apply { set(index, finalValue) }
+                                            },
                                             onRemove = { if (phones.size > 1) phones = phones.toMutableList().apply { removeAt(index) } },
-                                            onAdd = { phones = phones + "+380" },
-                                            showPlus = (index == phones.lastIndex),
+                                            onAdd = { if (phones.size < 5) phones = phones + "+380" },
+                                            showPlus = (index == phones.lastIndex && phones.size < 5),
                                             removeDesc = removeDesc,
                                             addDesc = addDesc
                                         )
@@ -663,7 +671,8 @@ private fun PhoneFieldWithPlus(
                     onValueChange = onValueChange,
                     textStyle = TextStyle(fontSize = 16.sp, color = Color.Black),
                     modifier = Modifier.weight(1f),
-                    cursorBrush = SolidColor(Color(0xFF313131))
+                    cursorBrush = SolidColor(Color(0xFF313131)),
+                    keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Phone)
                 )
                 Icon(
                     imageVector = Icons.Default.Close,
