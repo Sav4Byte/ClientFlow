@@ -278,12 +278,14 @@ fun CreateContactDialog(
                                         value = firstName, 
                                         onValueChange = { firstName = it }, 
                                         placeholder = namePlaceholder,
+                                        maxLength = 50,
                                         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
                                     )
                                     GrayFrameTextField(
                                         value = lastName, 
                                         onValueChange = { lastName = it }, 
                                         placeholder = surnamePlaceholder,
+                                        maxLength = 70,
                                         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
                                     )
                                 }
@@ -292,6 +294,7 @@ fun CreateContactDialog(
                                     value = company, 
                                     onValueChange = { company = it }, 
                                     placeholder = companyPlaceholder,
+                                    maxLength = 120,
                                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
                                 )
 
@@ -301,13 +304,16 @@ fun CreateContactDialog(
                                         PhoneFieldWithPlus(
                                             value = phone,
                                             onValueChange = { newValue ->
-                                                // Allow digits and '+' only, and ensure '+' is at the start
-                                                val filtered = newValue.filterIndexed { i, c -> 
-                                                    c.isDigit() || (i == 0 && c == '+') 
+                                                // Limit to 20 chars
+                                                if (newValue.length <= 20) {
+                                                    // Allow digits and '+' only, and ensure '+' is at the start
+                                                    val filtered = newValue.filterIndexed { i, c -> 
+                                                        c.isDigit() || (i == 0 && c == '+') 
+                                                    }
+                                                    // Ensure it starts with +
+                                                    val finalValue = if (filtered.isEmpty() || filtered[0] != '+') "+$filtered" else filtered
+                                                    phones = phones.toMutableList().apply { set(index, finalValue) }
                                                 }
-                                                // Ensure it starts with +
-                                                val finalValue = if (filtered.isEmpty() || filtered[0] != '+') "+$filtered" else filtered
-                                                phones = phones.toMutableList().apply { set(index, finalValue) }
                                             },
                                             onRemove = { if (phones.size > 1) phones = phones.toMutableList().apply { removeAt(index) } },
                                             onAdd = { if (phones.size < 5) phones = phones + "+380" },
@@ -325,6 +331,7 @@ fun CreateContactDialog(
                                     modifier = Modifier.height(80.dp),
                                     singleLine = false,
                                     fontWeight = FontWeight.Normal,
+                                    maxLength = 700,
                                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
                                 )
                             }
@@ -337,6 +344,7 @@ fun CreateContactDialog(
                                     value = reminderText, 
                                     onValueChange = { reminderText = it }, 
                                     placeholder = textPlaceholderResource,
+                                    maxLength = 200,
                                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
                                 )
 
@@ -450,6 +458,7 @@ fun CreateContactDialog(
                                     value = orderTitle, 
                                     onValueChange = { orderTitle = it }, 
                                     placeholder = titlePlaceholder,
+                                    maxLength = 120,
                                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
                                 )
                                 
@@ -461,6 +470,7 @@ fun CreateContactDialog(
                                     singleLine = false,
                                     showUnderline = false,
                                     fontWeight = FontWeight.Normal,
+                                    maxLength = 2000,
                                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
                                 )
                                 
@@ -469,6 +479,7 @@ fun CreateContactDialog(
                                     onValueChange = { orderCustomer = it }, 
                                     placeholder = customerPlaceholder, 
                                     fontWeight = FontWeight.Normal,
+                                    maxLength = 120,
                                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
                                 )
                                 SimpleUnderlineTextField(
@@ -476,6 +487,7 @@ fun CreateContactDialog(
                                     onValueChange = { orderAddress = it }, 
                                     placeholder = addressPlaceholder, 
                                     fontWeight = FontWeight.Normal,
+                                    maxLength = 250,
                                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
                                 )
                             }
@@ -488,6 +500,7 @@ fun CreateContactDialog(
                                     value = noteTitle, 
                                     onValueChange = { noteTitle = it }, 
                                     placeholder = titlePlaceholder,
+                                    maxLength = 120,
                                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
                                 )
                                 
@@ -499,6 +512,7 @@ fun CreateContactDialog(
                                     singleLine = false,
                                     showUnderline = false,
                                     fontWeight = FontWeight.Normal,
+                                    maxLength = 10000,
                                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
                                 )
                             }
@@ -715,6 +729,7 @@ private fun SimpleUnderlineTextField(
     singleLine: Boolean = true,
     showUnderline: Boolean = true,
     fontWeight: FontWeight = FontWeight.Bold,
+    maxLength: Int = Int.MAX_VALUE,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
@@ -734,7 +749,7 @@ private fun SimpleUnderlineTextField(
             }
             BasicTextField(
                 value = value,
-                onValueChange = onValueChange,
+                onValueChange = { if (it.length <= maxLength) onValueChange(it) },
                 textStyle = TextStyle(
                     fontSize = 17.sp,
                     color = Color(0xFF313131),
@@ -765,6 +780,7 @@ private fun GrayFrameTextField(
     modifier: Modifier = Modifier,
     singleLine: Boolean = true,
     fontWeight: FontWeight = FontWeight.Normal,
+    maxLength: Int = Int.MAX_VALUE,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default
 ) {
     Box(
