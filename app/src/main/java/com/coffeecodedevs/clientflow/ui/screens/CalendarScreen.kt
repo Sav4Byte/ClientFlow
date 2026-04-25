@@ -126,8 +126,8 @@ fun CalendarScreen(
             .map { Reminder(it.id, it.reminderText, if (it.reminderTime.isNotBlank()) it.reminderTime else allDayText) }
     }
 
-    val orders = remember(contacts) {
-        contacts.filter { it.orderName.isNotBlank() }
+    val orders = remember(contacts, dateString) {
+        contacts.filter { it.orderName.isNotBlank() && it.reminderDate == dateString }
             .map {
                 Order(
                     id = it.id,
@@ -139,9 +139,11 @@ fun CalendarScreen(
             }
     }
 
-    val allTabItems = remember(reminders, contacts, dateString) {
+    val allTabItems = remember(reminders, orders, contacts, dateString) {
         val items = mutableListOf<TimelineItem>()
         items.addAll(reminders.map { TimelineItem.ReminderItem(it) })
+        items.addAll(orders.map { TimelineItem.OrderItem(it, Color(0xFFE5CCFF), R.drawable.notess) })
+        
         val callDatePrefix = selectedDate.format(DateTimeFormatter.ofPattern("MMM. d,", Locale.getDefault()))
         
         contacts.forEach { contact ->
