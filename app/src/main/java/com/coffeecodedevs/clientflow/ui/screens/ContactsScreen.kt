@@ -125,37 +125,39 @@ class ClientsTabShape : Shape {
     ): Outline {
         return Outline.Generic(
             path = Path().apply {
-                val topLeftRadius = 20f * density.density
-                val curveWidth = 55f * density.density // Increased width for much less vertical curve
+                val cornerRadius = 20f * density.density
+                val curveWidth = 60f * density.density
 
-                // Start from top-left
-                moveTo(0f, topLeftRadius)
+                // Start from bottom-left
+                moveTo(0f, size.height)
+                
+                // Left edge up to corner
+                lineTo(0f, cornerRadius)
 
-                // Top-left corner (rounded)
+                // Top-left corner
                 arcTo(
-                    rect = Rect(0f, 0f, topLeftRadius * 2, topLeftRadius * 2),
+                    rect = Rect(0f, 0f, cornerRadius * 2, cornerRadius * 2),
                     startAngleDegrees = 180f,
                     sweepAngleDegrees = 90f,
                     forceMoveTo = false
                 )
 
                 // Top edge to start of curve
-                val curveStart = size.width - curveWidth * 0.2f
+                // Curve is centered on size.width
+                val curveStart = size.width - curveWidth / 2
+                val curveEnd = size.width + curveWidth / 2
+                
                 lineTo(curveStart, 0f)
 
-                // Smooth S-curve down and to the right
-                // Stronger rounding at corners (long horizontal handles)
+                // Smooth S-curve transition
                 cubicTo(
-                    curveStart + curveWidth * 0.9f, 0f, // CP1: Long horizontal handle from top
-                    size.width + curveWidth * 0.1f, size.height, // CP2: Long horizontal handle from bottom
-                    size.width + curveWidth, size.height // End point
+                    curveStart + curveWidth * 0.5f, 0f,
+                    curveEnd - curveWidth * 0.5f, size.height,
+                    curveEnd, size.height
                 )
 
-                // Bottom edge from curve end back to left
+                // Bottom edge back to start
                 lineTo(0f, size.height)
-
-                // Left edge back to start
-                lineTo(0f, topLeftRadius)
 
                 close()
             }
@@ -172,34 +174,33 @@ class EmployeesTabShape : Shape {
     ): Outline {
         return Outline.Generic(
             path = Path().apply {
-                val topRightRadius = 30f * density.density
-                val curveWidth = 70f * density.density // Increased width for much less vertical curve
+                val cornerRadius = 20f * density.density
+                val curveWidth = 60f * density.density
 
-                // Start from top-left (extended left)
-                // Curve starts at bottom-left (extended) and goes to top-left (indented)
-                val curveStartBottom = -curveWidth
-                val curveEndTop = curveWidth * 0.2f
+                // Curve starts at size.width = 0 (relatively to this box)
+                val curveStart = -curveWidth / 2
+                val curveEnd = curveWidth / 2
 
-                moveTo(curveStartBottom, size.height)
+                // Start from bottom-left (at curve end on bottom)
+                moveTo(curveStart, size.height)
 
-                // Smooth S-curve up and to the right
-                // Stronger rounding at corners (long horizontal handles)
+                // Smooth S-curve transition up
                 cubicTo(
-                    curveStartBottom + curveWidth * 0.9f, size.height, // CP1: Long horizontal handle from bottom
-                    curveEndTop - curveWidth * 0.9f, 0f, // CP2: Long horizontal handle from top
-                    curveEndTop, 0f // End point
+                    curveStart + curveWidth * 0.5f, size.height,
+                    curveEnd - curveWidth * 0.5f, 0f,
+                    curveEnd, 0f
                 )
 
-                // Top edge to top-right corner
-                lineTo(size.width - topRightRadius, 0f)
+                // Top edge to corner
+                lineTo(size.width - cornerRadius, 0f)
 
-                // Top-right corner (rounded)
+                // Top-right corner
                 arcTo(
                     rect = Rect(
-                        left = size.width - topRightRadius * 2,
+                        left = size.width - cornerRadius * 2,
                         top = 0f,
                         right = size.width,
-                        bottom = topRightRadius * 2
+                        bottom = cornerRadius * 2
                     ),
                     startAngleDegrees = 270f,
                     sweepAngleDegrees = 90f,
@@ -210,7 +211,7 @@ class EmployeesTabShape : Shape {
                 lineTo(size.width, size.height)
 
                 // Bottom edge
-                lineTo(curveStartBottom, size.height)
+                lineTo(curveStart, size.height)
 
                 close()
             }
