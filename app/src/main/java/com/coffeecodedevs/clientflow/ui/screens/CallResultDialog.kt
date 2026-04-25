@@ -120,7 +120,7 @@ fun CallResultDialog(
                     ) {
                         Text(
                             text = talkHowHeader,
-                            fontSize = 18.sp,
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF334D6F)
                         )

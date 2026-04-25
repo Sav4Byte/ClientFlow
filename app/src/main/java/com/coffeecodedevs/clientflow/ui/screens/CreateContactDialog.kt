@@ -191,7 +191,7 @@ fun CreateContactDialog(
                     ) {
                         Text(
                             text = createHeader,
-                            fontSize = 28.sp,
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF333333)
                         )
