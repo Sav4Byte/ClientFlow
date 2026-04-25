@@ -67,4 +67,5 @@
     <string name="no_reminders">Немає нагадувань</string>
     <string name="no_orders">Немає замовлень</string>
     <string name="no_events">Немає подій</string>
+    <string name="phone_placeholder">Номер телефону</string>
 </resources>

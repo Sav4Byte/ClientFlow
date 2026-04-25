@@ -69,4 +69,5 @@
     <string name="no_events">Нет событий</string>
     <string name="client_label">Клиент</string>
     <string name="employee_label">Сотрудник</string>
+    <string name="phone_placeholder">Номер телефона</string>
 </resources>

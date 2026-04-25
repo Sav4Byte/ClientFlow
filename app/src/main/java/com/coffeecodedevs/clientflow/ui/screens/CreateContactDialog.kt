@@ -71,7 +71,7 @@ fun CreateContactDialog(
     var firstName by remember { mutableStateOf<String>(editingContact?.firstName ?: "") }
     var lastName by remember { mutableStateOf<String>(editingContact?.lastName ?: "") }
     var company by remember { mutableStateOf<String>(editingContact?.company ?: "") }
-    var phones by remember { mutableStateOf<List<String>>(editingContact?.phones ?: listOf("+380")) }
+    var phones by remember { mutableStateOf<List<String>>(editingContact?.phones ?: listOf("")) }
     
     // Order fields
     var orderTitle by remember { mutableStateOf<String>(editingContact?.orderName ?: "") }
@@ -143,6 +143,7 @@ fun CreateContactDialog(
     val addDesc = stringResource(R.string.add_desc)
     val clientLabel = stringResource(R.string.client_label)
     val employeeLabel = stringResource(R.string.employee_label)
+    val phonePlaceholder = stringResource(R.string.phone_placeholder)
     
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = now.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
@@ -306,20 +307,17 @@ fun CreateContactDialog(
                                             onValueChange = { newValue ->
                                                 // Limit to 20 chars
                                                 if (newValue.length <= 20) {
-                                                    // Allow digits and '+' only, and ensure '+' is at the start
-                                                    val filtered = newValue.filterIndexed { i, c -> 
-                                                        c.isDigit() || (i == 0 && c == '+') 
-                                                    }
-                                                    // Ensure it starts with +
-                                                    val finalValue = if (filtered.isEmpty() || filtered[0] != '+') "+$filtered" else filtered
-                                                    phones = phones.toMutableList().apply { set(index, finalValue) }
+                                                    // Allow digits and '+' only
+                                                    val filtered = newValue.filter { it.isDigit() || it == '+' }
+                                                    phones = phones.toMutableList().apply { set(index, filtered) }
                                                 }
                                             },
                                             onRemove = { if (phones.size > 1) phones = phones.toMutableList().apply { removeAt(index) } },
-                                            onAdd = { if (phones.size < 5) phones = phones + "+380" },
+                                            onAdd = { if (phones.size < 5) phones = phones + "" },
                                             showPlus = (index == phones.lastIndex && phones.size < 5),
                                             removeDesc = removeDesc,
-                                            addDesc = addDesc
+                                            addDesc = addDesc,
+                                            placeholder = phonePlaceholder
                                         )
                                     }
                                 }
@@ -650,7 +648,8 @@ private fun PhoneFieldWithPlus(
     onAdd: () -> Unit,
     showPlus: Boolean,
     removeDesc: String,
-    addDesc: String
+    addDesc: String,
+    placeholder: String = ""
 ) {
     Box(
         modifier = Modifier
@@ -686,7 +685,17 @@ private fun PhoneFieldWithPlus(
                     textStyle = TextStyle(fontSize = 16.sp, color = Color.Black),
                     modifier = Modifier.weight(1f),
                     cursorBrush = SolidColor(Color(0xFF313131)),
-                    keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Phone)
+                    keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Phone),
+                    decorationBox = { innerTextField ->
+                        if (value.isEmpty()) {
+                            Text(
+                                text = placeholder,
+                                color = Color(0xFFAAAAAA),
+                                fontSize = 16.sp
+                            )
+                        }
+                        innerTextField()
+                    }
                 )
                 Icon(
                     imageVector = Icons.Default.Close,

@@ -69,4 +69,5 @@
     <string name="no_events">No events</string>
     <string name="client_label">Client</string>
     <string name="employee_label">Employee</string>
+    <string name="phone_placeholder">Phone number</string>
 </resources>
