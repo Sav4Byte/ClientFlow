@@ -96,7 +96,7 @@ fun NotesScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(
-                            color = Color.White.copy(alpha = 0.75f),
+                            color = Color.White,
                             shape = HeaderWithSearchCutoutShape()
                         )
                         .padding(start = 20.dp, top = 20.dp, bottom = 5.dp)
@@ -154,7 +154,7 @@ fun NotesScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(77.dp))
+            Spacer(modifier = Modifier.height(44.dp))
 
             // White container with notes list
             Box(

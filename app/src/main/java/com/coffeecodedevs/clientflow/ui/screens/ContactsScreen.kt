@@ -385,7 +385,7 @@ fun ContactsScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(color = Color.White.copy(alpha = 0.75f), shape = HeaderWithSearchCutoutShape())
+                        .background(color = Color.White, shape = HeaderWithSearchCutoutShape())
                         .padding(start = 10.dp, top = 20.dp, bottom = 5.dp)
                 ) {
                     Text(
@@ -491,7 +491,7 @@ fun ContactsScreen(
                 Box(
                     modifier = Modifier.fillMaxWidth().weight(1f)
                         .background(
-                            Color.White,
+                            Color.White.copy(alpha = 0.75f),
                             if (selectedTab == "CLIENT") RoundedCornerShape(topEnd = 10.dp)
                             else RoundedCornerShape(topStart = 10.dp)
                         )

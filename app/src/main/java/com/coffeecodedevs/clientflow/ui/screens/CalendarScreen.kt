@@ -182,7 +182,7 @@ fun CalendarScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(OctoberHeaderWithCutoutShape(cutoutCenterX))
-                        .background(Color.White.copy(alpha = 0.75f))
+                        .background(Color.White)
                         .padding(horizontal = 20.dp, vertical = 20.dp)
                 ) {
                     Text(
@@ -262,42 +262,102 @@ fun CalendarScreen(
             Box(modifier = Modifier.padding(top = 40.dp).padding(horizontal = 16.dp, vertical = 20.dp)) {
                 when (selectedTab) {
                     "REMINDER" -> {
-                        LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 120.dp)) {
-                            items(reminders) { reminder -> 
-                                val contact = contacts.find { it.id == reminder.id }
-                                CalendarReminderItem(
-                                    reminder, 
-                                    editDesc, 
-                                    deleteDesc,
-                                    onEdit = { contact?.let { onEditReminder(it) } },
-                                    onDelete = { contact?.let { onDeleteReminder(it) } }
-                                ) 
+                        if (reminders.isEmpty()) {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.bell),
+                                        contentDescription = null,
+                                        tint = Color(0xFF8B9BA8).copy(alpha = 0.5f),
+                                        modifier = Modifier.size(64.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Text(
+                                        text = stringResource(R.string.no_reminders),
+                                        fontSize = 18.sp,
+                                        color = Color(0xFF8B9BA8),
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        } else {
+                            LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 120.dp)) {
+                                items(reminders) { reminder -> 
+                                    val contact = contacts.find { it.id == reminder.id }
+                                    CalendarReminderItem(
+                                        reminder, 
+                                        editDesc, 
+                                        deleteDesc,
+                                        onEdit = { contact?.let { onEditReminder(it) } },
+                                        onDelete = { contact?.let { onDeleteReminder(it) } }
+                                    ) 
+                                }
                             }
                         }
                     }
                     "ORDERS" -> {
-                        LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 120.dp)) {
-                            items(orders) { order -> 
-                                CalendarOrderItem(order = order, onClick = { onOrderClick(order) }) 
+                        if (orders.isEmpty()) {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.notess),
+                                        contentDescription = null,
+                                        tint = Color(0xFF8B9BA8).copy(alpha = 0.5f),
+                                        modifier = Modifier.size(64.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Text(
+                                        text = stringResource(R.string.no_orders),
+                                        fontSize = 18.sp,
+                                        color = Color(0xFF8B9BA8),
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        } else {
+                            LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 120.dp)) {
+                                items(orders) { order -> 
+                                    CalendarOrderItem(order = order, onClick = { onOrderClick(order) }) 
+                                }
                             }
                         }
                     }
                     "ALL" -> {
-                        LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 120.dp)) {
-                            items(allTabItems) { item ->
-                                when (item) {
-                                    is TimelineItem.ReminderItem -> {
-                                        val contact = contacts.find { it.id == item.reminder.id }
-                                        CalendarReminderItem(
-                                            item.reminder, 
-                                            editDesc, 
-                                            deleteDesc,
-                                            onEdit = { contact?.let { onEditReminder(it) } },
-                                            onDelete = { contact?.let { onDeleteReminder(it) } }
-                                        )
+                        if (allTabItems.isEmpty()) {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.calendar),
+                                        contentDescription = null,
+                                        tint = Color(0xFF8B9BA8).copy(alpha = 0.5f),
+                                        modifier = Modifier.size(64.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Text(
+                                        text = stringResource(R.string.no_events),
+                                        fontSize = 18.sp,
+                                        color = Color(0xFF8B9BA8),
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        } else {
+                            LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 120.dp)) {
+                                items(allTabItems) { item ->
+                                    when (item) {
+                                        is TimelineItem.ReminderItem -> {
+                                            val contact = contacts.find { it.id == item.reminder.id }
+                                            CalendarReminderItem(
+                                                item.reminder, 
+                                                editDesc, 
+                                                deleteDesc,
+                                                onEdit = { contact?.let { onEditReminder(it) } },
+                                                onDelete = { contact?.let { onDeleteReminder(it) } }
+                                            )
+                                        }
+                                        is TimelineItem.CallItem -> CalendarCallItem(item)
+                                        is TimelineItem.OrderItem -> CalendarOrderItem(item.order)
                                     }
-                                    is TimelineItem.CallItem -> CalendarCallItem(item)
-                                    is TimelineItem.OrderItem -> CalendarOrderItem(item.order)
                                 }
                             }
                         }
