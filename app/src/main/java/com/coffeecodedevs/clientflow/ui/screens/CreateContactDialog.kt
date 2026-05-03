@@ -765,7 +765,7 @@ private fun SimpleUnderlineTextField(
             }
             BasicTextField(
                 value = value,
-                onValueChange = { if (it.length <= maxLength) onValueChange(it) },
+                onValueChange = { onValueChange(it.take(maxLength)) },
                 textStyle = TextStyle(
                     fontSize = 17.sp,
                     color = Color(0xFF313131),
@@ -824,7 +824,7 @@ private fun GrayFrameTextField(
                 }
                 BasicTextField(
                     value = value,
-                    onValueChange = onValueChange,
+                    onValueChange = { onValueChange(it.take(maxLength)) },
                     textStyle = TextStyle(
                         fontSize = 16.sp,
                         color = Color(0xFF313131),

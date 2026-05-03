@@ -125,7 +125,7 @@ fun GoalsScreen(
                             if (isEditing) {
                                 androidx.compose.foundation.text.BasicTextField(
                                     value = editedTitle,
-                                    onValueChange = { if (it.length <= 120) editedTitle = it },
+                                    onValueChange = { editedTitle = it.take(120) },
                                     textStyle = androidx.compose.ui.text.TextStyle(
                                         fontSize = 24.sp,
                                         fontWeight = FontWeight.Bold,
@@ -211,7 +211,7 @@ fun GoalsScreen(
                         value = editedDescription,
                         onValueChange = { 
                             val limit = if (isOrder) 2000 else 10000
-                            if (it.length <= limit) editedDescription = it 
+                            editedDescription = it.take(limit)
                         },
                         textStyle = androidx.compose.ui.text.TextStyle(
                             fontSize = 15.sp,

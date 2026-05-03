@@ -83,7 +83,7 @@ fun CalendarScreen(
     val density = androidx.compose.ui.platform.LocalDensity.current
     val screenWidthPx = with(density) { configuration.screenWidthDp.dp.toPx() }
     val itemWidthPx = screenWidthPx / 7f
-    val cutoutCenterX = screenWidthPx / 2f
+    val cutoutCenterX = screenWidthPx * 4.5f / 7f
 
     val initialIndex = totalDays / 2
     val initialScrollOffset = -(cutoutCenterX - itemWidthPx / 2f).toInt()
@@ -171,8 +171,8 @@ fun CalendarScreen(
                 )
             )
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Spacer(modifier = Modifier.height(24.dp))
+        Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
+            Spacer(modifier = Modifier.height(10.dp))
 
             val monthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
             val headerText = selectedDate.format(monthFormatter).uppercase()
@@ -181,16 +181,16 @@ fun CalendarScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(OctoberHeaderWithCutoutShape(cutoutCenterX))
+                        .clip(OctoberHeaderWithCutoutShape())
                         .background(Color.White)
-                        .padding(horizontal = 20.dp, vertical = 20.dp)
+                        .padding(start = 13.dp, top = 20.dp, bottom = 20.dp, end = 20.dp)
                 ) {
                     Text(
                         text = headerText,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF334D6F),
-                        modifier = Modifier.align(Alignment.Center)
+                        modifier = Modifier.align(Alignment.CenterStart)
                     )
                 }
 
@@ -213,18 +213,13 @@ fun CalendarScreen(
                         
                         val scale by remember(index) {
                             derivedStateOf {
-                                val layoutInfo = listState.layoutInfo
-                                val itemInfo = layoutInfo.visibleItemsInfo.find { it.index == index }
-                                
-                                if (itemInfo != null) {
-                                    val itemCenter = itemInfo.offset + itemInfo.size / 2f
-                                    val distanceFromCenter = kotlin.math.abs(itemCenter - cutoutCenterX)
-                                    val maxDistance = itemInfo.size.toFloat() * 1.5f
-                                    val rawScale = 1f - (distanceFromCenter / maxDistance)
+                                    // Use index-based smooth distance instead of pixel offset
+                                    val currentIndex = listState.firstVisibleItemIndex + (listState.firstVisibleItemScrollOffset / itemWidthPx)
+                                    val targetIndex = currentIndex + 4f
+                                    val distance = kotlin.math.abs(index - targetIndex)
+                                    val maxDistance = 1.5f
+                                    val rawScale = 1f - (distance / maxDistance)
                                     rawScale.coerceIn(0f, 1f)
-                                } else {
-                                    0f
-                                }
                             }
                         }
 
@@ -406,7 +401,7 @@ private fun CalendarDay(
 ) {
     val numberSize = (20 + (44 - 20) * scale).sp
     val dayNameSize = (14 + (32 - 14) * scale).sp
-    val fontWeight = if (scale > 0.5f) FontWeight.Bold else FontWeight.Normal
+    val fontWeight = FontWeight.Normal
     val verticalOffset = (-25 - (13 * scale)).dp
 
     Column(
@@ -476,26 +471,31 @@ private class ContentWithTabShape(val selectedTab: String) : Shape {
     }
 }
 
-private class OctoberHeaderWithCutoutShape(private val cutoutCenterX: Float) : Shape {
+private class OctoberHeaderWithCutoutShape : Shape {
     override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
         return Outline.Generic(
             path = Path().apply {
                 val edgeCornerRadius = 24f * density.density
-                moveTo(0f, 0f)
-                lineTo(size.width, 0f)
-                val cutoutWidth = 60f * density.density
                 val cutoutHeight = 40f * density.density
-                val smoothing = 25f * density.density
-                val left = cutoutCenterX - cutoutWidth / 2f
-                val right = cutoutCenterX + cutoutWidth / 2f
+                
+                val cutoutCenter = size.width * 4.5f / 7f
+                val cutoutWidth = size.width * 0.15f
+                val smoothing = size.width * 0.06f
+                
+                val left = cutoutCenter - cutoutWidth / 2f
+                val right = cutoutCenter + cutoutWidth / 2f
                 val top = size.height - cutoutHeight
+
+                moveTo(0f, 0f)
                 lineTo(size.width, 0f)
                 lineTo(size.width, size.height - edgeCornerRadius)
                 quadraticTo(size.width, size.height, size.width - edgeCornerRadius, size.height)
+                
                 lineTo(right + smoothing, size.height)
                 cubicTo(right, size.height, right, top, right - smoothing, top)
                 lineTo(left + smoothing, top)
                 cubicTo(left, top, left, size.height, left - smoothing, size.height)
+                
                 lineTo(edgeCornerRadius, size.height)
                 quadraticTo(0f, size.height, 0f, size.height - edgeCornerRadius)
                 lineTo(0f, 0f)

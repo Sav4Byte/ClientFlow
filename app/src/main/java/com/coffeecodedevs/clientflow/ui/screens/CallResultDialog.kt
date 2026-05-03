@@ -136,7 +136,7 @@ fun CallResultDialog(
 
                         BasicTextField(
                             value = callNote,
-                            onValueChange = { if (it.length <= 700) callNote = it },
+                            onValueChange = { callNote = it.take(700) },
                             textStyle = TextStyle(
                                 fontSize = 16.sp,
                                 color = Color(0xFF313131),
@@ -209,7 +209,7 @@ fun CallResultDialog(
                         if (isMadeOrder) {
                             BasicTextField(
                                 value = orderValue,
-                                onValueChange = { if (it.length <= 120) orderValue = it },
+                                onValueChange = { orderValue = it.take(120) },
                                 textStyle = TextStyle(
                                     fontSize = 15.sp,
                                     color = Color(0xFF888888),
@@ -258,7 +258,7 @@ fun CallResultDialog(
                         
                         BasicTextField(
                             value = reminderText,
-                            onValueChange = { if (it.length <= 200) reminderText = it },
+                            onValueChange = { reminderText = it.take(200) },
                             textStyle = TextStyle(
                                 fontSize = 15.sp,
                                 color = Color(0xFF313131),
